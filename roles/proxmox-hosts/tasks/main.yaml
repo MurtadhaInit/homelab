@@ -1,0 +1,5 @@
+- name: Create a specific user for performing Ansible tasks
+  ansible.builtin.include_tasks: create_ansible_user.yaml
+
+- name: Create a regular user for everything else (to be performed manually)
+  ansible.builtin.include_tasks: create_regular_user.yaml

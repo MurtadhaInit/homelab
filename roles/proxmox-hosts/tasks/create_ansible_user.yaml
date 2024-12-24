@@ -1,0 +1,18 @@
+---
+- name: Create the user
+  ansible.builtin.user:
+    name: ansible
+    groups:
+      - sudo
+    comment: "Automation user"
+    state: present
+    password: '!'
+    create_home: false
+    shell: /bin/bash
+
+- name: Create a regular user to general host management and main usage
+  ansible.builtin.user:
+    name: murtadha
+    state: present
+    create_home: true
+    password: ""
