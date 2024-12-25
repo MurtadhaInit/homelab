@@ -1,6 +1,3 @@
 ---
-- name: Setup Proxmox from scratch
-
-  tasks:
-    - name: Prepare Proxmox nodes for remote management
-      ansible.builtin.import_playbook: ./playbooks/proxmox-hosts
+- name: Prepare Proxmox nodes for remote management
+  ansible.builtin.import_playbook: ./playbooks/proxmox-hosts.yaml

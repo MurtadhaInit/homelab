@@ -4,9 +4,11 @@
   remote_user: root
   vars:
     automation_user: "ansible"
-    automation_user_pub_key: "{{ ansible_env.HOME }}/.ssh/keys/proxmox-hosts-automation.pub"
+    # automation_user_pub_key: "{{ ansible_env.HOME }}/.ssh/keys/proxmox-hosts-automation.pub"
+    automation_user_pub_key: "~/.ssh/keys/proxmox-hosts-automation.pub"
     regular_user: "murtadha"
-    regular_user_pub_key: "{{ ansible_env.HOME }}/.ssh/keys/proxmox-hosts.pub"
+    # regular_user_pub_key: "{{ ansible_env.HOME }}/.ssh/keys/proxmox-hosts.pub"
+    regular_user_pub_key: "~/.ssh/keys/proxmox-hosts.pub"
   vars_files:
     - ../vars/secrets.yaml
 
@@ -18,7 +20,7 @@
 
     - name: Create a specific automation user for performing future Ansible tasks
       block:
-        - name: Create the user
+        - name: Create the automation user
           ansible.builtin.user:
             name: "{{ automation_user }}"
             state: present
@@ -42,11 +44,10 @@
             line: "{{ automation_user }} ALL=(ALL) NOPASSWD: ALL"
             state: present
             validate: "/usr/sbin/visudo -cf %s"
-            # regexp: "^{{ automation_user }}"
 
     - name: Create a regular user for other manual management tasks
       block:
-        - name: Create the user
+        - name: Create the other user
           ansible.builtin.user:
             name: "{{ regular_user }}"
             state: present
@@ -69,7 +70,6 @@
         line: "PasswordAuthentication no"
         state: present
         validate: "/usr/sbin/sshd -t -f %s"
-        # regexp: "^#?PasswordAuthentication"
       notify: Restart SSH
 
   handlers:
