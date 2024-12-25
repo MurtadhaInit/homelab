@@ -1,8 +1,6 @@
 ---
-- name: Setup the homelab from scratch
-  hosts: proxmox-hosts
+- name: Setup Proxmox from scratch
 
   tasks:
     - name: Prepare Proxmox nodes for remote management
-      ansible.builtin.include_role:
-        name: proxmox-hosts
+      ansible.builtin.import_playbook: ./playbooks/proxmox-hosts
