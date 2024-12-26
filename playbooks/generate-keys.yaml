@@ -1,0 +1,74 @@
+---
+- name: Generate SSH key pairs for remote Proxmox management
+  hosts: localhost
+  connection: local
+
+  vars:
+    automation_ssh_key_filename: test1
+    regular_ssh_key_filename: test2
+
+  tasks:
+    - name: Check if the automation user SSH key exists
+      ansible.builtin.stat:
+        path: "~/.ssh/keys/{{ automation_ssh_key_filename }}"
+      register: automation_ssh_key
+
+    - name: Get the passphrase for key to be generated
+      ansible.builtin.pause:
+        prompt: "Enter the SSH passphrase for the automation user key"
+        echo: false
+      when: not automation_ssh_key.stat.exists
+      register: auto_ssh_passphrase
+
+    - name: Generate the SSH key
+      when: not automation_ssh_key.stat.exists
+      # NOTE: the user module doesn't have an option to set iterations (e.g. -t 100)
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        generate_ssh_key: true
+        ssh_key_type: ed25519
+        ssh_key_file: ".ssh/keys/{{ automation_ssh_key_filename }}"
+        ssh_key_passphrase: "{{ auto_ssh_passphrase.user_input }}"
+        force: false
+      register: auto_key_gen
+      
+      # TODO: save a temp variable between runs
+    # - name: Check if the key was added to the ssh-agent
+    #   ansible.builtin.shell:
+    #     cmd: "ssh-add -l | {{ auto_key_gen.ssh_fingerprint }}"
+
+      # TODO: add an additional check to only run on macos
+    - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
+      when: (auto_key_gen.changed) and (not auto_key_gen.failed)
+      changed_when: (auto_key_gen.changed) and (not auto_key_gen.failed)
+      ansible.builtin.command:
+        cmd: "ssh-add --apple-use-keychain {{ auto_key_gen.ssh_key_file }}"
+
+    - name: Check if the regular user SSH key exists
+      ansible.builtin.stat:
+        path: "~/.ssh/keys/{{ regular_ssh_key_filename }}"
+      register: regular_ssh_key
+
+    - name: Get the passphrase for key to be generated
+      ansible.builtin.pause:
+        prompt: "Enter the SSH passphrase for the regular user key"
+        echo: false
+      when: not regular_ssh_key.stat.exists
+      register: reg_ssh_passphrase
+
+    - name: Generate the SSH key
+      when: not regular_ssh_key.stat.exists
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        generate_ssh_key: true
+        ssh_key_type: ed25519
+        ssh_key_file: ".ssh/keys/{{ regular_ssh_key_filename }}"
+        ssh_key_passphrase: "{{ reg_ssh_passphrase.user_input }}"
+        force: false
+      register: reg_key_gen
+
+    - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
+      when: (reg_key_gen.changed) and (not reg_key_gen.failed)
+      changed_when: (reg_key_gen.changed) and (not reg_key_gen.failed)
+      ansible.builtin.command:
+        cmd: "ssh-add --apple-use-keychain {{ reg_key_gen.ssh_key_file }}"

@@ -4,10 +4,8 @@
   remote_user: root
   vars:
     automation_user: "ansible"
-    # automation_user_pub_key: "{{ ansible_env.HOME }}/.ssh/keys/proxmox-hosts-automation.pub"
     automation_user_pub_key: "~/.ssh/keys/proxmox-hosts-automation.pub"
     regular_user: "murtadha"
-    # regular_user_pub_key: "{{ ansible_env.HOME }}/.ssh/keys/proxmox-hosts.pub"
     regular_user_pub_key: "~/.ssh/keys/proxmox-hosts.pub"
   vars_files:
     - ../vars/secrets.yaml
