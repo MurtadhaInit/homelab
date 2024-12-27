@@ -4,90 +4,13 @@
   connection: local
 
   vars:
-    automation_ssh_key_filename: test1
-    regular_ssh_key_filename: test2
+    # base directory for keys is ~/.ssh/keys
+    ssh_users: [
+      { type: "automation user", key_filename: test1 },
+      { type: "regular user", key_filename: test2 }
+    ]
 
   tasks:
-    - name: Check if the automation user SSH key exists
-      ansible.builtin.stat:
-        path: "~/.ssh/keys/{{ automation_ssh_key_filename }}"
-      register: automation_ssh_key
-
-    - name: Get the passphrase for key to be generated
-      ansible.builtin.pause:
-        prompt: "Enter the SSH passphrase for the automation user key"
-        echo: false
-      when: not automation_ssh_key.stat.exists
-      register: auto_ssh_passphrase
-
-    - name: Generate the SSH key
-      when: not automation_ssh_key.stat.exists
-      # NOTE: the user module doesn't have an option to set iterations (e.g. -t 100)
-      ansible.builtin.user:
-        name: "{{ ansible_user_id }}"
-        generate_ssh_key: true
-        ssh_key_type: ed25519
-        ssh_key_file: ".ssh/keys/{{ automation_ssh_key_filename }}"
-        ssh_key_passphrase: "{{ auto_ssh_passphrase.user_input }}"
-        force: false
-      register: auto_key_gen
-
-    - name: Add the fingerprint to temp file to check for it in later runs
-      when: (auto_key_gen.changed) and (not auto_key_gen.failed)
-      ansible.builtin.copy:
-        content: "{{ auto_key_gen.ssh_fingerprint }}"
-        dest: ../.tmp/fingerprint1
-        mode: "600"
-
-    - name: Check if the key was added to the ssh-agent
-      ansible.builtin.set_fact:
-        auto_key_loaded: >-
-          {{ lookup('file', '../.tmp/fingerprint1') in lookup('pipe', 'ssh-add -l') }}
-
-      # TODO: add an additional check to only run on macos
-    - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
-      when: ((auto_key_gen.changed) and (not auto_key_gen.failed)) or (not auto_key_loaded)
-      changed_when: ((auto_key_gen.changed) and (not auto_key_gen.failed)) or (not auto_key_loaded)
-      ansible.builtin.command:
-        cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ automation_ssh_key_filename }}"
-
-    - name: Check if the regular user SSH key exists
-      ansible.builtin.stat:
-        path: "~/.ssh/keys/{{ regular_ssh_key_filename }}"
-      register: regular_ssh_key
-
-    - name: Get the passphrase for key to be generated
-      ansible.builtin.pause:
-        prompt: "Enter the SSH passphrase for the regular user key"
-        echo: false
-      when: not regular_ssh_key.stat.exists
-      register: reg_ssh_passphrase
-
-    - name: Generate the SSH key
-      when: not regular_ssh_key.stat.exists
-      ansible.builtin.user:
-        name: "{{ ansible_user_id }}"
-        generate_ssh_key: true
-        ssh_key_type: ed25519
-        ssh_key_file: ".ssh/keys/{{ regular_ssh_key_filename }}"
-        ssh_key_passphrase: "{{ reg_ssh_passphrase.user_input }}"
-        force: false
-      register: reg_key_gen
-
-    - name: Add the fingerprint to temp file to check for it in later runs
-      when: (reg_key_gen.changed) and (not reg_key_gen.failed)
-      ansible.builtin.copy:
-        content: "{{ reg_key_gen.ssh_fingerprint }}"
-        dest: ../.tmp/fingerprint2
-        mode: "600"
-
-    - name: Check if the key was added to the ssh-agent
-      ansible.builtin.set_fact:
-        reg_key_loaded: >-
-          {{ lookup('file', '../.tmp/fingerprint2') in lookup('pipe', 'ssh-add -l') }}
-
-    - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
-      when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (not reg_key_loaded)
-      changed_when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (not reg_key_loaded)
-      ansible.builtin.command:
-        cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ regular_ssh_key_filename }}"
+    - name: Generate SSH key pairs for users
+      ansible.builtin.include_tasks: tasks/generate-key.yaml
+      loop: "{{ ssh_users }}"

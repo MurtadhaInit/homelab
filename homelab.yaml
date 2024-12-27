@@ -1,3 +1,6 @@
 ---
-- name: Prepare Proxmox nodes for remote management
+- name: Generate two pairs of SSH keys locally for Proxmox management
+  ansible.builtin.import_playbook: ./playbooks/generate-keys.yaml
+
+- name: Prepare Proxmox nodes for remote management (create users and setup SSH)
   ansible.builtin.import_playbook: ./playbooks/proxmox-hosts.yaml
