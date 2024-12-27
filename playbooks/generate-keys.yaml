@@ -40,17 +40,16 @@
         mode: "600"
 
     - name: Check if the key was added to the ssh-agent
-      changed_when: true
-      ansible.builtin.shell:
-        cmd: "set -o pipefail && ssh-add -l | grep $(cat ../.tmp/fingerprint1)"
-      register: auto_fingerprint_check
+      ansible.builtin.set_fact:
+        auto_key_loaded: >-
+          {{ lookup('file', '../.tmp/fingerprint1') in lookup('pipe', 'ssh-add -l') }}
 
       # TODO: add an additional check to only run on macos
     - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
-      when: ((auto_key_gen.changed) and (not auto_key_gen.failed)) or (auto_fingerprint_check.rc != 0)
-      changed_when: (auto_key_gen.changed) and (not auto_key_gen.failed) or (auto_fingerprint_check.rc != 0)
+      when: ((auto_key_gen.changed) and (not auto_key_gen.failed)) or (not auto_key_loaded)
+      changed_when: ((auto_key_gen.changed) and (not auto_key_gen.failed)) or (not auto_key_loaded)
       ansible.builtin.command:
-        cmd: "ssh-add --apple-use-keychain {{ auto_key_gen.ssh_key_file }}"
+        cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ automation_ssh_key_filename }}"
 
     - name: Check if the regular user SSH key exists
       ansible.builtin.stat:
@@ -83,13 +82,12 @@
         mode: "600"
 
     - name: Check if the key was added to the ssh-agent
-      changed_when: true
-      ansible.builtin.shell:
-        cmd: "set -o pipefail && ssh-add -l | grep $(cat ../.tmp/fingerprint2)"
-      register: reg_fingerprint_check
+      ansible.builtin.set_fact:
+        reg_key_loaded: >-
+          {{ lookup('file', '../.tmp/fingerprint2') in lookup('pipe', 'ssh-add -l') }}
 
     - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
-      when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (reg_fingerprint_check.rc != 0)
-      changed_when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (reg_fingerprint_check.rc != 0)
+      when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (not reg_key_loaded)
+      changed_when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (not reg_key_loaded)
       ansible.builtin.command:
-        cmd: "ssh-add --apple-use-keychain {{ reg_key_gen.ssh_key_file }}"
+        cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ regular_ssh_key_filename }}"
