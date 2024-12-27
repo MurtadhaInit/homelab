@@ -1,0 +1,6 @@
+---
+# the 1st element should be the automation user and the 2nd the regular user
+ssh_users: [
+  { user_name: "ansible", type: "automation user", key_filename: test1, pub_key: "~/.ssh/keys/proxmox-hosts-automation.pub" },
+  { user_name: "murtadha", type: "regular user", key_filename: test2, pub_key: "~/.ssh/keys/proxmox-hosts.pub" }
+]

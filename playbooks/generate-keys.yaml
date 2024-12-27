@@ -3,12 +3,8 @@
   hosts: localhost
   connection: local
 
-  vars:
-    # base directory for keys is ~/.ssh/keys
-    ssh_users: [
-      { type: "automation user", key_filename: test1 },
-      { type: "regular user", key_filename: test2 }
-    ]
+  vars_files:
+    - ../vars/ssh_users.yaml
 
   tasks:
     - name: Generate SSH key pairs for users

@@ -3,12 +3,17 @@
   hosts: proxmox-hosts
   remote_user: root
   vars:
-    automation_user: "ansible"
-    automation_user_pub_key: "~/.ssh/keys/proxmox-hosts-automation.pub"
-    regular_user: "murtadha"
-    regular_user_pub_key: "~/.ssh/keys/proxmox-hosts.pub"
+    # automation_user: "{{ ssh_users | selectattr('type', 'eq', 'automation user') | map(attribute='user_name') | first }}"
+    # automation_user_pub_key: "{{ ssh_users | selectattr('type', 'eq', 'automation user') | map(attribute='pub_key') | first }}"
+    # regular_user: "{{ ssh_users | selectattr('type', 'eq', 'regular user') | map(attribute='user_name') | first }}"
+    # regular_user_pub_key: "{{ ssh_users | selectattr('type', 'eq', 'regular user') | map(attribute='pub_key') | first }}"
+    automation_user: "{{ ssh_users[0]['user_name'] }}"
+    automation_user_pub_key: "{{ ssh_users[0]['pub_key'] }}"
+    regular_user: "{{ ssh_users[1]['user_name'] }}"
+    regular_user_pub_key: "{{ ssh_users[1]['pub_key'] }}"
   vars_files:
     - ../vars/secrets.yaml
+    - ../vars/ssh_users.yaml
 
   tasks:
     - name: Install the sudo package
