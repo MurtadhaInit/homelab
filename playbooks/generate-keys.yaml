@@ -31,16 +31,24 @@
         ssh_key_passphrase: "{{ auto_ssh_passphrase.user_input }}"
         force: false
       register: auto_key_gen
-      
-      # TODO: save a temp variable between runs
-    # - name: Check if the key was added to the ssh-agent
-    #   ansible.builtin.shell:
-    #     cmd: "ssh-add -l | {{ auto_key_gen.ssh_fingerprint }}"
+
+    - name: Add the fingerprint to temp file to check for it in later runs
+      when: (auto_key_gen.changed) and (not auto_key_gen.failed)
+      ansible.builtin.copy:
+        content: "{{ auto_key_gen.ssh_fingerprint }}"
+        dest: ../.tmp/fingerprint1
+        mode: "600"
+
+    - name: Check if the key was added to the ssh-agent
+      changed_when: true
+      ansible.builtin.shell:
+        cmd: "set -o pipefail && ssh-add -l | grep $(cat ../.tmp/fingerprint1)"
+      register: auto_fingerprint_check
 
       # TODO: add an additional check to only run on macos
     - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
-      when: (auto_key_gen.changed) and (not auto_key_gen.failed)
-      changed_when: (auto_key_gen.changed) and (not auto_key_gen.failed)
+      when: ((auto_key_gen.changed) and (not auto_key_gen.failed)) or (auto_fingerprint_check.rc != 0)
+      changed_when: (auto_key_gen.changed) and (not auto_key_gen.failed) or (auto_fingerprint_check.rc != 0)
       ansible.builtin.command:
         cmd: "ssh-add --apple-use-keychain {{ auto_key_gen.ssh_key_file }}"
 
@@ -67,8 +75,21 @@
         force: false
       register: reg_key_gen
 
-    - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
+    - name: Add the fingerprint to temp file to check for it in later runs
       when: (reg_key_gen.changed) and (not reg_key_gen.failed)
-      changed_when: (reg_key_gen.changed) and (not reg_key_gen.failed)
+      ansible.builtin.copy:
+        content: "{{ reg_key_gen.ssh_fingerprint }}"
+        dest: ../.tmp/fingerprint2
+        mode: "600"
+
+    - name: Check if the key was added to the ssh-agent
+      changed_when: true
+      ansible.builtin.shell:
+        cmd: "set -o pipefail && ssh-add -l | grep $(cat ../.tmp/fingerprint2)"
+      register: reg_fingerprint_check
+
+    - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
+      when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (reg_fingerprint_check.rc != 0)
+      changed_when: (reg_key_gen.changed) and (not reg_key_gen.failed) or (reg_fingerprint_check.rc != 0)
       ansible.builtin.command:
         cmd: "ssh-add --apple-use-keychain {{ reg_key_gen.ssh_key_file }}"
