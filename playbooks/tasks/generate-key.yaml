@@ -30,6 +30,7 @@
     dest: "../.tmp/{{ item.key_filename }}_fingerprint"
     mode: "600"
 
+  # The fingerprint file has to be present
 - name: Check if the key was added to the ssh-agent
   ansible.builtin.set_fact:
     key_loaded: >-

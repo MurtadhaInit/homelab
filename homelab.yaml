@@ -2,5 +2,6 @@
 - name: Generate two pairs of SSH keys locally for Proxmox management
   ansible.builtin.import_playbook: ./playbooks/generate-keys.yaml
 
+  # The root password is required one time only with --ask-pass to set up SSH keys
 - name: Prepare Proxmox nodes for remote management (create users and setup SSH)
   ansible.builtin.import_playbook: ./playbooks/proxmox-hosts.yaml

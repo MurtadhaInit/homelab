@@ -1,5 +1,5 @@
 ---
-- name: Create a Proxmox template-ready machine
+- name: Create a Proxmox VM template
   hosts: proxmox_fresh_vms
 
   tasks:

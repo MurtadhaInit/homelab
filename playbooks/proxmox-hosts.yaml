@@ -16,6 +16,13 @@
     - ../vars/ssh_users.yaml
 
   tasks:
+    - name: Supply the public SSH key generated to the root user first
+      ansible.posix.authorized_key:
+        key: "{{ lookup('file', regular_user_pub_key) }}"
+        user: root
+        exclusive: true
+        state: present
+
     - name: Install the sudo package
       ansible.builtin.package:
         name: sudo
@@ -31,16 +38,17 @@
               - sudo
             shell: /bin/bash
             comment: Automation User
-            password: '!'
+            # password: '!' # pass is enabled for the TF provider (preferred over API tokens)
+            password: "{{ automation_user_pass | password_hash('sha512', salt, rounds=657235) }}"
 
-        - name: Supply the public SSH key generated for the new user
+        - name: Supply the public SSH key generated for the automation user
           ansible.posix.authorized_key:
             key: "{{ lookup('file', automation_user_pub_key) }}"
             user: "{{ automation_user }}"
             exclusive: true
             state: present
 
-        - name: Allow sudo without password for the user
+        - name: Allow sudo without password for the automation user
           ansible.builtin.lineinfile:
             path: "/etc/sudoers"
             search_string: "{{ automation_user }}"
@@ -50,7 +58,7 @@
 
     - name: Create a regular user for other manual management tasks
       block:
-        - name: Create the other user
+        - name: Create the regular user
           ansible.builtin.user:
             name: "{{ regular_user }}"
             state: present
@@ -59,7 +67,7 @@
             shell: /bin/bash
             password: "{{ regular_user_pass | password_hash('sha512', salt, rounds=657235) }}"
 
-        - name: Supply the public SSH key generated for the new user
+        - name: Supply the public SSH key generated for the regular user
           ansible.posix.authorized_key:
             key: "{{ lookup('file', regular_user_pub_key) }}"
             user: "{{ regular_user }}"
