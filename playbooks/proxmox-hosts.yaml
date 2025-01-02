@@ -83,6 +83,55 @@
         validate: "/usr/sbin/sshd -t -f %s"
       notify: Restart SSH
 
+    - name: Make the required (equivalent) changes on the PVE Web Gui side
+      block:
+        - name: Check if the admins group exists
+          changed_when: false
+          ansible.builtin.command:
+            cmd: pveum group list
+          register: pve_groups
+
+        - name: Create the admins group
+          when: not pve_groups.stdout is search('admins')
+          changed_when: not pve_groups.stdout is search('admins')
+          ansible.builtin.command:
+            cmd: 'pveum group add admins --comment "Admins Group"'
+
+        - name: Check if the admins group has 'Administrator' permissions
+          changed_when: false
+          ansible.builtin.command:
+            cmd: pveum acl list
+          register: pve_perms
+
+        - name: Assign the Administrator role (i.e. permissions) to the 'admins' group
+          when: not pve_perms.stdout is search('admins')
+          changed_when: not pve_perms.stdout is search('admins')
+          ansible.builtin.command:
+            cmd: 'pveum acl modify / --roles Administrator --groups admins'
+
+        - name: Check for the existent Web GUI users
+          changed_when: false
+          ansible.builtin.command:
+            cmd: pveum user list
+          register: pve_web_users
+
+          # The password used for Web GUI is going to be the same one setup for the underlying PAM user
+        - name: Mirror (i.e. create) the regular user if not present
+          when: not pve_web_users.stdout is search(regular_user + '@pam')
+          changed_when: not pve_web_users.stdout is search(regular_user + '@pam')
+          ansible.builtin.command:
+            # TODO: use a jinja filter to capitalise the first letter of the first name using the user name
+            cmd: "pveum user add {{ regular_user }}@pam --email {{ email }} --firstname 'Murtadha' --groups admins"
+          # NOTE: TFA needs to be enabled from the web GUI (for both this and the root user)
+
+          # The password used for Web GUI is going to be the same one setup for the underlying PAM user
+        - name: Mirror (i.e. create) the automation user if not present
+          when: not pve_web_users.stdout is search(automation_user + '@pam')
+          changed_when: not pve_web_users.stdout is search(automation_user + '@pam')
+          ansible.builtin.command:
+            # use a jinja filter to capitalise the first letter of the first name using the user name
+            cmd: "pveum user add {{ automation_user }}@pam --groups admins"
+
   handlers:
     - name: Restart SSH
       ansible.builtin.service:
