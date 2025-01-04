@@ -132,6 +132,11 @@
             # use a jinja filter to capitalise the first letter of the first name using the user name
             cmd: "pveum user add {{ automation_user }}@pam --groups admins"
 
+    - name: Enable the snippets content type for local storage
+      changed_when: true
+      ansible.builtin.command:
+        cmd: 'pvesm set local --content vztmpl,backup,iso,snippets'
+
   handlers:
     - name: Restart SSH
       ansible.builtin.service:
