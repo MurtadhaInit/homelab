@@ -7,7 +7,7 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
 
 resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   name        = "ubuntu-template"
-  description = "Golden template configured with Docker and essential tools"
+  description = "Preconfigured template based on an Ubuntu cloud image"
   node_name   = var.pve_hostname
   vm_id       = 500
   on_boot     = true
@@ -42,6 +42,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     # iothread = "true"
   }
 
+  # for 'Console' display
   serial_device {
     device = "socket"
   }
@@ -57,7 +58,8 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
 
   scsi_hardware = "virtio-scsi-pci"
 
-  # boot from the CD ROM by default first then the disk (if we added an ISO image to the VM later on)
+  # boot from the CD ROM by default first then the disk
+  # If we decided to add an ISO image to a cloned VM later on
   boot_order = ["ide3", "scsi0"]
 
   operating_system {
@@ -65,6 +67,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   }
 
   agent {
+    # The qemu-guest-agent needs to be installed and running inside the VM
     enabled = true
   }
 
@@ -78,11 +81,11 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
         address = "dhcp"
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.cloud_init_config.id
+    user_data_file_id = proxmox_virtual_environment_file.cloud_init_config_regular.id
   }
 }
 
-resource "proxmox_virtual_environment_file" "cloud_init_config" {
+resource "proxmox_virtual_environment_file" "cloud_init_config_regular" {
   datastore_id = "local"
   content_type = "snippets"
   node_name    = var.pve_hostname
@@ -91,19 +94,16 @@ resource "proxmox_virtual_environment_file" "cloud_init_config" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: ubuntu-template
+    hostname: ubuntu-vm
     user:
-      name: ${var.vm_username}
-      lock_passwd: true
+      name: ${var.vm_regular_username}
+      lock_passwd: false
+      passwd: ${var.vm_regular_password}
       groups:
         - sudo
-      sudo: ALL=(ALL) NOPASSWD:ALL
       shell: /bin/bash
       ssh_authorized_keys:
         - ${trimspace(file(var.vm_ssh_pub_key))}
-    # runcmd:
-    #     - systemctl enable qemu-guest-agent
-    #     - systemctl start qemu-guest-agent
     packages:
         - qemu-guest-agent
         - net-tools
@@ -114,6 +114,6 @@ resource "proxmox_virtual_environment_file" "cloud_init_config" {
     ssh_pwauth: false
     EOF
 
-    file_name = "ubuntu-cloud-user-data-cloud-config.yaml"
+    file_name = "regular-user-config.yaml"
   }
 }
