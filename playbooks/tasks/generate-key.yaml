@@ -42,3 +42,5 @@
   changed_when: ((key_gen.changed) and (not key_gen.failed)) or (not key_loaded)
   ansible.builtin.command:
     cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ item.key_filename }}"
+
+# TODO: add a task to edit ~/.ssh/config file and add relevant sections if they don't exist

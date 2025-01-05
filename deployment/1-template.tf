@@ -51,22 +51,23 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
 
   cdrom {
     enabled = true
+    # interface = "ide3" # this is already the default
+    # file_id = "none"
   }
 
   scsi_hardware = "virtio-scsi-pci"
 
-  boot_order = ["scsi0"]
+  # boot from the CD ROM by default first then the disk (if we added an ISO image to the VM later on)
+  boot_order = ["ide3", "scsi0"]
 
   operating_system {
     type = "l26"
   }
 
-  # ⚠️
   agent {
-    enabled = false
+    enabled = true
   }
 
-  # ⚠️
   initialization {
     # interface = "ide2" # the default interface
     ip_config {
@@ -77,12 +78,42 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
         address = "dhcp"
       }
     }
-    user_account {
-      keys = [trimspace(file(var.vm_ssh_pub_key))]
-      # password = random_password.ubuntu_vm_password.result
-      username = var.vm_username
-      password = var.vm_password
-    }
-    # user_data_file_id = proxmox_virtual_environment_file.cloud_config.id
+    user_data_file_id = proxmox_virtual_environment_file.cloud_init_config.id
+  }
+}
+
+resource "proxmox_virtual_environment_file" "cloud_init_config" {
+  datastore_id = "local"
+  content_type = "snippets"
+  node_name    = var.pve_hostname
+  overwrite    = true
+
+  source_raw {
+    data = <<-EOF
+    #cloud-config
+    hostname: ubuntu-template
+    user:
+      name: ${var.vm_username}
+      lock_passwd: true
+      groups:
+        - sudo
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      shell: /bin/bash
+      ssh_authorized_keys:
+        - ${trimspace(file(var.vm_ssh_pub_key))}
+    # runcmd:
+    #     - systemctl enable qemu-guest-agent
+    #     - systemctl start qemu-guest-agent
+    packages:
+        - qemu-guest-agent
+        - net-tools
+    package_update: true
+    package_upgrade: true
+    package_reboot_if_required: true
+    disable_root: true
+    ssh_pwauth: false
+    EOF
+
+    file_name = "ubuntu-cloud-user-data-cloud-config.yaml"
   }
 }

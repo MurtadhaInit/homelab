@@ -28,14 +28,19 @@ variable "vm_username" {
   default     = "murtadha"
 }
 
-variable "vm_password" {
-  type        = string
-  description = "The default password to use on all VMs"
-}
-
 # TODO: generate a separate key for each VM
 variable "vm_ssh_pub_key" {
   type        = string
   description = "The default public SSH key to supply to all VMs"
   default     = "~/.ssh/keys/proxmox-vms.pub"
+}
+
+variable "vm_static_ip" {
+  type        = string
+  description = "The static IP address for the core ubuntu VM with Docker"
+}
+
+variable "vm_gateway_ip" {
+  type        = string
+  description = "The IP address for the default gateway for core ubuntu VM with Docker"
 }
