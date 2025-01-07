@@ -98,7 +98,7 @@ resource "proxmox_virtual_environment_file" "cloud_init_config_regular" {
     user:
       name: ${var.vm_regular_username}
       lock_passwd: false
-      passwd: ${var.vm_regular_password}
+      passwd: ${data.external.reg_password_hash.result.hash}
       groups:
         - sudo
       shell: /bin/bash
@@ -116,4 +116,9 @@ resource "proxmox_virtual_environment_file" "cloud_init_config_regular" {
 
     file_name = "regular-user-config.yaml"
   }
+}
+
+data "external" "reg_password_hash" {
+  # the salt is only provided to guarantee idempotency
+  program = ["./hash-password.py", var.vm_regular_password, var.vm_regular_pass_salt]
 }

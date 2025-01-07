@@ -4,8 +4,14 @@ terraform {
       source = "bpg/proxmox"
       # version = "0.69.0"
     }
+    external = {
+      source = "hashicorp/external"
+      # version = "2.3.4"
+    }
   }
 }
+
+provider "external" {}
 
 provider "proxmox" {
   endpoint = var.pve_host_ip
