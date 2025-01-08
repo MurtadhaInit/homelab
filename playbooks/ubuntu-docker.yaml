@@ -5,6 +5,7 @@
 
   tasks:
     - name: Add Docker GPG apt Key
+      become: true
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/keyrings/docker.asc

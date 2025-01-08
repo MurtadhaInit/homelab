@@ -118,6 +118,9 @@ resource "proxmox_virtual_environment_file" "cloud_init_config_regular" {
     packages:
         - qemu-guest-agent
         - net-tools
+    runcmd:
+      - sudo systemctl enable qemu-guest-agent
+      - sudo systemctl start qemu-guest-agent
     package_update: true
     package_upgrade: true
     package_reboot_if_required: true
