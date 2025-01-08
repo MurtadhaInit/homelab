@@ -47,7 +47,9 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     device = "socket"
   }
   vga {
-    type = "serial0"
+    type = "std"
+    # type = "serial0"
+    # clipboard = "vnc"
   }
 
   cdrom {
@@ -95,15 +97,24 @@ resource "proxmox_virtual_environment_file" "cloud_init_config_regular" {
     data = <<-EOF
     #cloud-config
     hostname: ubuntu-vm
-    user:
-      name: ${var.vm_regular_username}
-      lock_passwd: false
-      passwd: ${data.external.reg_password_hash.result.hash}
-      groups:
-        - sudo
-      shell: /bin/bash
-      ssh_authorized_keys:
-        - ${trimspace(file(var.vm_ssh_pub_key))}
+    users:
+      - name: ${var.vm_regular_username}
+        lock_passwd: false
+        passwd: ${data.external.reg_password_hash.result.hash}
+        groups:
+          - sudo
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - ${trimspace(file(var.vm_ssh_pub_key))}
+      - name: ${var.vm_automation_username}
+        gecos: Automation User
+        lock_passwd: true
+        groups:
+          - sudo
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - ${trimspace(file(var.vm_ssh_pub_key))}
     packages:
         - qemu-guest-agent
         - net-tools
@@ -120,5 +131,5 @@ resource "proxmox_virtual_environment_file" "cloud_init_config_regular" {
 
 data "external" "reg_password_hash" {
   # the salt is only provided to guarantee idempotency
-  program = ["./hash-password.py", var.vm_regular_password, var.vm_regular_pass_salt]
+  program = ["./utils/hash-password.py", var.vm_regular_password, var.vm_regular_pass_salt]
 }
