@@ -1,20 +1,19 @@
-resource "proxmox_virtual_environment_vm" "ubuntu_template" {
-  name        = "ubuntu-template"
-  description = "Preconfigured template based on an Ubuntu cloud image"
+resource "proxmox_virtual_environment_vm" "ubuntu_with_docker" {
+  name        = "ubuntu-with-docker"
+  description = "A VM generated from an Ubuntu cloud image configured with Cloud Init for Docker containers deployment"
   tags        = ["terraform"]
   node_name   = var.pve_hostname
-  vm_id       = 500
+  vm_id       = 600
   on_boot     = true
-  started     = false
-  template    = true
+  started     = true
 
   memory {
-    dedicated = 2048
+    dedicated = 4096
     floating  = 0 # disables "ballooning device"
   }
 
   cpu {
-    cores = 2
+    cores = 4
     numa  = true
     type  = "host"
     # units = 100
@@ -27,7 +26,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
 
   disk {
     datastore_id = "local-lvm"
-    interface    = "scsi0" # virtio0
+    interface    = "scsi0" # or virtio0 ?
     discard      = "on"
     iothread     = "true"
     ssd          = true
@@ -46,17 +45,16 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     # clipboard = "vnc"
   }
 
-  cdrom {
-    # enabled = true
-    # interface = "ide3" # this is already the default
-    # file_id = "none"
-  }
+  # cdrom {
+  # enabled = true
+  # interface = "ide3" # this is already the default
+  # file_id = "none"
+  # }
 
   scsi_hardware = "virtio-scsi-pci"
 
   # boot from the CD ROM by default first then the disk
-  # If we decided to add an ISO image to a cloned VM later on
-  boot_order = ["ide3", "scsi0"]
+  # boot_order = ["ide3", "scsi0"]
 
   operating_system {
     type = "l26"
@@ -71,47 +69,36 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     # interface = "ide2" # the default interface
     ip_config {
       ipv4 {
-        address = "dhcp"
-      }
-      ipv6 {
-        address = "dhcp"
+        address = var.ubuntu_docker_static_ip
+        gateway = var.vm_gateway
       }
     }
-    user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config_regular_vms.id
+    user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config_docker_vm.id
   }
 }
 
-resource "proxmox_virtual_environment_file" "user_data_cloud_config_regular_vms" {
-  datastore_id = "local"
+resource "proxmox_virtual_environment_file" "user_data_cloud_config_docker_vm" {
   content_type = "snippets"
+  datastore_id = "local"
   node_name    = var.pve_hostname
   overwrite    = true
 
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: ubuntu-vm
-    users:
-      - name: ${var.vm_regular_username}
-        lock_passwd: false
-        passwd: ${data.external.reg_password_hash.result.hash}
-        groups:
-          - sudo
-        shell: /bin/bash
-        ssh_authorized_keys:
-          - ${trimspace(file(var.vm_ssh_public_key))}
-      - name: ${var.vm_automation_username}
-        gecos: Automation User
-        lock_passwd: true
-        groups:
-          - sudo
-        sudo: ALL=(ALL) NOPASSWD:ALL
-        shell: /bin/bash
-        ssh_authorized_keys:
-          - ${trimspace(file(var.vm_ssh_public_key))}
+    hostname: ubuntu-with-docker
+    user:
+      name: ${var.vm_automation_username}
+      gecos: Automation User
+      lock_passwd: true
+      groups:
+        - sudo
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      shell: /bin/bash
+      ssh_authorized_keys:
+        - ${trimspace(file(var.vm_ssh_public_key))}
     packages:
         - qemu-guest-agent
-        - net-tools
     runcmd:
       - systemctl enable qemu-guest-agent
       - systemctl start qemu-guest-agent
@@ -123,6 +110,12 @@ resource "proxmox_virtual_environment_file" "user_data_cloud_config_regular_vms"
     ssh_pwauth: false
     EOF
 
-    file_name = "user-data-cloud-config-regular-vms.yaml"
+    file_name = "user-data-cloud-config-docker-vm.yaml"
   }
+}
+
+variable "ubuntu_docker_static_ip" {
+  type        = string
+  description = "The static IP address for the core ubuntu VM configured with Docker"
+  default     = "10.20.30.41/24"
 }
