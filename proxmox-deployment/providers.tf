@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source = "bpg/proxmox"
-      # version = "0.69.0"
+      # version = "0.76.0"
     }
     external = {
       source = "hashicorp/external"
@@ -14,22 +14,40 @@ terraform {
 provider "external" {}
 
 provider "proxmox" {
-  endpoint = var.pve_host_ip
+  endpoint = "https://${var.pve_host_ip}:${var.pve_host_port}/"
   username = "${var.pve_host_user}@pam"
   password = var.pve_host_pass
+
   # because self-signed TLS certificate is in use
   insecure = true
-  tmp_dir  = "../.tmp/"
+
+  # a directory with enough space when using proxmox_virtual_environment_file
+  tmp_dir = "../.tmp/"
 
   ssh {
-    agent    = true
+    agent = true
+    # a PAM user with password-less sudo privileges
     username = var.pve_host_user
+    node {
+      name    = var.pve_hostname
+      address = var.pve_host_ip
+    }
+    # additional nodes can be added below the same way
   }
+
+  # generate a random ID for each VM or Container when the vm_id attribute is not specified
+  # this is to guarantee non-conflict of IDs
+  random_vm_ids = true
 }
 
 variable "pve_host_ip" {
   type        = string
-  description = "The Proxmox host endpoint"
+  description = "The Proxmox host endpoint - IP address"
+}
+
+variable "pve_host_port" {
+  type        = string
+  description = "The Proxmox host endpoint - port number"
 }
 
 variable "pve_host_user" {
