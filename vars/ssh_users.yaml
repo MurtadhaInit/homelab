@@ -5,5 +5,5 @@
 ssh_users: [
   { user_name: "automator", type: "automation user", key_filename: proxmox-hosts-automation, pub_key: "~/.ssh/keys/proxmox-hosts-automation.pub" },
   { user_name: "murtadha", type: "regular user", key_filename: proxmox-hosts, pub_key: "~/.ssh/keys/proxmox-hosts.pub" },
-  { user_name: "murtadah", type: "VM user", key_filename: proxmox-vms, pub_key: "~/.ssh/keys/proxmox-vms.pub" }
+  { user_name: "murtadha", type: "VM user", key_filename: proxmox-vms, pub_key: "~/.ssh/keys/proxmox-vms.pub" }
 ]
