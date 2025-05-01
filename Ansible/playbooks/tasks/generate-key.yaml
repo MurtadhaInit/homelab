@@ -1,0 +1,46 @@
+---
+- name: "Check if the SSH key exists for {{ item.type }}"
+  ansible.builtin.stat:
+    path: "~/.ssh/keys/{{ item.key_filename }}"
+  register: ssh_key
+
+- name: "Get the passphrase for key to be generated for {{ item.type }}"
+  ansible.builtin.pause:
+    prompt: "Enter the SSH passphrase for the {{ item.type }} key"
+    echo: false
+  when: not ssh_key.stat.exists
+  register: ssh_passphrase
+
+- name: "Generate the SSH key for {{ item.type }}"
+  when: not ssh_key.stat.exists
+  # NOTE: the user module doesn't have an option to set iterations (e.g. -t 100)
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    generate_ssh_key: true
+    ssh_key_type: ed25519
+    ssh_key_file: ".ssh/keys/{{ item.key_filename }}"
+    ssh_key_passphrase: "{{ ssh_passphrase.user_input }}"
+    force: false
+  register: key_gen
+
+- name: Add the fingerprint to a temp file to check for it in later runs
+  when: (key_gen.changed) and (not key_gen.failed)
+  ansible.builtin.copy:
+    content: "{{ key_gen.ssh_fingerprint }}"
+    dest: "../../.tmp/{{ item.key_filename }}_fingerprint"
+    mode: "600"
+
+  # The fingerprint file has to be present
+- name: Check if the key was added to the ssh-agent
+  ansible.builtin.set_fact:
+    key_loaded: >-
+      {{ lookup('file', '../../.tmp/' + item.key_filename + '_fingerprint') in lookup('pipe', 'ssh-add -l') }}
+
+  # TODO: add an additional check to only run on macos
+- name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
+  when: ((key_gen.changed) and (not key_gen.failed)) or (not key_loaded)
+  changed_when: ((key_gen.changed) and (not key_gen.failed)) or (not key_loaded)
+  ansible.builtin.command:
+    cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ item.key_filename }}"
+
+# TODO: add a task to edit ~/.ssh/config file and add relevant sections if they don't exist

@@ -1,0 +1,12 @@
+---
+- name: Generate SSH key pairs for remote Proxmox management
+  hosts: localhost
+  connection: local
+
+  vars_files:
+    - ../vars/ssh_users.yaml
+
+  tasks:
+    - name: Generate SSH key pairs for users
+      ansible.builtin.include_tasks: tasks/generate-key.yaml
+      loop: "{{ ssh_users }}"
