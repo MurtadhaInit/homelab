@@ -1,5 +1,5 @@
-resource "proxmox_virtual_environment_vm" "ubuntu_with_docker" {
-  name        = "ubuntu-with-docker"
+resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
+  name        = "ubuntu-docker"
   description = "A VM generated from an Ubuntu cloud image configured with Cloud Init for Docker containers deployment"
   tags        = ["terraform"]
   node_name   = var.pve_hostname
@@ -30,7 +30,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_with_docker" {
     discard      = "on"
     iothread     = "true"
     ssd          = true
-    size         = 20
+    size         = 40
     file_id      = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
     # file_format = "raw" # what will be applied anyways
   }
@@ -86,7 +86,7 @@ resource "proxmox_virtual_environment_file" "user_data_cloud_config_docker_vm" {
   source_raw {
     data = <<-EOF
     #cloud-config
-    hostname: ubuntu-with-docker
+    hostname: ubuntu-docker
     user:
       name: ${var.vm_automation_username}
       gecos: Automation User
