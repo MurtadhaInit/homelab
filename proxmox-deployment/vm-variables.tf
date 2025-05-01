@@ -5,7 +5,8 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
   node_name    = var.pve_hostname
 
   # The URL for the latest Ubuntu Server LTS minimal cloud image
-  url = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+  url       = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+  overwrite = false
 }
 
 # === Shared between various Linux VMs ===
