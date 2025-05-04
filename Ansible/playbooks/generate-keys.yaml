@@ -1,5 +1,5 @@
 ---
-- name: Generate SSH key pairs for remote Proxmox management
+- name: Generate SSH key pairs locally for the management of Proxmox hosts and VMs
   hosts: localhost
   connection: local
 

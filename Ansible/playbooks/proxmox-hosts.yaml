@@ -1,4 +1,5 @@
 ---
+# The root password is required one time only with --ask-pass to set up SSH keys
 - name: Prepare Proxmox nodes for remote management
   hosts: proxmox_hosts
   remote_user: root
@@ -116,8 +117,7 @@
           when: not pve_web_users.stdout is search(regular_user + '@pam')
           changed_when: not pve_web_users.stdout is search(regular_user + '@pam')
           ansible.builtin.command:
-            # TODO: use a jinja filter to capitalise the first letter of the first name using the user name
-            cmd: "pveum user add {{ regular_user }}@pam --email {{ email }} --firstname 'Murtadha' --groups admins"
+            cmd: "pveum user add {{ regular_user }}@pam --email {{ email }} --firstname '{{ regular_user | capitalize }}' --groups admins"
           # NOTE: TFA needs to be enabled from the web GUI (for both this and the root user)
 
           # The password used for Web GUI is going to be the same one setup for the underlying PAM user
@@ -125,7 +125,6 @@
           when: not pve_web_users.stdout is search(automation_user + '@pam')
           changed_when: not pve_web_users.stdout is search(automation_user + '@pam')
           ansible.builtin.command:
-            # use a jinja filter to capitalise the first letter of the first name using the user name
             cmd: "pveum user add {{ automation_user }}@pam --groups admins"
 
     - name: Enable the snippets content type for local storage
