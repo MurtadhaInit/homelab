@@ -1,6 +1,6 @@
 
 global_python_deps := "ansible ansible-lint passlib"
-pyenv_python_interpreter := `pyenv which python`
+# pyenv_python_interpreter := `pyenv which python`
 
 # List available recipes
 default:
@@ -19,7 +19,12 @@ pve-hosts:
   @echo "⚙️ Preparing Proxmox hosts...\n"
   ansible-playbook playbooks/proxmox-hosts.yaml
 
-# Build resources on Proxmox hosts and confugre Proxmox hosts further
+# Plan resources and required changed on Proxmox hosts
 [working-directory: 'Terraform-OpenTofu']
 vms-plan:
   terraform plan
+
+# Build resources on Proxmox hosts + further configuration
+[working-directory: 'Terraform-OpenTofu']
+vms-apply:
+  terraform apply -auto-approve
