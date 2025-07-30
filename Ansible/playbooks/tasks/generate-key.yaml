@@ -13,13 +13,15 @@
 
 - name: "Generate the SSH key for {{ item.type }}"
   when: not ssh_key.stat.exists
-  # NOTE: the user module doesn't have an option to set iterations (e.g. -t 100)
+  # NOTE: the user module doesn't have an option to set iterations (e.g. -a 100)
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ lookup('env', 'USER') }}"
     generate_ssh_key: true
     ssh_key_type: ed25519
     ssh_key_file: ".ssh/keys/{{ item.key_filename }}"
     ssh_key_passphrase: "{{ ssh_passphrase.user_input }}"
+    # TODO: uncomment in the future because this might change the current keys
+    # comment: "Host: {{ ansible_hostname }}"
     force: false
   register: key_gen
 
@@ -28,6 +30,7 @@
   ansible.builtin.copy:
     content: "{{ key_gen.ssh_fingerprint }}"
     dest: "../../.tmp/{{ item.key_filename }}_fingerprint"
+    # TODO: change to better permissions like read-only by the user
     mode: "600"
 
   # The fingerprint file has to be present
@@ -36,11 +39,21 @@
     key_loaded: >-
       {{ lookup('file', '../../.tmp/' + item.key_filename + '_fingerprint') in lookup('pipe', 'ssh-add -l') }}
 
-  # TODO: add an additional check to only run on macos
 - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
-  when: ((key_gen.changed) and (not key_gen.failed)) or (not key_loaded)
+  when: ansible_system == "Darwin" and (((key_gen.changed) and (not key_gen.failed)) or (not key_loaded))
   changed_when: ((key_gen.changed) and (not key_gen.failed)) or (not key_loaded)
   ansible.builtin.command:
     cmd: "ssh-add --apple-use-keychain ~/.ssh/keys/{{ item.key_filename }}"
 
+- name: Add the key to the ssh-agent (Linux)
+  when: ansible_system == "Linux" and (((key_gen.changed) and (not key_gen.failed)) or (not key_loaded))
+  changed_when: ((key_gen.changed) and (not key_gen.failed)) or (not key_loaded)
+  ansible.builtin.command:
+    # TODO: is this going to cause an interactive prompt for the passphrase?
+    # and if so, can we pipe it from the passphrase variable we gathered earlier?
+    cmd: "ssh-add ~/.ssh/keys/{{ item.key_filename }}"
+
 # TODO: add a task to edit ~/.ssh/config file and add relevant sections if they don't exist
+# e.g., use the block in file or line in file modules to check that all hosts have their keys
+# added to the agent and identities only are allowed. Also add a previous task to check for
+# the existence of the config file and create it if not.
