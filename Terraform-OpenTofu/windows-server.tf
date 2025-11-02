@@ -50,6 +50,7 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
     cores = 4
     numa  = true
     type  = "host"
+    units = 1024
   }
   usb {
     usb3 = true

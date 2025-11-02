@@ -17,7 +17,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     cores = 2
     numa  = true
     type  = "host"
-    # units = 100
+    units = 1024
   }
 
   network_device {

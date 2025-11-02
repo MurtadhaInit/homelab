@@ -16,7 +16,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
     cores = 4
     numa  = true
     type  = "host"
-    # units = 100
+    units = 1024
   }
 
   network_device {
