@@ -7,6 +7,6 @@
     - ../vars/ssh_users.yaml
 
   tasks:
-    - name: Generate SSH key pairs for users
+    - name: Generate SSH key pairs for the specified users
       ansible.builtin.include_tasks: tasks/generate-key.yaml
       loop: "{{ ssh_users }}"

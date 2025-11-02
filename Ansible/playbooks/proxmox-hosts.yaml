@@ -1,19 +1,17 @@
 ---
-# The root password is required one time only with --ask-pass to set up SSH keys
+# NOTE: the root password is required one time only with --ask-pass to set up SSH keys for root
 - name: Prepare Proxmox nodes for remote management
   hosts: proxmox_hosts
   remote_user: root
   vars:
-    automation_user: "{{ ssh_users[0]['user_name'] }}"
-    automation_user_pub_key: "{{ ssh_users[0]['pub_key'] }}"
-    regular_user: "{{ ssh_users[1]['user_name'] }}"
-    regular_user_pub_key: "{{ ssh_users[1]['pub_key'] }}"
+    regular_user: "{{ ssh_users[0]['user_name'] }}"
+    regular_user_pub_key: "{{ ssh_users[0]['pub_key'] }}"
   vars_files:
     - ../vars/secrets.yaml
     - ../vars/ssh_users.yaml
 
   tasks:
-    - name: Supply the public SSH key generated to the root user first
+    - name: Supply the generated public SSH key to the root user first
       ansible.posix.authorized_key:
         key: "{{ lookup('file', regular_user_pub_key) }}"
         user: root
@@ -25,35 +23,7 @@
         name: sudo
         state: present
 
-    - name: Create a specific automation user for performing future Ansible tasks
-      block:
-        - name: Create the automation user
-          ansible.builtin.user:
-            name: "{{ automation_user }}"
-            state: present
-            groups:
-              - sudo
-            shell: /bin/bash
-            comment: Automation User
-            # password: '!' # pass is enabled for the TF provider (preferred over API tokens)
-            password: "{{ automation_user_pass | password_hash('sha512', salt, rounds=657235) }}"
-
-        - name: Supply the public SSH key generated for the automation user
-          ansible.posix.authorized_key:
-            key: "{{ lookup('file', automation_user_pub_key) }}"
-            user: "{{ automation_user }}"
-            exclusive: true
-            state: present
-
-        - name: Allow sudo without password for the automation user
-          ansible.builtin.lineinfile:
-            path: "/etc/sudoers"
-            search_string: "{{ automation_user }}"
-            line: "{{ automation_user }} ALL=(ALL) NOPASSWD: ALL"
-            state: present
-            validate: "/usr/sbin/visudo -cf %s"
-
-    - name: Create a regular user for other manual management tasks
+    - name: Create a regular user for manual management and automation tasks
       block:
         - name: Create the regular user
           ansible.builtin.user:
@@ -64,12 +34,21 @@
             shell: /bin/bash
             password: "{{ regular_user_pass | password_hash('sha512', salt, rounds=657235) }}"
 
-        - name: Supply the public SSH key generated for the regular user
+        - name: Supply the generated public SSH key to the regular user (same one for root)
           ansible.posix.authorized_key:
             key: "{{ lookup('file', regular_user_pub_key) }}"
             user: "{{ regular_user }}"
             exclusive: true
             state: present
+
+        - name: Allow sudo without password for the regular user (primarily for automation)
+          ansible.builtin.copy:
+            dest: "/etc/sudoers.d/{{ regular_user }}"
+            content: "{{ regular_user }} ALL=(ALL) NOPASSWD: ALL\n"
+            mode: "0440"
+            owner: root
+            group: root
+            validate: "/usr/sbin/visudo -cf %s"
 
     - name: Disable SSH password authentication on the server
       ansible.builtin.lineinfile:
@@ -82,50 +61,43 @@
 
     - name: Make the required (equivalent) changes on the PVE Web Gui side
       block:
-        - name: Check if the admins group exists
+        - name: List available groups
           changed_when: false
           ansible.builtin.command:
             cmd: pveum group list
           register: pve_groups
 
-        - name: Create the admins group
+        - name: Create the admins group if it doesn't exist
           when: not pve_groups.stdout is search('admins')
           changed_when: not pve_groups.stdout is search('admins')
           ansible.builtin.command:
             cmd: 'pveum group add admins --comment "Admins Group"'
 
-        - name: Check if the admins group has 'Administrator' permissions
+        - name: List assigned roles
           changed_when: false
           ansible.builtin.command:
             cmd: pveum acl list
           register: pve_perms
 
-        - name: Assign the Administrator role (i.e. permissions) to the 'admins' group
+        - name: Assign the 'Administrator' role (i.e. permissions) to the 'admins' group if it doesn't have it
           when: not pve_perms.stdout is search('admins')
           changed_when: not pve_perms.stdout is search('admins')
           ansible.builtin.command:
             cmd: 'pveum acl modify / --roles Administrator --groups admins'
 
-        - name: Check for the existent Web GUI users
+        - name: List existent Web GUI users
           changed_when: false
           ansible.builtin.command:
             cmd: pveum user list
           register: pve_web_users
 
-          # The password used for Web GUI is going to be the same one setup for the underlying PAM user
+          # NOTE: the password used for Web GUI is going to be the same one set for the underlying PAM user
+          # NOTE: 2FA needs to be enabled manually from the web GUI (for both this and the root user)
         - name: Mirror (i.e. create) the regular user if not present
           when: not pve_web_users.stdout is search(regular_user + '@pam')
           changed_when: not pve_web_users.stdout is search(regular_user + '@pam')
           ansible.builtin.command:
             cmd: "pveum user add {{ regular_user }}@pam --email {{ email }} --firstname '{{ regular_user | capitalize }}' --groups admins"
-          # NOTE: TFA needs to be enabled from the web GUI (for both this and the root user)
-
-          # The password used for Web GUI is going to be the same one setup for the underlying PAM user
-        - name: Mirror (i.e. create) the automation user if not present
-          when: not pve_web_users.stdout is search(automation_user + '@pam')
-          changed_when: not pve_web_users.stdout is search(automation_user + '@pam')
-          ansible.builtin.command:
-            cmd: "pveum user add {{ automation_user }}@pam --groups admins"
 
     - name: Enable the snippets content type for local storage
       changed_when: true

@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "passlib",
+# ]
+# ///
 
 """
 Take a password and return a sha512-crypt hash for use in Unix systems.

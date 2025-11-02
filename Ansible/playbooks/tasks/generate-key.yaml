@@ -20,8 +20,6 @@
     ssh_key_type: ed25519
     ssh_key_file: ".ssh/keys/{{ item.key_filename }}"
     ssh_key_passphrase: "{{ ssh_passphrase.user_input }}"
-    # TODO: uncomment in the future because this might change the current keys
-    # comment: "Host: {{ ansible_hostname }}"
     force: false
   register: key_gen
 
@@ -29,15 +27,14 @@
   when: (key_gen.changed) and (not key_gen.failed)
   ansible.builtin.copy:
     content: "{{ key_gen.ssh_fingerprint }}"
-    dest: "../../.tmp/{{ item.key_filename }}_fingerprint"
-    # TODO: change to better permissions like read-only by the user
-    mode: "600"
+    dest: "../../.tmp/{{ item.key_filename }}-fingerprint"
+    mode: "0600"
 
-  # The fingerprint file has to be present
+  # NOTE: the fingerprint file has to be present
 - name: Check if the key was added to the ssh-agent
   ansible.builtin.set_fact:
     key_loaded: >-
-      {{ lookup('file', '../../.tmp/' + item.key_filename + '_fingerprint') in lookup('pipe', 'ssh-add -l') }}
+      {{ lookup('file', '../../.tmp/' + item.key_filename + '-fingerprint') in lookup('pipe', 'ssh-add -l') }}
 
 - name: Add the key to the ssh-agent and store the passphrase in keychain (macOS)
   when: ansible_system == "Darwin" and (((key_gen.changed) and (not key_gen.failed)) or (not key_loaded))
@@ -55,5 +52,6 @@
 
 # TODO: add a task to edit ~/.ssh/config file and add relevant sections if they don't exist
 # e.g., use the block in file or line in file modules to check that all hosts have their keys
-# added to the agent and identities only are allowed. Also add a previous task to check for
+# added to the agent and only identities are allowed. Also add a previous task to check for
 # the existence of the config file and create it if not.
+# Using home-manager is another idea/consideration.
