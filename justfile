@@ -13,6 +13,7 @@ pve-hosts:
   @echo "⚙️ Generating SSH keys...\n"
   ansible-playbook playbooks/generate-keys.yaml
   @echo "⚙️ Preparing Proxmox hosts...\n"
+  # run with --ask-pass the first time
   ansible-playbook playbooks/proxmox-hosts.yaml
 
 # Plan resources and required changes on Proxmox hosts

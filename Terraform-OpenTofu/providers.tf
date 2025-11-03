@@ -1,22 +1,8 @@
-terraform {
-  required_providers {
-    proxmox = {
-      source  = "bpg/proxmox"
-      version = "0.85.1"
-    }
-    external = {
-      source  = "hashicorp/external"
-      version = "2.3.5"
-    }
-  }
-}
-
 provider "external" {}
 
 provider "proxmox" {
-  endpoint = "https://${var.pve_host_ip}:${var.pve_host_port}/"
-  username = "${var.pve_host_user}@pam"
-  password = var.pve_host_pass
+  endpoint  = "https://${var.pve_host_ip}:${var.pve_host_port}/"
+  api_token = var.pve_host_api_token
 
   # because self-signed TLS certificate is in use
   insecure = true
@@ -38,29 +24,4 @@ provider "proxmox" {
   # generate a random ID for each VM or Container when the vm_id attribute is not specified
   # this is to guarantee non-conflict of IDs
   random_vm_ids = true
-}
-
-variable "pve_host_ip" {
-  type        = string
-  description = "The Proxmox host endpoint - IP address"
-}
-
-variable "pve_host_port" {
-  type        = string
-  description = "The Proxmox host endpoint - port number"
-}
-
-variable "pve_host_user" {
-  type        = string
-  description = "The Proxmox host username to be used (PAM user)"
-}
-
-variable "pve_host_pass" {
-  type        = string
-  description = "The Proxmox host user password (PAM user)"
-}
-
-variable "pve_hostname" {
-  type        = string
-  description = "The hostname given for the Proxmox host"
 }

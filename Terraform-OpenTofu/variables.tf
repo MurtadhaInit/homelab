@@ -1,12 +1,27 @@
-# === Images ===
-resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
-  content_type = "iso"
-  datastore_id = "local"
-  node_name    = var.pve_hostname
+# === Proxmox variables ===
+variable "pve_host_ip" {
+  type        = string
+  description = "The Proxmox host endpoint - IP address"
+}
 
-  # The URL for the latest Ubuntu Server LTS minimal cloud image
-  url       = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
-  overwrite = false
+variable "pve_host_port" {
+  type        = string
+  description = "The Proxmox host endpoint - port number"
+}
+
+variable "pve_host_user" {
+  type        = string
+  description = "The Proxmox host username to be used (PAM user)"
+}
+
+variable "pve_host_api_token" {
+  type        = string
+  description = "The Proxmox host API token"
+}
+
+variable "pve_hostname" {
+  type        = string
+  description = "The hostname given for the Proxmox host"
 }
 
 # === Shared between various Linux VMs ===
@@ -14,12 +29,6 @@ variable "vm_ssh_public_key" {
   type        = string
   description = "The default public SSH key to supply to all VMs"
   default     = "~/.ssh/keys/proxmox-vms.pub"
-}
-
-variable "vm_automation_username" {
-  type        = string
-  description = "The username to set by default for all Linux VMs"
-  default     = "automator"
 }
 
 variable "vm_gateway" {
@@ -47,7 +56,9 @@ variable "vm_regular_pass_salt" {
   sensitive   = true
 }
 
-data "external" "reg_password_hash" {
-  # the salt is only provided to guarantee idempotency
-  program = ["./utils/hash-password.py", var.vm_regular_password, var.vm_regular_pass_salt]
+# === vm - ubuntu_docker
+variable "ubuntu_docker_static_ip" {
+  type        = string
+  description = "The static IP address for the core ubuntu VM configured with Docker"
+  default     = "10.20.30.41/24"
 }
