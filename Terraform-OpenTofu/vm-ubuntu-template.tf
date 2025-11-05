@@ -29,7 +29,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     datastore_id = "local-lvm"
     interface    = "scsi0" # virtio0
     discard      = "on"
-    iothread     = "true"
+    iothread     = true # for best disk performance: iothread + virtio-scsi-single
     ssd          = true
     size         = 20
     file_id      = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
@@ -52,7 +52,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
     # file_id = "none"
   }
 
-  scsi_hardware = "virtio-scsi-pci"
+  scsi_hardware = "virtio-scsi-single"
 
   # boot from the CD ROM by default first then the disk
   # If we decided to add an ISO image to a cloned VM later on

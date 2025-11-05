@@ -102,7 +102,7 @@
     - name: Enable the snippets content type for local storage
       changed_when: true
       ansible.builtin.command:
-        cmd: 'pvesm set local --content vztmpl,backup,iso,snippets'
+        cmd: 'pvesm set local --content vztmpl,backup,iso,snippets,import'
 
   handlers:
     - name: Restart SSH
