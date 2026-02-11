@@ -6,7 +6,15 @@
   vars:
     regular_user: "{{ ssh_users[0]['user_name'] }}"
     regular_user_pub_key: "{{ ssh_users[0]['pub_key'] }}"
+    proxmox_api:
+      host: "{{ ansible_host }}"
+      port: 8006
+      user: "root@pam"
+      token_id: automation # generate tokens with: pveum user token add root@pam automation --privsep 0
+      token_secret: "{{ root_user_api_token_secret }}" # NOTE: or gen new token and pass the var value at runtime
+      validate_certs: false
   vars_files:
+    # for regular_user_pass, salt, email, and root_user_api_token_secret
     - ../vars/secrets.yaml
     - ../vars/ssh_users.yaml
 
@@ -24,85 +32,99 @@
         state: present
 
     - name: Create a regular user for manual management and automation tasks
-      block:
-        - name: Create the regular user
-          ansible.builtin.user:
-            name: "{{ regular_user }}"
-            state: present
-            groups:
-              - sudo
-            shell: /bin/bash
-            password: "{{ regular_user_pass | password_hash('sha512', salt, rounds=657235) }}"
+      ansible.builtin.user:
+        name: "{{ regular_user }}"
+        state: present
+        groups:
+          - sudo
+        shell: /bin/bash
+        password: "{{ regular_user_pass | password_hash('sha512', salt, rounds=657235) }}"
 
-        - name: Supply the generated public SSH key to the regular user (same one for root)
-          ansible.posix.authorized_key:
-            key: "{{ lookup('file', regular_user_pub_key) }}"
-            user: "{{ regular_user }}"
-            exclusive: true
-            state: present
+    - name: Supply the generated public SSH key to the regular user (same one for root)
+      ansible.posix.authorized_key:
+        key: "{{ lookup('file', regular_user_pub_key) }}"
+        user: "{{ regular_user }}"
+        exclusive: true
+        state: present
 
-        - name: Allow sudo without password for the regular user (primarily for automation)
-          ansible.builtin.copy:
-            dest: "/etc/sudoers.d/{{ regular_user }}"
-            content: "{{ regular_user }} ALL=(ALL) NOPASSWD: ALL\n"
-            mode: "0440"
-            owner: root
-            group: root
-            validate: "/usr/sbin/visudo -cf %s"
+    - name: Allow sudo without password for the regular user (primarily for automation)
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ regular_user }}"
+        content: "{{ regular_user }} ALL=(ALL) NOPASSWD: ALL\n"
+        mode: "0440"
+        owner: root
+        group: root
+        validate: "/usr/sbin/visudo -cf %s"
 
     - name: Disable SSH password authentication on the server
       ansible.builtin.lineinfile:
         path: "/etc/ssh/sshd_config"
-        search_string: "PasswordAuthentication"
+        regexp: "^#?PasswordAuthentication"
         line: "PasswordAuthentication no"
         state: present
         validate: "/usr/sbin/sshd -t -f %s"
       notify: Restart SSH
 
     - name: Make the required (equivalent) changes on the PVE Web Gui side
+      delegate_to: localhost # these modules make API calls to the Proxmox API *from* the controller
+      module_defaults:
+        group/community.proxmox.proxmox:
+          api_host: "{{ proxmox_api.host }}"
+          api_port: "{{ proxmox_api.port }}"
+          api_user: "{{ proxmox_api.user }}"
+          api_token_id: "{{ proxmox_api.token_id }}"
+          api_token_secret: "{{ proxmox_api.token_secret }}"
+          validate_certs: "{{ proxmox_api.validate_certs }}"
       block:
-        - name: List available groups
-          changed_when: false
-          ansible.builtin.command:
-            cmd: pveum group list
-          register: pve_groups
+        - name: Create the admins group
+          community.proxmox.proxmox_group:
+            name: admins
+            comment: "Admins Group"
+            state: present
+        - name: Assign the 'Administrator' role (i.e. permissions) to the 'admins' group
+          community.proxmox.proxmox_access_acl:
+            path: /
+            roleid: Administrator
+            type: group
+            ugid: admins
+            state: present
+        - name: Create the regular user, mirroring the underlying PAM user created earlier
+          community.proxmox.proxmox_user:
+            name: "{{ regular_user }}@pam"
+            firstname: "{{ regular_user | capitalize }}"
+            email: "{{ email }}"
+            groups:
+              - admins
+            # keys: # for 2FA (Yubico)
+            # NOTE: the password used for Web GUI is going to be the same one set for the underlying PAM user
+            # NOTE: 2FA needs to be enabled manually from the web GUI (for both this and the root user)
+            enable: true
 
-        - name: Create the admins group if it doesn't exist
-          when: not pve_groups.stdout is search('admins')
-          changed_when: not pve_groups.stdout is search('admins')
-          ansible.builtin.command:
-            cmd: 'pveum group add admins --comment "Admins Group"'
-
-        - name: List assigned roles
-          changed_when: false
-          ansible.builtin.command:
-            cmd: pveum acl list
-          register: pve_perms
-
-        - name: Assign the 'Administrator' role (i.e. permissions) to the 'admins' group if it doesn't have it
-          when: not pve_perms.stdout is search('admins')
-          changed_when: not pve_perms.stdout is search('admins')
-          ansible.builtin.command:
-            cmd: 'pveum acl modify / --roles Administrator --groups admins'
-
-        - name: List existent Web GUI users
-          changed_when: false
-          ansible.builtin.command:
-            cmd: pveum user list
-          register: pve_web_users
-
-          # NOTE: the password used for Web GUI is going to be the same one set for the underlying PAM user
-          # NOTE: 2FA needs to be enabled manually from the web GUI (for both this and the root user)
-        - name: Mirror (i.e. create) the regular user if not present
-          when: not pve_web_users.stdout is search(regular_user + '@pam')
-          changed_when: not pve_web_users.stdout is search(regular_user + '@pam')
-          ansible.builtin.command:
-            cmd: "pveum user add {{ regular_user }}@pam --email {{ email }} --firstname '{{ regular_user | capitalize }}' --groups admins"
-
-    - name: Enable the snippets content type for local storage
-      changed_when: true
+    - name: Check the content types for current 'local' storage
       ansible.builtin.command:
-        cmd: 'pvesm set local --content vztmpl,backup,iso,snippets,import'
+        cmd: pvesh get /storage/local --output-format json
+      changed_when: false
+      register: local_storage_config
+    - name: Enable the 'snippets' and 'import' content types for 'local' storage
+      changed_when: true
+      when: >
+        'snippets' not in (local_storage_config.stdout | from_json).content
+        or 'import' not in (local_storage_config.stdout | from_json).content
+      ansible.builtin.command:
+        cmd: "pvesm set local --content vztmpl,backup,iso,snippets,import"
+
+    # - name: Install 'amd64-microcode' after enabling the 'non-free-firmware' Debian repositories
+    #   block:
+    #     - name: Enable the non-free-firmware component in Proxmox sources
+    #       ansible.builtin.apt_repository:
+    #         repo: "deb http://deb.debian.org/debian {{ ansible_distribution_release }} main contrib non-free-firmware"
+    #         filename: debian-non-free-firmware
+    #         state: present
+    #     - name: Install amd64-microcode
+    #       ansible.builtin.apt:
+    #         name: amd64-microcode
+    #         state: present
+    #         update_cache: true
 
   handlers:
     - name: Restart SSH

@@ -1,0 +1,3 @@
+collections:
+  # ansible-galaxy collection install -r ./requirements.yml
+  - name: community.proxmox

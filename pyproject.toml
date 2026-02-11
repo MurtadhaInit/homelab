@@ -1,0 +1,13 @@
+[project]
+name = "homelab"
+version = "0.1.0"
+description = "Python dependencies for Ansible and Terraform/OpenTofu"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+  "ansible>=13.3.0",
+  "ansible-lint>=26.1.1",
+  "passlib>=1.7.4",
+  "proxmoxer>=2.2.0",
+  "requests>=2.32.5",
+]

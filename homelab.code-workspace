@@ -8,6 +8,6 @@
 		}
 	],
 	"settings": {
-		"ansible.python.interpreterPath": "python3"
+		"ansible.python.interpreterPath": "/Users/murtadha/Projects/homelab/.venv/bin/python"
 	}
 }

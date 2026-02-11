@@ -4,8 +4,11 @@ default:
 
 # Prepare the environment
 bootstrap:
-  @echo "⚙️ Installing/upgrading global Python tools with uv...\n"
-  uv tool install ansible --with-executables-from ansible-core,ansible-lint --with passlib --upgrade
+  @echo "⚙️ Installing Python tools and packages with uv...\n"
+  uv sync
+  @echo "⚙️ Installing Ansible collections...\n"
+  # in the Ansible directory
+  ansible-galaxy collection install -r Ansible/requirements.yml
 
 # 1. Prepare Proxmox hosts for automation
 [working-directory: 'Ansible']
