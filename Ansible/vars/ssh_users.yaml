@@ -1,7 +1,0 @@
----
-# the 1st element: the regular/automation user (Proxmox Hosts)
-# the 2nd element: the default main VM user (Proxmox VMs)
-ssh_users: [
-  { user_name: "murtadha", type: "regular/automation user", key_filename: proxmox-hosts, pub_key: "~/.ssh/keys/proxmox-hosts.pub" },
-  { user_name: "murtadha", type: "VM user", key_filename: proxmox-vms, pub_key: "~/.ssh/keys/proxmox-vms.pub" }
-]

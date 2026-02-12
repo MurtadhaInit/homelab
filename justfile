@@ -10,6 +10,22 @@ bootstrap:
   # in the Ansible directory
   ansible-galaxy collection install -r Ansible/requirements.yml
 
+# Generate SSH key pairs locally for the management of Proxmox hosts and VMs
+generate-keys:
+      #!/usr/bin/env bash
+      for key in proxmox-hosts proxmox-vms; do
+          [ -f ~/.ssh/keys/$key ] && continue
+          echo "Generating SSH key pair..."
+          ssh-keygen -a 100 -t ed25519 -f ~/.ssh/keys/$key -C "generated on $(hostname)"
+          if [[ "$(uname)" == "Darwin" ]]; then
+              echo "Adding key to ssh-agent and storing passphrase in keychain (macOS)..."
+              ssh-add --apple-use-keychain ~/.ssh/keys/$key
+          else
+              echo "Adding key to ssh-agent..."
+              ssh-add ~/.ssh/keys/$key
+          fi
+      done
+
 # 1. Prepare Proxmox hosts for automation
 [working-directory: 'Ansible']
 pve-hosts:
