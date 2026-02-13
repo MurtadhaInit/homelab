@@ -8,7 +8,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
   started     = true
 
   memory {
-    dedicated = 4096
+    dedicated = 2048
     floating  = 0 # disables "ballooning device"
   }
 

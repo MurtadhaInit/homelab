@@ -31,3 +31,15 @@ resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
   # The URL for the most recent build of the virtIO drivers for Windows
   url = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win.iso"
 }
+
+resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
+  content_type = "vztmpl"
+  datastore_id = "local"
+  node_name    = var.pve_hostname
+
+  # The latest NixOS Proxmox LXC template - Update accordingly for new releases
+  url                = "https://hydra.nixos.org/build/320902448/download/1/nixos-image-lxc-proxmox-25.11pre-git-x86_64-linux.tar.xz"
+  checksum           = "335a2c2425ec03f3cabd283fb7e9c094f05133b380fd7a919ee3e2e677777350"
+  checksum_algorithm = "sha256"
+  overwrite          = false
+}

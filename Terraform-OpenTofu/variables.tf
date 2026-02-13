@@ -37,7 +37,7 @@ variable "vm_gateway" {
   default     = "10.20.30.1"
 }
 
-# === Config date for regular users on Linux VMs ===
+# === Config data for regular users on Linux VMs ===
 variable "vm_regular_username" {
   type        = string
   description = "The username to set for all regular Ubuntu cloud image VMs by default"
@@ -61,4 +61,11 @@ variable "ubuntu_docker_static_ip" {
   type        = string
   description = "The static IP address for the core ubuntu VM configured with Docker"
   default     = "10.20.30.41/24"
+}
+
+# === vm - nixos
+variable "nixos_static_ip" {
+  type        = string
+  description = "The static IP address for the NixOS LXC container"
+  default     = "10.20.30.50/24"
 }
