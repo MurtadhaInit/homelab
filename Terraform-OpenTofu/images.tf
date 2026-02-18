@@ -1,6 +1,6 @@
 resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
   content_type = "iso"
-  datastore_id = "local"
+  datastore_id = var.pve_storage
   node_name    = var.pve_hostname
 
   # The URL for the latest Ubuntu Server LTS minimal cloud image
@@ -10,7 +10,7 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
 
 resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
   content_type   = "iso"
-  datastore_id   = "local"
+  datastore_id   = var.pve_storage 
   node_name      = var.pve_hostname
   upload_timeout = 1200
 
@@ -24,17 +24,18 @@ resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
 
 resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
   content_type   = "iso"
-  datastore_id   = "local"
+  datastore_id   = var.pve_storage 
   node_name      = var.pve_hostname
   upload_timeout = 1200
 
-  # The URL for the most recent build of the virtIO drivers for Windows
-  url = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win.iso"
+  # See: https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers and https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
+  # The URL for the stable build of the virtIO drivers for Windows
+  url = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso"
 }
 
 resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
   content_type = "vztmpl"
-  datastore_id = "local"
+  datastore_id = var.pve_storage 
   node_name    = var.pve_hostname
 
   # The latest NixOS Proxmox LXC template - Update accordingly for new releases

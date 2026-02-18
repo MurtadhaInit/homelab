@@ -79,7 +79,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
 
 resource "proxmox_virtual_environment_file" "user_data_cloud_config_docker_vm" {
   content_type = "snippets"
-  datastore_id = "local"
+  datastore_id = var.pve_storage
   node_name    = var.pve_hostname
   overwrite    = true
 
@@ -88,8 +88,8 @@ resource "proxmox_virtual_environment_file" "user_data_cloud_config_docker_vm" {
     #cloud-config
     hostname: ubuntu-docker
     user:
-      name: automator
-      gecos: Automation User
+      name: ${var.vm_regular_username}
+      gecos: Primary User
       lock_passwd: true
       groups:
         - sudo

@@ -10,17 +10,17 @@ resource "proxmox_virtual_environment_container" "nixos" {
   features {
     nesting = true
   }
-  
+
   cpu {
     architecture = "amd64"
-    cores = 4
+    cores        = 4
   }
-  
+
   memory {
     dedicated = 2048
-    swap = 512
+    swap      = 512
   }
-  
+
   initialization {
     hostname = "nixos-ct"
 
@@ -47,13 +47,13 @@ resource "proxmox_virtual_environment_container" "nixos" {
   }
 
   disk {
-    datastore_id = "local"
+    datastore_id = var.pve_storage
     size         = 4
   }
 
   operating_system {
     template_file_id = proxmox_virtual_environment_download_file.nixos_lxc_proxmox_image.id
-    type = "nixos"
+    type             = "nixos"
   }
 
   # mount_point {
@@ -91,12 +91,12 @@ resource "proxmox_virtual_environment_container" "nixos" {
 }
 
 resource "random_password" "nixos_ct_pass" {
-  length = 16
-  special = true
-  override_special = "_%@" 
+  length           = 16
+  special          = true
+  override_special = "_%@"
 }
 
 output "nixos_ct_pass" {
-  value = random_password.nixos_ct_pass.result
+  value     = random_password.nixos_ct_pass.result
   sensitive = true
 }

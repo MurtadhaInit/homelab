@@ -82,7 +82,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
 }
 
 resource "proxmox_virtual_environment_file" "user_data_cloud_config_regular_vms" {
-  datastore_id = "local"
+  datastore_id = var.pve_storage
   content_type = "snippets"
   node_name    = var.pve_hostname
   overwrite    = true

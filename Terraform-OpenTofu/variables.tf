@@ -24,6 +24,12 @@ variable "pve_hostname" {
   description = "The hostname given for the Proxmox host"
 }
 
+variable "pve_storage" {
+  type        = string
+  description = "The name of storage I'm using for *everything*: VM and container disks, ISOs, snippets...etc"
+  default     = "local"
+}
+
 # === Shared between various Linux VMs ===
 variable "vm_ssh_public_key" {
   type        = string
@@ -63,7 +69,7 @@ variable "ubuntu_docker_static_ip" {
   default     = "10.20.30.41/24"
 }
 
-# === vm - nixos
+# === ct - nixos
 variable "nixos_static_ip" {
   type        = string
   description = "The static IP address for the NixOS LXC container"
