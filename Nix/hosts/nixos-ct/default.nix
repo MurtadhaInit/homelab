@@ -23,6 +23,17 @@
   # Let the Proxmox host handle TRIM for the underlying storage
   services.fstrim.enable = false;
 
+  # Shared service user — matches the `murtadha` user (UID 1000) on the
+  # Proxmox host so bind-mounted files are directly accessible.
+  users.users.murtadha = {
+    uid = 1000;
+    group = "murtadha";
+    isSystemUser = true;
+  };
+  users.groups.murtadha = {
+    gid = 1000;
+  };
+
   homelab.qbittorrent.enable = true;
   homelab.jellyfin.enable = true;
 }

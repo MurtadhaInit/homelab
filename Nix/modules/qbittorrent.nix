@@ -12,6 +12,8 @@ in
     services.qbittorrent = {
       enable = true;
       openFirewall = true;
+      user = "murtadha";
+      group = "murtadha";
       webuiPort = 9080;
       # torrentingPort =
       profileDir = "/mnt/media/qbittorrent";

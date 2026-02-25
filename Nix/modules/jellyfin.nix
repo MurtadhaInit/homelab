@@ -18,6 +18,8 @@ in
       enable = true;
       openFirewall = true; # won't sync with port changes made in the GUI afterwards
       # The default Web UI port is 8096
+      user = "murtadha";
+      group = "murtadha";
       configDir = "/mnt/media/jellyfin/config";
       dataDir = "/mnt/media/jellyfin/data";
       cacheDir = "/mnt/media/jellyfin/cache";
