@@ -1,0 +1,86 @@
+---
+- name: Setup filesystem mounts on Proxmox host
+  hosts: proxmox_hosts
+  remote_user: root
+
+  vars:
+    mounts:
+      - path: /mnt/media
+        src: /dev/pve/media
+        fstype: xfs
+        opts: defaults,noatime
+        dump: "0"
+        passno: "2"
+      - path: /mnt/usb-hdd
+        src: UUID=A2DCFB36DCFB0379
+        fstype: ntfs-3g
+        opts: defaults,nofail,noatime,permissions,uid=0,gid=0,fmask=0000,dmask=0000
+        dump: "0"
+        passno: "0"
+
+  tasks:
+    - name: Install NTFS support
+      ansible.builtin.apt:
+        name: ntfs-3g
+        state: present
+
+    - name: Create mount points
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "0777" # make it world-writable to avoid permission issues (e.g. NixOS services)
+        owner: root
+        group: root
+      loop: "{{ mounts }}"
+
+    - name: Mount filesystems and add to fstab
+      ansible.posix.mount:
+        path: "{{ item.path }}"
+        src: "{{ item.src }}"
+        fstype: "{{ item.fstype }}"
+        opts: "{{ item.opts }}"
+        dump: "{{ item.dump }}"
+        passno: "{{ item.passno }}"
+        state: mounted
+      loop: "{{ mounts }}"
+
+    - name: Make changes on the Proxmox storage side
+      delegate_to: localhost # these modules make API calls to the Proxmox API *from* the controller
+      module_defaults:
+        group/community.proxmox.proxmox:
+          api_host: "{{ proxmox_api.host }}"
+          api_port: "{{ proxmox_api.port }}"
+          api_user: "{{ proxmox_api.user }}"
+          api_token_id: "{{ proxmox_api.token_id }}"
+          api_token_secret: "{{ proxmox_api.token_secret }}"
+          validate_certs: "{{ proxmox_api.validate_certs }}"
+      block:
+        - name: Enable all content types for 'local' storage
+          community.proxmox.proxmox_storage:
+            name: local
+            type: dir
+            dir_options:
+              path: /var/lib/vz
+            nodes: ["prox"]
+            content:
+              - vztmpl
+              - backup
+              - iso
+              - snippets
+              - import
+              - images
+              - rootdir
+            state: present
+        - name: Add the mounted directories to Proxmox storage
+          community.proxmox.proxmox_storage:
+            name: "{{ item.name }}"
+            type: dir
+            dir_options:
+              path: "{{ item.path }}"
+            nodes: ["prox"]
+            content:
+              - backup
+            state: present
+          loop:
+            - { name: media, path: /mnt/media }
+            - { name: usb-hdd, path: /mnt/usb-hdd }

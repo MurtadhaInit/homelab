@@ -8,6 +8,9 @@
 		}
 	],
 	"settings": {
-		"ansible.python.interpreterPath": "/Users/murtadha/Projects/homelab/.venv/bin/python"
+		"ansible.python.interpreterPath": "/Users/murtadha/Projects/homelab/.venv/bin/python",
+		"yaml.customTags": [
+      "!vault scalar"
+		]
 	}
 }

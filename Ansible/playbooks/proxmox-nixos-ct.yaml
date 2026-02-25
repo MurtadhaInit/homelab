@@ -1,0 +1,51 @@
+---
+- name: Configure NixOS LXC container on Proxmox (features and bind mounts)
+  hosts: proxmox_hosts
+  remote_user: root
+
+  vars:
+    nixos_ct_id: 1000
+
+  tasks:
+    - name: Check if NixOS container exists
+      ansible.builtin.command: pct status {{ nixos_ct_id }}
+      register: ct_status
+      changed_when: false
+      failed_when: false
+
+    - name: Get current container config
+      ansible.builtin.command: pct config {{ nixos_ct_id }}
+      register: ct_config
+      changed_when: false
+      when: ct_status.rc == 0
+
+    # API tokens can't set feature flags on privileged containers (only root@pam can),
+    # so we set nesting here. Nesting is required for nsncd (mount namespaces).
+    - name: Enable nesting feature
+      ansible.builtin.command: pct set {{ nixos_ct_id }} -features nesting=1
+      when:
+        - ct_status.rc == 0
+        - "'nesting=1' not in ct_config.stdout"
+      changed_when: true
+      notify: Reboot NixOS container
+
+    - name: Add bind mount for media directory
+      ansible.builtin.command: >
+        pct set {{ nixos_ct_id }} -mp0 /mnt/media,mp=/mnt/media
+      when:
+        - ct_status.rc == 0
+        - "'mp0' not in ct_config.stdout"
+      changed_when: true
+
+    - name: Add bind mount for USB HDD
+      ansible.builtin.command: >
+        pct set {{ nixos_ct_id }} -mp1 /mnt/usb-hdd,mp=/mnt/usb-hdd
+      when:
+        - ct_status.rc == 0
+        - "'mp1' not in ct_config.stdout"
+      changed_when: true
+
+  handlers:
+    - name: Reboot NixOS container
+      ansible.builtin.command: pct reboot {{ nixos_ct_id }}
+      changed_when: true

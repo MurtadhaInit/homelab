@@ -1,0 +1,33 @@
+---
+- name: Setup NFS server on Proxmox host to share a media directory
+  hosts: proxmox_hosts
+  remote_user: root
+
+  vars:
+    nfs_export_path: /mnt/media
+    # Allow any host on the local subnet to mount the share
+    nfs_allowed_network: "10.20.30.0/24"
+
+  tasks:
+    - name: Install NFS server
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Ensure the NFS service is enabled
+      ansible.builtin.service:
+        name: nfs-kernel-server
+        enabled: true
+        state: started
+
+    - name: Configure NFS export
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "{{ nfs_export_path }} {{ nfs_allowed_network }}(rw,sync,no_subtree_check,no_root_squash)"
+        regexp: "^{{ nfs_export_path }}\\s"
+      notify: Re-export NFS shares
+
+  handlers:
+    - name: Re-export NFS shares
+      ansible.builtin.command: exportfs -ra
+      changed_when: true
