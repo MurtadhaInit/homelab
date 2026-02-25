@@ -44,15 +44,6 @@
         state: mounted
       loop: "{{ mounts }}"
 
-    - name: Set ownership and permissions on /mnt/media (XFS — supports native perms)
-      ansible.builtin.file:
-        path: /mnt/media
-        state: directory
-        recurse: true
-        owner: murtadha
-        group: murtadha
-        mode: "u=rwX,g=rX,o="
-
     - name: Make changes on the Proxmox storage side
       delegate_to: localhost # these modules make API calls to the Proxmox API *from* the controller
       module_defaults:
