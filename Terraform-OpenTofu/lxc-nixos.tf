@@ -6,9 +6,11 @@ resource "proxmox_virtual_environment_container" "nixos" {
   start_on_boot = true
   started       = true
 
-  unprivileged = true
-  features {
-    nesting = true
+  unprivileged = false
+
+  console {
+    type = "shell"
+    # NOTE: password login is disabled by default so 'console' type access is useless
   }
 
   cpu {
@@ -18,7 +20,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
 
   memory {
     dedicated = 2048
-    swap      = 512
+    swap      = 1024
   }
 
   initialization {
@@ -36,19 +38,18 @@ resource "proxmox_virtual_environment_container" "nixos" {
       keys = [
         trimspace(file(var.vm_ssh_public_key))
       ]
-      # password = var.vm_regular_password
       password = random_password.nixos_ct_pass.result
     }
   }
 
   network_interface {
-    name   = "veth0"
+    name   = "eth0" # instead of veth0 because the NixOS LXC container might expect this
     bridge = "vmbr0"
   }
 
   disk {
     datastore_id = var.pve_storage
-    size         = 4
+    size         = 8
   }
 
   operating_system {
@@ -56,38 +57,18 @@ resource "proxmox_virtual_environment_container" "nixos" {
     type             = "nixos"
   }
 
+  # Bind mount managed via Ansible (proxmox-nfs.yaml) because API tokens
+  # cannot create bind mounts — requires root@pam *password* authentication.
   # mount_point {
-  #   # bind mount, *requires* root@pam authentication
-  #   volume = "/mnt/bindmounts/shared"
-  #   path   = "/mnt/shared"
-  #   # mount_options = [  ]
+  #   volume = "/mnt/media"
+  #   path   = "/mnt/media"
   # }
+  # features { nesting = true } is also needed for this CT and applied as above for the
+  # same reasons.
 
-  # mount_point {
-  #   # volume mount, a new volume will be created by PVE
-  #   volume = "local-lvm"
-  #   size   = "10G"
-  #   path   = "/mnt/volume"
-  # }
-
-  # mount_point {
-  #   # volume mount, an existing volume will be mounted
-  #   volume = "local-lvm:subvol-108-disk-101"
-  #   size   = "10G"
-  #   path   = "/mnt/data"
-  # }
-
-  # To reference a mount point volume from another resource, use path_in_datastore:
-  # mount_point {
-  #   volume = other_container.mount_point[0].path_in_datastore
-  #   size   = "10G"
-  #   path   = "/mnt/shared"
-  # }
-
-  # device_passthrough {
-  #   # mode = 
-  #   path = 
-  # }
+  lifecycle {
+    ignore_changes = [mount_point]
+  }
 }
 
 resource "random_password" "nixos_ct_pass" {
@@ -99,4 +80,14 @@ resource "random_password" "nixos_ct_pass" {
 output "nixos_ct_pass" {
   value     = random_password.nixos_ct_pass.result
   sensitive = true
+}
+
+output "nixos_ct_ip" {
+  description = "IP address of the nixos LXC container"
+  value       = proxmox_virtual_environment_container.nixos.initialization[0].ip_config[0].ipv4[0].address
+}
+
+output "nixos_ct_ssh" {
+  description = "SSH connection command for nixos LXC container"
+  value       = "ssh -i ~/.ssh/keys/proxmox-vms root@${trimsuffix(var.nixos_static_ip, "/24")}"
 }

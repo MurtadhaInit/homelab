@@ -1,5 +1,5 @@
 {
-  description = "NixOS infrastructure managed with deploy-rs";
+  description = "NixOS infrastructure deployed with deploy-rs";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -22,15 +22,13 @@
         };
       };
 
-      deploy = {
-        nodes = {
-          nixos-ct = {
-            hostname = "nixos-ct";
-            sshUser = "root";
-            profiles.system = {
-              user = "root";
-              path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.nixos-ct;
-            };
+      deploy.nodes = {
+        nixos-ct = {
+          hostname = "nixos-ct";
+          sshUser = "root";
+          profiles.system = {
+            user = "root";
+            path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.nixos-ct;
           };
         };
       };

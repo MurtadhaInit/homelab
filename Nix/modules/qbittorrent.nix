@@ -12,16 +12,22 @@ in
     services.qbittorrent = {
       enable = true;
       openFirewall = true;
-      webuiPort = 9090;
+      webuiPort = 9080;
       # torrentingPort =
-      # profileDir =  # the config/state location
+      profileDir = "/mnt/media/qbittorrent";
       serverConfig = {
+        LegalNotice.Accepted = true;
+        BitTorrent.Session.QueueingSystemEnabled = false;
         Preferences = {
           WebUI = {
+            # AlternativeUIEnabled = true;
+            # RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
             Username = "murtadha";
             # Generate a password: nix run git+https://codeberg.org/feathecutie/qbittorrent_password:main -- -p <password>
-            Password_PBKDF2 = "@ByteArray(RnWLrLhy2VE0cc1a9eoOIQ==:65Rrbv6+y2MCujH2bJdr/5lccDZXyHmYzv3M/yGAr72uwnmdBCeQh6axlkczaT9JnQ+1MHWzEr3QnfSTgdNfjQ==)"; # TODO: for testing. replace later with proper secrets
+            # TODO: for testing. replace later with proper secrets
+            Password_PBKDF2 = "@ByteArray(FS2FD/7c7tMa1L+lG+7vng==:Cdl48KcH17YqJudyzVNC8KAG4q4kf78JLMfvtItTngcg4nBueXikO8kUf3Sg0R26Ltul/+tkKW7RkhYcCnwmsw==)";
           };
+          General.Locale = "en";
         };
       };
     };

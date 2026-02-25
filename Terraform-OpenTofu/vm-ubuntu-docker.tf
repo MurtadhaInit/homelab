@@ -25,12 +25,12 @@ resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
   }
 
   disk {
-    datastore_id = "local-lvm"
+    datastore_id = var.pve_storage
     interface    = "scsi0"
     discard      = "on"
     iothread     = true
     ssd          = true
-    size         = 40
+    size         = 20
     file_id      = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
     # file_format = "raw" # what will be applied anyways
   }
@@ -74,6 +74,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_docker" {
       }
     }
     user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config_docker_vm.id
+    datastore_id      = var.pve_storage
   }
 }
 
@@ -112,4 +113,14 @@ resource "proxmox_virtual_environment_file" "user_data_cloud_config_docker_vm" {
 
     file_name = "user-data-cloud-config-docker-vm.yaml"
   }
+}
+
+output "ubuntu_docker_ip" {
+  description = "IP address of the ubuntu-docker VM"
+  value       = proxmox_virtual_environment_vm.ubuntu_docker.initialization[0].ip_config[0].ipv4[0].address
+}
+
+output "ubuntu_docker_ssh" {
+  description = "SSH connection command for ubuntu-docker VM"
+  value       = "ssh ${var.vm_regular_username}@${trimsuffix(var.ubuntu_docker_static_ip, "/24")}"
 }

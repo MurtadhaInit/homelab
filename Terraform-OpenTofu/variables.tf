@@ -24,6 +24,12 @@ variable "pve_hostname" {
   description = "The hostname given for the Proxmox host"
 }
 
+variable "pve_host_ssh_key" {
+  type        = string
+  description = "The path to the private SSH key to use when connecting to Proxmox hosts"
+  default     = "~/.ssh/keys/proxmox-hosts"
+}
+
 variable "pve_storage" {
   type        = string
   description = "The name of storage I'm using for *everything*: VM and container disks, ISOs, snippets...etc"
@@ -43,23 +49,11 @@ variable "vm_gateway" {
   default     = "10.20.30.1"
 }
 
-# === Config data for regular users on Linux VMs ===
+# === Common users in VMs and Containers ===
 variable "vm_regular_username" {
   type        = string
-  description = "The username to set for all regular Ubuntu cloud image VMs by default"
+  description = "The regular username to set for all VMs and containers by default"
   default     = "murtadha"
-}
-
-variable "vm_regular_password" {
-  type        = string
-  description = "The password to set for all regular Ubuntu cloud image VMs by default"
-  sensitive   = true
-}
-
-variable "vm_regular_pass_salt" {
-  type        = string
-  description = "The password salt to use for all regular Ubuntu cloud image VMs by default"
-  sensitive   = true
 }
 
 # === vm - ubuntu_docker

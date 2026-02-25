@@ -13,7 +13,8 @@ provider "proxmox" {
   ssh {
     agent = true
     # a PAM user with password-less sudo privileges
-    username = var.pve_host_user
+    username    = var.pve_host_user
+    private_key = file(var.pve_host_ssh_key) # when/if the SSH agent is not working
     node {
       name    = var.pve_hostname
       address = var.pve_host_ip
