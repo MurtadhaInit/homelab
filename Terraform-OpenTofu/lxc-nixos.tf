@@ -1,6 +1,6 @@
 resource "proxmox_virtual_environment_container" "nixos" {
   description   = "A NixOS LXC container generated from a Proxmox LXC image template from Hydra"
-  tags          = ["terraform"]
+  tags          = ["terraform", "ansible"]
   node_name     = var.pve_hostname
   vm_id         = 1000
   start_on_boot = true

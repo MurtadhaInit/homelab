@@ -7,8 +7,8 @@
     mounts:
       - path: /mnt/media
         src: /dev/pve/media
-        fstype: xfs
-        opts: defaults,noatime
+        fstype: btrfs
+        opts: compress=zstd,noatime
         dump: "0"
         passno: "2"
       - path: /mnt/usb-hdd
@@ -43,6 +43,20 @@
         passno: "{{ item.passno }}"
         state: mounted
       loop: "{{ mounts }}"
+
+    - name: Create 'To Stream' directory with nocow attribute (avoids btrfs CoW fragmentation for torrent downloads)
+      block:
+        - name: Create the directory
+          ansible.builtin.file:
+            path: /mnt/media/To Stream
+            state: directory
+            mode: "0750"
+            owner: murtadha
+            group: murtadha
+        - name: Disable copy-on-write
+          ansible.builtin.command:
+            cmd: chattr +C "/mnt/media/To Stream"
+          changed_when: false
 
     - name: Make changes on the Proxmox storage side
       delegate_to: localhost # these modules make API calls to the Proxmox API *from* the controller
@@ -84,3 +98,12 @@
           loop:
             - { name: media, path: /mnt/media }
             - { name: usb-hdd, path: /mnt/usb-hdd }
+
+    - name: Install a few tools for checking storage space
+      ansible.builtin.apt:
+        name:
+          - duf
+          - ncdu
+          - du-dust
+        state: present
+        update_cache: true
