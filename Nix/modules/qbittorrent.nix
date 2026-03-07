@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.homelab.qbittorrent;
@@ -16,14 +21,15 @@ in
       group = "murtadha";
       webuiPort = 9080;
       # torrentingPort =
+      # Use this for torrent migrations and the like: https://github.com/jslay88/qbt_migrate
       profileDir = "/mnt/media/qbittorrent";
       serverConfig = {
         LegalNotice.Accepted = true;
         BitTorrent.Session.QueueingSystemEnabled = false;
         Preferences = {
           WebUI = {
-            # AlternativeUIEnabled = true;
-            # RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
+            AlternativeUIEnabled = true;
+            RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
             Username = "murtadha";
             # Generate a password: nix run git+https://codeberg.org/feathecutie/qbittorrent_password:main -- -p <password>
             # TODO: for testing. replace later with proper secrets

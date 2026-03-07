@@ -1,4 +1,4 @@
-{ modulesPath, ... }:
+{ modulesPath, config, ... }:
 
 {
   imports = [
@@ -7,6 +7,7 @@
 
     ../../modules/qbittorrent.nix
     ../../modules/jellyfin.nix
+    ../../modules/syncthing.nix
   ];
 
   system.stateVersion = "25.11";
@@ -34,6 +35,15 @@
     gid = 1000;
   };
 
+  age.secrets.syncthing-gui-password = {
+    file = ../../secrets/syncthing-gui-password.age;
+    owner = "murtadha";
+  };
+
   homelab.qbittorrent.enable = true;
   homelab.jellyfin.enable = true;
+  homelab.syncthing = {
+    enable = true;
+    guiPasswordFile = config.age.secrets.syncthing-gui-password.path;
+  };
 }
