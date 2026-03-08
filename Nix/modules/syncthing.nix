@@ -27,6 +27,7 @@ in
       openDefaultPorts = true; # TCP/UDP 22000 for transfers and UDP 21027 for discovery
       guiPasswordFile = cfg.guiPasswordFile;
       overrideDevices = false;
+      overrideFolders = false;
       guiAddress = "0.0.0.0:8384";
       settings = {
         gui = {
@@ -37,6 +38,8 @@ in
             id = "documents";
             path = "/mnt/media/documents";
             label = "Documents";
+            type = "receiveonly";
+            ignorePerms = true;
             versioning = {
               type = "staggered";
               params = {
