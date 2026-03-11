@@ -99,6 +99,45 @@
             - { name: media, path: /mnt/media }
             - { name: usb-hdd, path: /mnt/usb-hdd }
 
+    - name: Setup monthly btrfs scrub for the media LV
+      block:
+        - name: Create the scrub service unit
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/btrfs-scrub-media.service
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=Btrfs scrub on /mnt/media
+              ConditionPathIsMountPoint=/mnt/media
+
+              [Service]
+              Type=oneshot
+              ExecStart=/usr/sbin/btrfs scrub start -B /mnt/media
+              IOSchedulingClass=idle
+              CPUSchedulingPolicy=idle
+              Nice=19
+        - name: Create the scrub timer unit
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/btrfs-scrub-media.timer
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=Monthly btrfs scrub on /mnt/media
+
+              [Timer]
+              OnCalendar=monthly
+              Persistent=true
+              RandomizedDelaySec=1h
+
+              [Install]
+              WantedBy=timers.target
+        - name: Enable and start the scrub timer
+          ansible.builtin.systemd:
+            name: btrfs-scrub-media.timer
+            enabled: true
+            state: started
+            daemon_reload: true
+
     - name: Install a few tools for checking storage space
       ansible.builtin.apt:
         name:
