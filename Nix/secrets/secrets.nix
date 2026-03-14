@@ -4,6 +4,8 @@ let
   # murtadha = "";
 in
 {
-  # Edit with (in this dir): nix run github:ryantm/agenix -- -e syncthing-gui-password.age
+  # Edit with (in this dir): nix run github:ryantm/agenix -- -e <filename>.age
   "syncthing-gui-password.age".publicKeys = [ nixos-ct ];
+  "grafana-secret-key.age".publicKeys = [ nixos-ct ];
+  "grafana-admin-password.age".publicKeys = [ nixos-ct ];
 }

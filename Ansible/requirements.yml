@@ -2,3 +2,6 @@
 collections:
   # https://docs.ansible.com/projects/ansible/latest/collections/community/proxmox/index.html
   - name: community.proxmox
+  # https://prometheus-community.github.io/ansible/branch/main/
+  # TODO: also requires: brew install gnu-tar
+  - name: prometheus.prometheus

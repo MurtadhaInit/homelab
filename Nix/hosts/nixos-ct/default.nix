@@ -8,6 +8,8 @@
     ../../modules/qbittorrent.nix
     ../../modules/jellyfin.nix
     ../../modules/syncthing.nix
+    ../../modules/prometheus.nix
+    ../../modules/grafana.nix
   ];
 
   system.stateVersion = "25.11";
@@ -35,9 +37,20 @@
     gid = 1000;
   };
 
-  age.secrets.syncthing-gui-password = {
-    file = ../../secrets/syncthing-gui-password.age;
-    owner = "murtadha";
+  age.secrets = {
+    syncthing-gui-password = {
+      file = ../../secrets/syncthing-gui-password.age;
+      owner = "murtadha";
+    };
+    grafana-secret-key = {
+      # Generate with: openssl rand -hex 32 | nix run github:ryantm/agenix -- -e grafana-secret-key.age
+      file = ../../secrets/grafana-secret-key.age;
+      owner = "grafana";
+    };
+    grafana-admin-password = {
+      file = ../../secrets/grafana-admin-password.age;
+      owner = "grafana";
+    };
   };
 
   homelab.qbittorrent.enable = true;
@@ -45,5 +58,14 @@
   homelab.syncthing = {
     enable = true;
     guiPasswordFile = config.age.secrets.syncthing-gui-password.path;
+  };
+  homelab.prometheus = {
+    enable = true;
+    proxmoxHostAddress = "10.20.30.40";
+  };
+  homelab.grafana = {
+    enable = true;
+    secretKeyFile = config.age.secrets.grafana-secret-key.path;
+    adminPasswordFile = config.age.secrets.grafana-admin-password.path;
   };
 }

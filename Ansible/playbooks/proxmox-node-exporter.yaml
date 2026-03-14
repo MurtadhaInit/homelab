@@ -1,0 +1,16 @@
+---
+# Metrics are exposed on 0.0.0.0:9100/metrics for Prometheus to scrape
+- name: Setup Prometheus Node Exporter (latest) on Proxmox host
+  hosts: proxmox_hosts
+  remote_user: root
+
+  roles:
+      # NOTE: This role downloads the untars the binary on the controller which would
+      # require 'gnu-tar' to be present on macOS.
+    - role: prometheus.prometheus.node_exporter
+      vars:
+        node_exporter_enabled_collectors:
+          - processes
+          - systemd # added by default through the role
+          - textfile: # added by default through the role
+              directory: "{{ node_exporter_textfile_dir }}"
