@@ -15,6 +15,16 @@ in
       default = null;
       description = "Path to a file containing the plaintext password for the Web GUI";
     };
+    keyFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Path to the Syncthing private key (key.pem)";
+    };
+    certFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Path to the Syncthing certificate (cert.pem)";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -22,17 +32,21 @@ in
       enable = true;
       user = "murtadha";
       group = "murtadha";
+      key = cfg.keyFile;
+      cert = cfg.certFile;
       dataDir = "/mnt/media/syncthing";
       # NOTE: this won't open the GUI port
       openDefaultPorts = true; # TCP/UDP 22000 for transfers and UDP 21027 for discovery
       guiPasswordFile = cfg.guiPasswordFile;
-      # Don't clobber devices/folders (or devices for folders) added through the GUI
-      overrideDevices = false;
-      overrideFolders = false;
       guiAddress = "0.0.0.0:8384";
       settings = {
         gui = {
           user = "murtadha";
+        };
+        devices = {
+          MBP = {
+            id = "CYLNY5H-GWUW324-OXEJJTA-E4RGJC4-W5X6HGP-J5DZE6F-E54XXBL-WYQ2MQK";
+          };
         };
         folders = {
           documents = {
@@ -46,6 +60,7 @@ in
                 maxAge = "31536000"; # keep versions up to 1 year
               };
             };
+            devices = [ "MBP" ];
           };
         };
       };

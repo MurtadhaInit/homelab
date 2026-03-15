@@ -43,13 +43,22 @@
       owner = "murtadha";
     };
     grafana-secret-key = {
-      # Generate with: openssl rand -hex 32 | nix run github:ryantm/agenix -- -e grafana-secret-key.age
       file = ../../secrets/grafana-secret-key.age;
       owner = "grafana";
     };
     grafana-admin-password = {
       file = ../../secrets/grafana-admin-password.age;
       owner = "grafana";
+    };
+    syncthing-key = {
+      file = ../../secrets/syncthing-key.age;
+      owner = "murtadha";
+      mode = "0400";
+    };
+    syncthing-cert = {
+      file = ../../secrets/syncthing-cert.age;
+      owner = "murtadha";
+      mode = "0444";
     };
   };
 
@@ -58,6 +67,8 @@
   homelab.syncthing = {
     enable = true;
     guiPasswordFile = config.age.secrets.syncthing-gui-password.path;
+    keyFile = config.age.secrets.syncthing-key.path;
+    certFile = config.age.secrets.syncthing-cert.path;
   };
   homelab.prometheus = {
     enable = true;
