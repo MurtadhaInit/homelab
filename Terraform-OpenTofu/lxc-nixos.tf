@@ -20,7 +20,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
 
   memory {
     dedicated = 2048
-    swap      = 1024
+    swap      = 2048
   }
 
   initialization {
@@ -49,7 +49,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
 
   disk {
     datastore_id = var.pve_storage
-    size         = 8
+    size         = 20
   }
 
   operating_system {
