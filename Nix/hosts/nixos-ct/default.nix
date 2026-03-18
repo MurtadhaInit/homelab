@@ -10,6 +10,7 @@
     ../../modules/syncthing.nix
     ../../modules/prometheus.nix
     ../../modules/grafana.nix
+    ../../modules/adguardhome.nix
   ];
 
   system.stateVersion = "25.11";
@@ -79,4 +80,5 @@
     secretKeyFile = config.age.secrets.grafana-secret-key.path;
     adminPasswordFile = config.age.secrets.grafana-admin-password.path;
   };
+  homelab.adguardhome.enable = true;
 }
