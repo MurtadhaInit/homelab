@@ -73,6 +73,13 @@ in
           ];
           enable_dnssec = true;
 
+          # rDNS: resolve PTR queries for private IPs via the router, which knows
+          # device hostnames from DHCP leases.
+          # NOTE: add the gateway address for each network using Adguard Home
+          # as its DNS server in Unifi
+          use_private_ptr_resolvers = true;
+          local_ptr_upstreams = [ "10.20.30.1" ];
+
           # Safe to disable on a LAN-only server (not exposed to the internet)
           ratelimit = 0;
           refuse_any = false;
