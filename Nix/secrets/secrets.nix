@@ -17,4 +17,7 @@ in
   # Obtain device ID with: nix run nixpkgs#syncthing -- device-id --config ./conf --data ./data
   "syncthing-key.age".publicKeys = [ nixos-ct ];
   "syncthing-cert.age".publicKeys = [ nixos-ct ];
+  # Cloudflare API token for Caddy DNS-01 ACME challenges. Required perms: Zone.Zone:Read, Zone.DNS:Edit
+  # Create with: "CF_API_TOKEN=<token>" | nix run github:ryantm/agenix -- -e caddy-cloudflare-token.age
+  "caddy-cloudflare-token.age".publicKeys = [ nixos-ct ];
 }

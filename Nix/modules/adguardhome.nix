@@ -15,6 +15,11 @@ in
       default = "home.lan";
       description = "Local domain to resolve via DNS rewrites";
     };
+    publicDomain = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Public domain to also resolve via DNS rewrites (e.g. home.murtadha.dev)";
+    };
     lanAddress = lib.mkOption {
       type = lib.types.str;
       default = "10.20.30.50";
@@ -96,7 +101,12 @@ in
               answer = cfg.lanAddress;
               enabled = true;
             }
-          ];
+          ]
+          ++ lib.optional (cfg.publicDomain != null) {
+            domain = "*.${cfg.publicDomain}";
+            answer = cfg.lanAddress;
+            enabled = true;
+          };
         };
 
         filters = [

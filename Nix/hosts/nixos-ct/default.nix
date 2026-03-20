@@ -10,6 +10,7 @@
     ../../modules/syncthing.nix
     ../../modules/prometheus.nix
     ../../modules/grafana.nix
+    ../../modules/caddy.nix
     ../../modules/adguardhome.nix
   ];
 
@@ -61,6 +62,9 @@
       owner = "murtadha";
       mode = "0444";
     };
+    caddy-cloudflare-token = {
+      file = ../../secrets/caddy-cloudflare-token.age;
+    };
   };
 
   homelab.qbittorrent.enable = true;
@@ -80,5 +84,14 @@
     secretKeyFile = config.age.secrets.grafana-secret-key.path;
     adminPasswordFile = config.age.secrets.grafana-admin-password.path;
   };
-  homelab.adguardhome.enable = true;
+  homelab.caddy = {
+    enable = true;
+    proxmoxAddress = "10.20.30.40";
+    publicDomain = "home.murtadha.dev";
+    cloudflareTokenFile = config.age.secrets.caddy-cloudflare-token.path;
+  };
+  homelab.adguardhome = {
+    enable = true;
+    publicDomain = "home.murtadha.dev";
+  };
 }

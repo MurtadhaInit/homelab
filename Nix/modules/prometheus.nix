@@ -27,6 +27,12 @@ in
             { targets = [ "${cfg.proxmoxHostAddress}:9100" ]; }
           ];
         }
+        {
+          job_name = "caddy";
+          static_configs = [
+            { targets = [ "localhost:2019" ]; }
+          ];
+        }
       ];
     };
 
