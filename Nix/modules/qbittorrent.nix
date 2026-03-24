@@ -25,7 +25,11 @@ in
       profileDir = "/mnt/media/qbittorrent";
       serverConfig = {
         LegalNotice.Accepted = true;
-        BitTorrent.Session.QueueingSystemEnabled = false;
+        BitTorrent.Session = {
+          QueueingSystemEnabled = false;
+          AlternativeGlobalDLSpeedLimit = 15000; # kB/s
+          AlternativeGlobalUPSpeedLimit = 5000; # kB/s
+        };
         Preferences = {
           WebUI = {
             AlternativeUIEnabled = true;
