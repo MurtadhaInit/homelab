@@ -27,6 +27,13 @@
     git
   ];
 
+  # buildEnv doesn't link ghostty.terminfo into the system-path despite it
+  # being in systemPackages (multi-output package limitation). TERMINFO is
+  # checked first in the terminfo lookup chain, so pointing it directly at
+  # the store path bypasses the system-path entirely (for other terminal
+  # types the lookup falls through to $TERMINFO_DIRS).
+  environment.sessionVariables.TERMINFO = "${pkgs.ghostty.terminfo}/share/terminfo";
+
   services.openssh = {
     enable = true;
     settings = {
