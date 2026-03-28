@@ -13,6 +13,7 @@
     ../../modules/caddy.nix
     ../../modules/adguardhome.nix
     ../../modules/prowlarr.nix
+    ../../modules/sonarr.nix
   ];
 
   system.stateVersion = "25.11";
@@ -69,6 +70,9 @@
     prowlarr-api-key = {
       file = ../../secrets/prowlarr-api-key.age;
     };
+    sonarr-api-key = {
+      file = ../../secrets/sonarr-api-key.age;
+    };
   };
 
   homelab.qbittorrent.enable = true;
@@ -101,5 +105,9 @@
   homelab.prowlarr = {
     enable = true;
     apiKeyFile = config.age.secrets.prowlarr-api-key.path;
+  };
+  homelab.sonarr = {
+    enable = true;
+    apiKeyFile = config.age.secrets.sonarr-api-key.path;
   };
 }
