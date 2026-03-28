@@ -20,4 +20,6 @@ in
   # Cloudflare API token for Caddy DNS-01 ACME challenges. Required perms: Zone.Zone:Read, Zone.DNS:Edit
   # Create with: "CF_API_TOKEN=<token>" | nix run github:ryantm/agenix -- -e caddy-cloudflare-token.age
   "caddy-cloudflare-token.age".publicKeys = [ nixos-ct ];
+  # Generate with (Nushell): $"PROWLARR__AUTH__APIKEY=(openssl rand -hex 16 | str trim)\n" | nix run github:ryantm/agenix -- -e prowlarr-api-key.age
+  "prowlarr-api-key.age".publicKeys = [ nixos-ct ];
 }

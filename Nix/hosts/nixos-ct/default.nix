@@ -12,6 +12,7 @@
     ../../modules/grafana.nix
     ../../modules/caddy.nix
     ../../modules/adguardhome.nix
+    ../../modules/prowlarr.nix
   ];
 
   system.stateVersion = "25.11";
@@ -65,6 +66,9 @@
     caddy-cloudflare-token = {
       file = ../../secrets/caddy-cloudflare-token.age;
     };
+    prowlarr-api-key = {
+      file = ../../secrets/prowlarr-api-key.age;
+    };
   };
 
   homelab.qbittorrent.enable = true;
@@ -93,5 +97,9 @@
   homelab.adguardhome = {
     enable = true;
     publicDomain = "home.murtadha.dev";
+  };
+  homelab.prowlarr = {
+    enable = true;
+    apiKeyFile = config.age.secrets.prowlarr-api-key.path;
   };
 }

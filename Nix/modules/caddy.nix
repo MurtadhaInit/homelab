@@ -33,6 +33,10 @@ let
       name = "adguard";
       proxy = "localhost:${toString config.services.adguardhome.port}";
     }
+    {
+      name = "prowlarr";
+      proxy = "localhost:9696";
+    }
   ];
 
   mkHttpBlock = svc: ''
