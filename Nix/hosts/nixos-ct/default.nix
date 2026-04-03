@@ -14,6 +14,7 @@
     ../../modules/adguardhome.nix
     ../../modules/prowlarr.nix
     ../../modules/sonarr.nix
+    ../../modules/sabnzbd.nix
   ];
 
   system.stateVersion = "25.11";
@@ -73,6 +74,14 @@
     sonarr-api-key = {
       file = ../../secrets/sonarr-api-key.age;
     };
+    sabnzbd-secrets = {
+      file = ../../secrets/sabnzbd-secrets.age;
+      owner = "murtadha";
+    };
+    sabnzbd-server = {
+      file = ../../secrets/sabnzbd-server.age;
+      owner = "murtadha";
+    };
   };
 
   homelab.qbittorrent.enable = true;
@@ -109,5 +118,10 @@
   homelab.sonarr = {
     enable = true;
     apiKeyFile = config.age.secrets.sonarr-api-key.path;
+  };
+  homelab.sabnzbd = {
+    enable = true;
+    secretsFile = config.age.secrets.sabnzbd-secrets.path;
+    serverSecretsFile = config.age.secrets.sabnzbd-server.path;
   };
 }

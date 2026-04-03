@@ -41,6 +41,10 @@ let
       name = "sonarr";
       proxy = "localhost:8989";
     }
+    {
+      name = "sabnzbd";
+      proxy = "localhost:8080";
+    }
   ];
 
   mkHttpBlock = svc: ''
