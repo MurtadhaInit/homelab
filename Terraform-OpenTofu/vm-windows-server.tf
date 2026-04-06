@@ -4,7 +4,7 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
   tags        = ["terraform"]
   node_name   = var.pve_hostname
   vm_id       = 700
-  on_boot     = true
+  on_boot     = false
   started     = false
 
   memory {

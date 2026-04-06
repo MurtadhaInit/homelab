@@ -27,7 +27,7 @@ in
     services.prowlarr = {
       enable = true;
       openFirewall = true; # Default port is 9696
-      dataDir = "/mnt/media/prowlarr";
+      # The default data directory is at /var/lib/prowlarr
       settings = {
         auth = {
           authenticationMethod = "Forms";
