@@ -57,8 +57,8 @@ resource "proxmox_virtual_environment_container" "nixos" {
     type             = "nixos"
   }
 
-  # Bind mount managed via Ansible (proxmox-nfs.yaml) because API tokens
-  # cannot create bind mounts — requires root@pam *password* authentication.
+  # Bind mount managed via Ansible because API tokens cannot create
+  # bind mounts — requires root@pam *password* authentication.
   # mount_point {
   #   volume = "/mnt/media"
   #   path   = "/mnt/media"
