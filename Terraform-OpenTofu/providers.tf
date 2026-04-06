@@ -1,5 +1,10 @@
 provider "external" {}
 
+provider "talos" {}
+
+# Used to render chart templates locally so no authentication to a k8s cluster is needed
+provider "helm" {}
+
 provider "proxmox" {
   endpoint  = "https://${var.pve_host_ip}:${var.pve_host_port}/"
   api_token = var.pve_host_api_token

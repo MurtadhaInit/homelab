@@ -1,3 +1,7 @@
 .DS_Store
 .ansible/
 *.drawio.bkp
+
+# Kubernetes and Talos client configs (contain sensitive credentials)
+k8s/talosconfig
+k8s/kubeconfig

@@ -56,16 +56,35 @@ variable "vm_regular_username" {
   default     = "murtadha"
 }
 
-# === vm - ubuntu_docker
+# === vm - ubuntu_docker ===
 variable "ubuntu_docker_static_ip" {
   type        = string
   description = "The static IP address for the core ubuntu VM configured with Docker"
   default     = "10.20.30.41/24"
 }
 
-# === ct - nixos
+# === ct - nixos ===
 variable "nixos_static_ip" {
   type        = string
   description = "The static IP address for the NixOS LXC container"
   default     = "10.20.30.50/24"
+}
+
+# === k8s ===
+variable "talos_version" {
+  type        = string
+  description = "The version of Talos features to use in generated machine configuration"
+  default     = "v1.12.6"
+}
+
+variable "k8s_version" {
+  type        = string
+  description = "The version of Kubernetes to use in generated machine configuration"
+  default     = "v1.35.2"
+}
+
+variable "cilium_version" {
+  type        = string
+  description = "The version of Cilium to deploy as the cluster CNI"
+  default     = "1.19.0"
 }

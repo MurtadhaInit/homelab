@@ -4,6 +4,7 @@ default:
 
 # Prepare the environment
 bootstrap:
+    mise install
     @echo "⚙️ Installing Python tools and packages with uv...\n"
     uv sync
     @echo "⚙️ Installing Ansible collections...\n"
@@ -38,9 +39,9 @@ pve-hosts:
 # Plan resources and required changes on Proxmox hosts
 [working-directory('Terraform-OpenTofu')]
 vms-plan:
-    terraform plan
+    tofu plan
 
 # Build resources on Proxmox hosts + further configuration
 [working-directory('Terraform-OpenTofu')]
 vms-apply:
-    terraform apply -auto-approve
+    tofu apply -auto-approve

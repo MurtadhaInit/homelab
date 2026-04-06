@@ -10,7 +10,7 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
 
 resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
   content_type   = "iso"
-  datastore_id   = var.pve_storage 
+  datastore_id   = var.pve_storage
   node_name      = var.pve_hostname
   upload_timeout = 1200
 
@@ -24,18 +24,19 @@ resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
 
 resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
   content_type   = "iso"
-  datastore_id   = var.pve_storage 
+  datastore_id   = var.pve_storage
   node_name      = var.pve_hostname
-  upload_timeout = 1200
+  upload_timeout = 2700
 
   # See: https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers and https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
-  # The URL for the stable build of the virtIO drivers for Windows
-  url = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso"
+  # The URL for the stable build of the virtIO drivers for Windows - version 0.1.271
+  url       = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win.iso"
+  overwrite = false
 }
 
 resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
   content_type = "vztmpl"
-  datastore_id = var.pve_storage 
+  datastore_id = var.pve_storage
   node_name    = var.pve_hostname
 
   # The latest NixOS Proxmox LXC template - Update accordingly for new releases
@@ -43,4 +44,41 @@ resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
   checksum           = "335a2c2425ec03f3cabd283fb7e9c094f05133b380fd7a919ee3e2e677777350"
   checksum_algorithm = "sha256"
   overwrite          = false
+}
+
+# === Talos Image Factory ===
+# Declare the extensions we want and let the provider generate the schematic + URL
+
+data "talos_image_factory_extensions_versions" "this" {
+  talos_version = var.talos_version
+  filters = {
+    names = ["qemu-guest-agent", "amd-ucode"]
+  }
+}
+
+resource "talos_image_factory_schematic" "this" {
+  schematic = yamlencode({
+    customization = {
+      systemExtensions = {
+        officialExtensions = data.talos_image_factory_extensions_versions.this.extensions_info.*.name
+      }
+    }
+  })
+}
+
+data "talos_image_factory_urls" "this" {
+  talos_version = var.talos_version
+  schematic_id  = talos_image_factory_schematic.this.id
+  architecture  = "amd64"
+  platform      = "nocloud"
+}
+
+resource "proxmox_download_file" "talos_image" {
+  content_type = "iso"
+  datastore_id = var.pve_storage
+  node_name    = var.pve_hostname
+
+  # disk_image URL is the .raw.xz image — rename to .img for Proxmox/provider compatibility
+  url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
+  file_name = "talos-nocloud-amd64.img"
 }

@@ -1,9 +1,11 @@
 [env]
 _.python.venv = ".venv"
+TALOSCONFIG = "{{ config_root }}/k8s/talosconfig"
+KUBECONFIG = "{{ config_root }}/k8s/kubeconfig"
 
 [tools]
 uv = "latest"
 opentofu = "latest"
 helm = "latest"
-kubectl = "1.35"
-talosctl = "1.12" # should match the version of Talos Linux used
+kubectl = "1.35" # should match the version of Kubernetes deployed
+talosctl = "1.12" # should match the version of Talos Linux deployed
