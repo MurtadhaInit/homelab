@@ -12,9 +12,6 @@ provider "proxmox" {
   # because self-signed TLS certificate is in use
   insecure = true
 
-  # a directory with enough space when using proxmox_virtual_environment_file
-  tmp_dir = "../.tmp/"
-
   ssh {
     agent = true
     # a PAM user with password-less sudo privileges

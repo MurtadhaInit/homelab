@@ -56,8 +56,8 @@ variable "vm_regular_username" {
   default     = "murtadha"
 }
 
-# === vm - ubuntu_docker ===
-variable "ubuntu_docker_static_ip" {
+# === vm - ubuntu ===
+variable "ubuntu_vm_static_ip" {
   type        = string
   description = "The static IP address for the core ubuntu VM configured with Docker"
   default     = "10.20.30.41/24"
