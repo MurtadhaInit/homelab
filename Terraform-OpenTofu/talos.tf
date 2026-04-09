@@ -9,9 +9,11 @@
 #   3. Push configs to each node over the Talos API
 #   4. Bootstrap etcd on one control plane node
 #   5. Retrieve talosconfig and kubeconfig
+#   6. Install Cilium CNI via Helm
 #
-# After `tofu apply`, the cluster will be fully ready — Cilium is deployed
-# as an inline manifest during bootstrap, so nodes become Ready automatically.
+# After bootstrap, nodes are NotReady (no CNI). Cilium is then installed via
+# a Helm release — its pods tolerate the NotReady taint, so they start and
+# establish networking. Once Cilium is running, nodes become Ready.
 # =============================================================================
 
 # === 1. Cluster secrets ===
@@ -21,69 +23,9 @@ resource "talos_machine_secrets" "this" {
   talos_version = var.talos_version
 }
 
-# === 2. Cilium CNI (rendered via Helm, deployed as inline manifest) ===
-# Rendered locally — no cluster connection needed. The output is injected into
-# the controlplane machine config so Talos deploys Cilium during bootstrap.
-locals {
-  cilium_values = yamlencode({
-    ipam = { mode = "kubernetes" }
-
-    # Replaces kube-proxy with eBPF-based routing (we disabled kube-proxy in Talos)
-    kubeProxyReplacement = true
-
-    # Enable the Gateway API controller (CRDs installed separately via Flux)
-    gatewayAPI = { enabled = true }
-
-    # KubePrism is Talos's local API server proxy running on every node.
-    # Cilium needs the API server to start, but without Cilium there's no pod
-    # networking to reach it — KubePrism breaks this chicken-and-egg by providing
-    # a localhost endpoint that works before the CNI is up.
-    k8sServiceHost = "localhost"
-    k8sServicePort = 7445
-
-    # Talos already mounts cgroups — tell Cilium not to try
-    cgroup = {
-      autoMount = { enabled = false }
-      hostRoot  = "/sys/fs/cgroup"
-    }
-
-    # Talos blocks SYS_MODULE (no kernel module loading from pods),
-    # so we explicitly list only the capabilities Cilium actually needs
-    securityContext = {
-      capabilities = {
-        ciliumAgent      = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
-        cleanCiliumState = ["NET_ADMIN", "SYS_ADMIN", "SYS_RESOURCE"]
-      }
-    }
-  })
-}
-
-data "helm_template" "cilium" {
-  name         = "cilium"
-  namespace    = "kube-system"
-  repository   = "https://helm.cilium.io/"
-  chart        = "cilium"
-  version      = var.cilium_version
-  kube_version = var.k8s_version
-  include_crds = true
-
-  values = [local.cilium_values]
-}
-
-# Cache the rendered manifest in state to prevent drift from helm_template
-# re-evaluation. Only re-renders when cilium_version or values change.
-resource "terraform_data" "cilium_manifest" {
-  triggers_replace = [var.cilium_version, sha256(local.cilium_values)]
-  input            = data.helm_template.cilium.manifest
-
-  lifecycle {
-    ignore_changes = [input]
-  }
-}
-
-# === 3. Machine configurations ===
+# === 2. Machine configurations ===
 # The base config for each role. Think of this as the "template" —
-# further per-node customizations can be applied as patches in step 4.
+# further per-node customizations can be applied as patches in step 3.
 
 data "talos_machine_configuration" "controlplane" {
   talos_version      = var.talos_version
@@ -96,20 +38,12 @@ data "talos_machine_configuration" "controlplane" {
   config_patches = [
     yamlencode({
       cluster = {
-        # Disable the default Flannel CNI and kube-proxy — Cilium replaces both
+        # Disable the default Flannel CNI and kube-proxy — Cilium replaces both.
+        # Cilium is installed separately via Helm after bootstrap (step 6).
         network = {
           cni = { name = "none" }
         }
         proxy = { disabled = true }
-
-        # Deploy Cilium during bootstrap as an inline manifest.
-        # This ensures nodes become Ready without any manual post-bootstrap steps.
-        inlineManifests = [
-          {
-            name     = "cilium"
-            contents = terraform_data.cilium_manifest.output
-          }
-        ]
       }
 
       # Virtual IP shared across control plane nodes for HA.
@@ -138,6 +72,7 @@ data "talos_machine_configuration" "worker" {
 }
 
 # === 3. Apply configs to each node ===
+
 # Pushes the machine config to each node over the Talos gRPC API.
 # The provider retries until the node's API becomes reachable after boot.
 resource "talos_machine_configuration_apply" "this" {
@@ -184,7 +119,7 @@ data "talos_client_configuration" "this" {
   endpoints            = [for name, node in local.controlplane_nodes : node.ip]
 }
 
-# kubeconfig — needed for `kubectl` and (and other clients like Flux) to talk to the Kubernetes API
+# kubeconfig — needed for `kubectl` (and other clients like Flux) to talk to the Kubernetes API
 resource "talos_cluster_kubeconfig" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
   node                 = local.talos_nodes["talos-cp-1"].ip
@@ -192,7 +127,7 @@ resource "talos_cluster_kubeconfig" "this" {
   depends_on = [talos_machine_bootstrap.this]
 }
 
-# === Write client configs to disk ===
+# === 5a. Write client configs to disk ===
 # Automatically written on apply — no manual step needed.
 # Paths match the TALOSCONFIG and KUBECONFIG env vars set in mise.toml.
 resource "local_sensitive_file" "talosconfig" {
@@ -203,4 +138,55 @@ resource "local_sensitive_file" "talosconfig" {
 resource "local_sensitive_file" "kubeconfig" {
   content  = talos_cluster_kubeconfig.this.kubeconfig_raw
   filename = "${path.module}/../k8s/kubeconfig"
+}
+
+# === 6. Cilium CNI (installed via Helm) ===
+# Installed as a Helm release after bootstrap. The kube-apiserver uses host
+# networking so it's reachable even without a CNI — Helm can talk to it via
+# the kubeconfig. Cilium's pods tolerate the NotReady taint, so they start
+# on the CNI-less nodes and establish networking.
+#
+# On a fresh cluster, this resource waits for the kubeconfig to be written
+# to disk before attempting to install (via depends_on).
+
+resource "helm_release" "cilium" {
+  name       = "cilium"
+  namespace  = "kube-system"
+  repository = "https://helm.cilium.io/"
+  chart      = "cilium"
+  version    = "1.19.2"
+
+  values = [yamlencode({
+    ipam = { mode = "kubernetes" }
+
+    # Replaces kube-proxy with eBPF-based routing (we disabled kube-proxy in Talos)
+    kubeProxyReplacement = true
+
+    # Enable the Gateway API controller (CRDs installed separately via Flux)
+    gatewayAPI = { enabled = true }
+
+    # KubePrism is Talos's local API server proxy running on every node.
+    # Cilium needs the API server to start, but without Cilium there's no pod
+    # networking to reach it — KubePrism breaks this chicken-and-egg by providing
+    # a localhost endpoint that works before the CNI is up.
+    k8sServiceHost = "localhost"
+    k8sServicePort = 7445
+
+    # Talos already mounts cgroups — tell Cilium not to try
+    cgroup = {
+      autoMount = { enabled = false }
+      hostRoot  = "/sys/fs/cgroup"
+    }
+
+    # Talos blocks SYS_MODULE (no kernel module loading from pods),
+    # so we explicitly list only the capabilities Cilium actually needs
+    securityContext = {
+      capabilities = {
+        ciliumAgent      = ["CHOWN", "KILL", "NET_ADMIN", "NET_RAW", "IPC_LOCK", "SYS_ADMIN", "SYS_RESOURCE", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+        cleanCiliumState = ["NET_ADMIN", "SYS_ADMIN", "SYS_RESOURCE"]
+      }
+    }
+  })]
+
+  depends_on = [local_sensitive_file.kubeconfig]
 }

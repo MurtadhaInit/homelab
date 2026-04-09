@@ -8,7 +8,7 @@ spec:
   interval: 12h
   url: https://github.com/kubernetes-sigs/gateway-api
   ref:
-    tag: v1.4.1
+    tag: v1.4.1 # as per https://docs.cilium.io/en/stable/network/servicemesh/gateway-api/gateway-api/
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

@@ -4,6 +4,7 @@
 2. Consider setting up encryption in Adguard Home to both allow clients to use DoH/DoT with the DNS server and crucially to identify clients uniquely in Adguard Home.
 3. Use an external secrets provider like Hashicorop Vault along with ephemeral resources in the Talos provider (also update to 0.11 when it's out of beta).
 4. Adopt a better secrets management solution and remove the .env file along with its mise entry and .gitignore entry.
+5. Change the namespace used for Cilium when deployed as an embedded Helm chart and change the namespace used for Flux source and kustomization CRDs to be in some other namespace (maybe).
 
 ## Notes
 

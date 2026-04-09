@@ -2,8 +2,14 @@ provider "external" {}
 
 provider "talos" {}
 
-# Used to render chart templates locally so no authentication to a k8s cluster is needed
-provider "helm" {}
+# The kubeconfig is written to disk by local_sensitive_file.kubeconfig
+# during apply — the Helm provider connects lazily when a helm_release
+# resource is evaluated, by which time the file exists.
+provider "helm" {
+  kubernetes = {
+    config_path = "${path.module}/../k8s/kubeconfig"
+  }
+}
 
 provider "proxmox" {
   endpoint  = "https://${var.pve_host_ip}:${var.pve_host_port}/"

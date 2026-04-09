@@ -82,9 +82,3 @@ variable "k8s_version" {
   description = "The version of Kubernetes to use in generated machine configuration"
   default     = "v1.35.2"
 }
-
-variable "cilium_version" {
-  type        = string
-  description = "The version of Cilium to deploy as the cluster CNI"
-  default     = "1.19.0"
-}
