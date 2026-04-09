@@ -1,12 +1,12 @@
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
+kind: GitRepository
 metadata:
   name: gateway-api
   namespace: flux-system
 spec:
   interval: 12h
-  url: oci://ghcr.io/kubernetes-sigs/gateway-api/crd-install
+  url: https://github.com/kubernetes-sigs/gateway-api
   ref:
     tag: v1.5.1
 ---
@@ -18,7 +18,8 @@ metadata:
 spec:
   interval: 1h
   sourceRef:
-    kind: OCIRepository
+    kind: GitRepository
     name: gateway-api
+  path: ./config/crd/standard
   prune: false
   wait: true
