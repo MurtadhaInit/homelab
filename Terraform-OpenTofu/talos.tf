@@ -24,20 +24,15 @@ resource "talos_machine_secrets" "this" {
 # === 2. Cilium CNI (rendered via Helm, deployed as inline manifest) ===
 # Rendered locally — no cluster connection needed. The output is injected into
 # the controlplane machine config so Talos deploys Cilium during bootstrap.
-data "helm_template" "cilium" {
-  name         = "cilium"
-  namespace    = "kube-system"
-  repository   = "https://helm.cilium.io/"
-  chart        = "cilium"
-  version      = var.cilium_version
-  kube_version = var.k8s_version
-  include_crds = true
-
-  values = [yamlencode({
+locals {
+  cilium_values = yamlencode({
     ipam = { mode = "kubernetes" }
 
     # Replaces kube-proxy with eBPF-based routing (we disabled kube-proxy in Talos)
     kubeProxyReplacement = true
+
+    # Enable the Gateway API controller (CRDs installed separately via Flux)
+    gatewayAPI = { enabled = true }
 
     # KubePrism is Talos's local API server proxy running on every node.
     # Cilium needs the API server to start, but without Cilium there's no pod
@@ -60,13 +55,25 @@ data "helm_template" "cilium" {
         cleanCiliumState = ["NET_ADMIN", "SYS_ADMIN", "SYS_RESOURCE"]
       }
     }
-  })]
+  })
+}
+
+data "helm_template" "cilium" {
+  name         = "cilium"
+  namespace    = "kube-system"
+  repository   = "https://helm.cilium.io/"
+  chart        = "cilium"
+  version      = var.cilium_version
+  kube_version = var.k8s_version
+  include_crds = true
+
+  values = [local.cilium_values]
 }
 
 # Cache the rendered manifest in state to prevent drift from helm_template
-# re-evaluation. Only re-renders when cilium_version changes.
+# re-evaluation. Only re-renders when cilium_version or values change.
 resource "terraform_data" "cilium_manifest" {
-  triggers_replace = [var.cilium_version]
+  triggers_replace = [var.cilium_version, sha256(local.cilium_values)]
   input            = data.helm_template.cilium.manifest
 
   lifecycle {
