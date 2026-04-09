@@ -45,6 +45,10 @@ let
       name = "sabnzbd";
       proxy = "localhost:8080";
     }
+    {
+      name = "seerr";
+      proxy = "localhost:${toString config.services.seerr.port}";
+    }
   ];
 
   mkHttpBlock = svc: ''

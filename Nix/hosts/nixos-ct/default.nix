@@ -15,6 +15,7 @@
     ../../modules/prowlarr.nix
     ../../modules/sonarr.nix
     ../../modules/sabnzbd.nix
+    ../../modules/seerr.nix
   ];
 
   system.stateVersion = "25.11";
@@ -124,4 +125,5 @@
     secretsFile = config.age.secrets.sabnzbd-secrets.path;
     serverSecretsFile = config.age.secrets.sabnzbd-server.path;
   };
+  homelab.seerr.enable = true;
 }
