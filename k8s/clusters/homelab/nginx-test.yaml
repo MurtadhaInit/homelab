@@ -4,6 +4,7 @@ metadata:
   labels:
     run: nginx-test
   name: nginx-test
+  namespace: default
 spec:
   containers:
   - image: nginx
