@@ -45,3 +45,7 @@ vms-plan:
 [working-directory('Terraform-OpenTofu')]
 vms-apply:
     tofu apply -auto-approve
+
+[working-directory('k8s')]
+flux-bootstrap:
+    flux bootstrap github --owner=$GITHUB_USER --repository=homelab --branch=main --personal --path=k8s/clusters/homelab
