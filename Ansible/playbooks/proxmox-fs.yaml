@@ -1,6 +1,6 @@
 ---
 - name: Setup filesystem mounts on Proxmox host
-  hosts: proxmox_hosts
+  hosts: pve-host-1
   remote_user: root
 
   vars:
@@ -137,12 +137,3 @@
             enabled: true
             state: started
             daemon_reload: true
-
-    - name: Install a few tools for checking storage space
-      ansible.builtin.apt:
-        name:
-          - duf
-          - ncdu
-          - du-dust
-        state: present
-        update_cache: true

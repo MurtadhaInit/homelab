@@ -105,6 +105,16 @@
     #         update_cache: true
     # TODO: configure the proxmox firewall
 
+    - name: Install general tools
+      ansible.builtin.apt:
+        name:
+          - duf
+          - ncdu
+          - du-dust
+          - unar
+        state: present
+        update_cache: true
+
   handlers:
     - name: Restart SSH
       ansible.builtin.service:

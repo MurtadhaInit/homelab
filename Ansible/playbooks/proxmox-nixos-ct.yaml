@@ -1,6 +1,6 @@
 ---
 - name: Configure NixOS LXC container on Proxmox (features and bind mounts)
-  hosts: proxmox_hosts
+  hosts: pve-host-1
   remote_user: root
 
   vars:
