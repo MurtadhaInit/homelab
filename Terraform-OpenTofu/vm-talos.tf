@@ -38,8 +38,8 @@ locals {
       role            = "worker"
       ip              = "10.20.30.70"
       vm_id           = 820
-      cores           = 1
-      memory          = 1024
+      cores           = 2
+      memory          = 2048
       disk_gb         = 10
       longhorn_disk_gb = 15
     }
@@ -47,8 +47,8 @@ locals {
       role            = "worker"
       ip              = "10.20.30.71"
       vm_id           = 821
-      cores           = 1
-      memory          = 1024
+      cores           = 2
+      memory          = 2048
       disk_gb         = 10
       longhorn_disk_gb = 15
     }
