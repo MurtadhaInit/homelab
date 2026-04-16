@@ -94,10 +94,11 @@
             nodes: ["prox"]
             content:
               - backup
+              - images
             state: present
           loop:
-            - { name: media, path: /mnt/media }
-            - { name: usb-hdd, path: /mnt/usb-hdd }
+            - { name: media-lv, path: /mnt/media/proxmox }
+            # - { name: usb-hdd, path: /mnt/usb-hdd }
 
     - name: Setup monthly btrfs scrub for the media LV
       block:

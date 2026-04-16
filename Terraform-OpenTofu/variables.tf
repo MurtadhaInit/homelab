@@ -36,6 +36,12 @@ variable "pve_storage" {
   default     = "local"
 }
 
+variable "pve_secondary_storage" {
+  type        = string
+  description = "The name of the secondary Proxmox storage (e.g., for disks)"
+  default     = "media-lv"
+}
+
 # === Shared between various Linux VMs ===
 variable "vm_ssh_public_key" {
   type        = string

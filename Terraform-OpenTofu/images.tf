@@ -52,7 +52,12 @@ resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
 data "talos_image_factory_extensions_versions" "this" {
   talos_version = var.talos_version
   filters = {
-    names = ["qemu-guest-agent", "amd-ucode"]
+    names = [
+      "qemu-guest-agent",
+      "amd-ucode",
+      "iscsi-tools", # for Longhorn
+      "util-linux-tools" # for Longhorn
+    ]
   }
 }
 

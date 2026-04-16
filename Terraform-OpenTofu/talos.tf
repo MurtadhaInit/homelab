@@ -69,6 +69,40 @@ data "talos_machine_configuration" "worker" {
   cluster_endpoint   = local.talos_cluster_endpoint
   machine_type       = "worker"
   machine_secrets    = talos_machine_secrets.this.machine_secrets
+
+  config_patches = [
+    # Longhorn requires the kubelet to bind-mount its data directory.
+    # UserVolumeConfig auto-mounts to /var/mnt/<name>, and this propagates
+    # it into the kubelet's mount namespace.
+    yamlencode({
+      machine = {
+        kubelet = {
+          extraMounts = [
+            {
+              destination = "/var/mnt/longhorn"
+              type        = "bind"
+              source      = "/var/mnt/longhorn"
+              options     = ["bind", "rshared", "rw"]
+            }
+          ]
+        }
+      }
+    }),
+    # Provision the dedicated Longhorn disk as a user volume.
+    # Talos auto-formats, partitions, and mounts it at /var/mnt/longhorn.
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "UserVolumeConfig"
+      name       = "longhorn"
+      provisioning = {
+        diskSelector = {
+          match = "!system_disk && disk.transport == 'virtio'"
+        }
+        minSize = "1GiB"
+        grow    = true
+      }
+    })
+  ]
 }
 
 # === 3. Apply configs to each node ===
@@ -90,6 +124,12 @@ resource "talos_machine_configuration_apply" "this" {
   # via the NoCloud datasource — no need to set it here.
 
   depends_on = [proxmox_virtual_environment_vm.talos]
+
+  lifecycle {
+    # Re-apply config when the VM is rebuilt from scratch, since a new VM
+    # boots with no config even though the resource inputs haven't changed.
+    replace_triggered_by = [proxmox_virtual_environment_vm.talos[each.key]]
+  }
 }
 
 # === 4. Bootstrap ===

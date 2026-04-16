@@ -8,44 +8,49 @@ locals {
   # Using a map (not a list) so that adding/removing a node doesn't affect others.
   talos_nodes = {
     "talos-cp-1" = {
-      role    = "controlplane"
-      ip      = "10.20.30.60"
-      vm_id   = 810
-      cores   = 2
-      memory  = 2048
-      disk_gb = 10
+      role             = "controlplane"
+      ip               = "10.20.30.60"
+      vm_id            = 810
+      cores            = 2
+      memory           = 2048
+      disk_gb          = 10
+      longhorn_disk_gb = null
     }
     "talos-cp-2" = {
-      role    = "controlplane"
-      ip      = "10.20.30.61"
-      vm_id   = 811
-      cores   = 2
-      memory  = 2048
-      disk_gb = 10
+      role             = "controlplane"
+      ip               = "10.20.30.61"
+      vm_id            = 811
+      cores            = 2
+      memory           = 2048
+      disk_gb          = 10
+      longhorn_disk_gb = null
     }
     "talos-cp-3" = {
-      role    = "controlplane"
-      ip      = "10.20.30.62"
-      vm_id   = 812
-      cores   = 2
-      memory  = 2048
-      disk_gb = 10
+      role             = "controlplane"
+      ip               = "10.20.30.62"
+      vm_id            = 812
+      cores            = 2
+      memory           = 2048
+      disk_gb          = 10
+      longhorn_disk_gb = null
     }
     "talos-worker-1" = {
-      role    = "worker"
-      ip      = "10.20.30.70"
-      vm_id   = 820
-      cores   = 1
-      memory  = 1024
-      disk_gb = 10
+      role            = "worker"
+      ip              = "10.20.30.70"
+      vm_id           = 820
+      cores           = 1
+      memory          = 1024
+      disk_gb         = 10
+      longhorn_disk_gb = 15
     }
     "talos-worker-2" = {
-      role    = "worker"
-      ip      = "10.20.30.71"
-      vm_id   = 821
-      cores   = 1
-      memory  = 1024
-      disk_gb = 10
+      role            = "worker"
+      ip              = "10.20.30.71"
+      vm_id           = 821
+      cores           = 1
+      memory          = 1024
+      disk_gb         = 10
+      longhorn_disk_gb = 15
     }
   }
 
@@ -103,6 +108,19 @@ resource "proxmox_virtual_environment_vm" "talos" {
     file_id      = proxmox_download_file.talos_image.id
   }
 
+  # Dedicated Longhorn storage disk (workers only)
+  dynamic "disk" {
+    for_each = each.value.longhorn_disk_gb != null ? [each.value.longhorn_disk_gb] : []
+    content {
+      datastore_id = var.pve_secondary_storage
+      size         = disk.value
+      interface    = "scsi1"
+      file_format  = "raw"
+      ssd          = true
+      discard      = "on"
+    }
+  }
+
   scsi_hardware = "virtio-scsi-pci" # VirtIO SCSI - since VirtIO SCSI Single is unsupported by Talos
 
   operating_system {
@@ -121,5 +139,13 @@ resource "proxmox_virtual_environment_vm" "talos" {
       }
     }
     datastore_id = var.pve_storage
+  }
+
+  lifecycle {
+    # The file_id is only used at VM creation time (source image to clone).
+    # After boot, the disk is independent and Talos upgrades itself via
+    # `talosctl upgrade`, not by re-cloning. Ignore changes so that a new
+    # schematic (e.g. added extensions) doesn't destroy running nodes.
+    ignore_changes = [disk[0].file_id]
   }
 }
