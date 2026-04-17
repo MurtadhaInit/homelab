@@ -29,7 +29,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
     ssd          = true
     iothread     = true
     size         = 10
-    file_format  = "raw"
+    file_format  = "qcow2"
     file_id      = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
   }
 
