@@ -126,9 +126,10 @@ resource "talos_machine_configuration_apply" "this" {
   depends_on = [proxmox_virtual_environment_vm.talos]
 
   lifecycle {
-    # Re-apply config when the VM is rebuilt from scratch, since a new VM
-    # boots with no config even though the resource inputs haven't changed.
-    replace_triggered_by = [proxmox_virtual_environment_vm.talos[each.key]]
+    # Re-apply config when the VM is recreated (new ID), not on in-place
+    # updates like memory/CPU changes. A new VM boots with no config even
+    # though this resource's inputs haven't changed.
+    replace_triggered_by = [proxmox_virtual_environment_vm.talos[each.key].id]
   }
 }
 
