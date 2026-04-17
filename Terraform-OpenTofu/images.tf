@@ -87,3 +87,8 @@ resource "proxmox_download_file" "talos_image" {
   url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
   file_name = "talos-nocloud-amd64.img"
 }
+
+output "talos_upgrade_image" {
+  description = "Installer image URL for talosctl upgrade"
+  value       = data.talos_image_factory_urls.this.urls.installer
+}
