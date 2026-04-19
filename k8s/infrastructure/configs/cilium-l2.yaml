@@ -1,0 +1,18 @@
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: default
+spec:
+  nodeSelector:
+    matchLabels: {}
+  externalIPs: true
+  loadBalancerIPs: true
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: default
+spec:
+  blocks:
+    - cidr: 10.20.30.80/32

@@ -206,6 +206,17 @@ resource "helm_release" "cilium" {
     # Enable the Gateway API controller (CRDs installed separately via Flux)
     gatewayAPI = { enabled = true }
 
+    # L2 announcements — respond to ARP on the LAN for LoadBalancer Service IPs,
+    # so the Gateway gets a reachable address without an external LB like MetalLB.
+    # Paired with CiliumL2AnnouncementPolicy + CiliumLoadBalancerIPPool CRs
+    # applied via Flux under k8s/infrastructure/configs/cilium-l2.yaml.
+    l2announcements = { enabled = true }
+    externalIPs     = { enabled = true }
+
+    # L2 uses leader-election leases, which amplifies API-server traffic.
+    # Raise the client rate limit so cilium-agent isn't throttled under load.
+    k8sClientRateLimit = { qps = 50, burst = 100 }
+
     # KubePrism is Talos's local API server proxy running on every node.
     # Cilium needs the API server to start, but without Cilium there's no pod
     # networking to reach it — KubePrism breaks this chicken-and-egg by providing
