@@ -21,9 +21,6 @@ metadata:
   namespace: cert-manager
 spec:
   interval: 1h
-  dependsOn:
-    - name: gateway-api-crds
-      namespace: flux-system
   chart:
     spec:
       chart: cert-manager
