@@ -3,8 +3,11 @@ _.python.venv = ".venv"
 _.file = ".env"
 TALOSCONFIG = "{{ config_root }}/k8s/talosconfig"
 KUBECONFIG = "{{ config_root }}/k8s/kubeconfig"
+SOPS_AGE_KEY_FILE = "~/.ssh/keys/sops-age.txt"
 
 [tools]
+age = "latest"
+sops = "latest"
 uv = "latest"
 opentofu = "latest"
 helm = "latest"

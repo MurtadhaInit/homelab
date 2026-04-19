@@ -46,6 +46,13 @@ vms-plan:
 vms-apply:
     tofu apply -auto-approve
 
+# 1. Supply the Age private key to the cluster to allow Flux to decrypt SOPS-encrypted Secret resources
+[working-directory('k8s')]
+seed-sops-secret:
+    kubectl create namespace flux-system
+    cat ~/.ssh/keys/sops-age.txt | kubectl create secret generic sops-age --namespace=flux-system --from-file=sops-age.agekey=/dev/stdin
+
+# 2. Bootstrap the cluster with Flux (install Flux controllers and every other resource defined in the repo)
 [working-directory('k8s')]
 flux-bootstrap:
     flux bootstrap github --owner=$GITHUB_USER --repository=homelab --branch=main --personal --path=k8s/clusters/homelab
