@@ -1,4 +1,4 @@
 creation_rules:
-  - path_regex: .*\.yaml$
+  - path_regex: k8s/infrastructure/secrets/.*\.yaml$
     encrypted_regex: ^(data|stringData)$
     age: age1judvvl6kdauw8kwu2ul7g0ffrmg0n9ugvznsh440mp8gzx5fwynsyhxxsc

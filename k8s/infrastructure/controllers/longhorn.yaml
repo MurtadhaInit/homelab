@@ -34,6 +34,16 @@ spec:
   values:
     defaultSettings:
       defaultDataPath: /var/mnt/longhorn
-      defaultReplicaCount: 2
+      defaultReplicaCount: 2 # Default number of replicas for volumes created using the Longhorn UI
     persistence:
-      defaultClassReplicaCount: 2
+      defaultClassReplicaCount: 2 # Replica count of the default Longhorn StorageClass
+      # reclaimPolicy: Retain
+    # metrics:
+    #   serviceMonitor:
+    #     enabled: true # create a Prometheus ServiceMonitor resource for Longhorn Manager components
+    #     # -- Additional labels for the Prometheus ServiceMonitor resource.
+    #     additionalLabels: {}
+    #     # ...see other options
+    # httproute:
+    #   enabled: true # generate HTTPRoute records for the Longhorn UI service using Gateway API
+    #   # ...see other options
