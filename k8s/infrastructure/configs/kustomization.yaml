@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - cilium-l2.yaml
   - cluster-issuers.yaml
+  - gateway.yaml
