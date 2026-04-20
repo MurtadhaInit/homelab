@@ -44,6 +44,11 @@ spec:
     #     # -- Additional labels for the Prometheus ServiceMonitor resource.
     #     additionalLabels: {}
     #     # ...see other options
-    # httproute:
-    #   enabled: true # generate HTTPRoute records for the Longhorn UI service using Gateway API
-    #   # ...see other options
+    httproute:
+      enabled: true
+      parentRefs:
+        - name: homelab
+          namespace: gateway-system
+          sectionName: https
+      hostnames:
+        - longhorn.k8s.murtadha.dev
