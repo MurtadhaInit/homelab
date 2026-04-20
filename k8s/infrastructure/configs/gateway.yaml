@@ -10,7 +10,7 @@ metadata:
   name: homelab
   namespace: gateway-system
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   gatewayClassName: cilium
   listeners:
