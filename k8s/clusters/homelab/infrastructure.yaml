@@ -29,6 +29,7 @@ spec:
   retryInterval: 1m
   path: ./k8s/infrastructure/configs
   prune: true
+  wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -45,6 +46,7 @@ spec:
   retryInterval: 1m
   path: ./k8s/infrastructure/secrets
   prune: true
+  wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
