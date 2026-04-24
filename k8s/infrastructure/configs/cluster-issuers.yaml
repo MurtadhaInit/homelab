@@ -15,6 +15,10 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token
               key: api-token
+        selector:
+          dnsZones:
+            - "home.murtadha.dev" # match all subdomains
+            - "k8s.murtadha.dev" # TODO: to retire once transitioned to the above
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -32,3 +36,7 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token
               key: api-token
+        selector:
+          dnsZones:
+            - "home.murtadha.dev" # match all subdomains
+            - "k8s.murtadha.dev" # TODO: to retire once transitioned to the above
