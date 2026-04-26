@@ -40,7 +40,7 @@ locals {
       vm_id           = 820
       cores           = 2
       memory          = 2048
-      disk_gb         = 10
+      disk_gb         = 15
       longhorn_disk_gb = 15
     }
     "talos-worker-2" = {
@@ -49,7 +49,7 @@ locals {
       vm_id           = 821
       cores           = 2
       memory          = 2048
-      disk_gb         = 10
+      disk_gb         = 15
       longhorn_disk_gb = 15
     }
   }

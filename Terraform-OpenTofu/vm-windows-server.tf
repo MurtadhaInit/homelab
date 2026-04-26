@@ -56,7 +56,7 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
   stop_on_destroy = true
 
   lifecycle {
-    # enabled        = false
+    enabled        = false
     ignore_changes = [started]
   }
 }
