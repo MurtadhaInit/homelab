@@ -43,6 +43,15 @@ spec:
         existingSecret: grafana-admin
         userKey: admin-user
         passwordKey: admin-password
+      # Requests put the pod in Burstable QoS so it isn't first in line for
+      # eviction under node memory pressure. The limit is a circuit breaker
+      # for runaway memory (e.g. plugin or render leak), not a steady-state cap.
+      resources:
+        requests:
+          cpu: 50m
+          memory: 256Mi
+        limits:
+          memory: 768Mi
       persistence:
         enabled: true
         type: sts
@@ -50,6 +59,12 @@ spec:
         accessModes: [ReadWriteOnce]
         size: 2Gi
       sidecar:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            memory: 128Mi
         dashboards:
           enabled: true
           searchNamespace: ALL
@@ -95,16 +110,17 @@ spec:
         retention: 7d
         retentionSize: 6GiB
 
-        # Workers have ~2 GiB total RAM; without an explicit limit Prometheus's
-        # automemlimit picks ~1.8 GiB (90% of node mem) and the kernel OOMKills
-        # the BestEffort process. Setting requests+limits puts the pod in
-        # Burstable QoS and caps Go's heap target at the cgroup limit.
+        # Requests put Prometheus in Burstable QoS (lower OOM eviction priority
+        # than BestEffort) and bound Go's automemlimit to the cgroup limit
+        # rather than 90% of node memory. The limit is a circuit breaker for
+        # cardinality blow-ups, not a steady-state cap — Prometheus typically
+        # sits well below this for a small homelab scrape volume.
         resources:
           requests:
             cpu: 100m
-            memory: 384Mi
+            memory: 512Mi
           limits:
-            memory: 768Mi
+            memory: 1500Mi
 
         storageSpec:
           volumeClaimTemplate:
