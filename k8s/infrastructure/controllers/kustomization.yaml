@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - longhorn.yaml
+  - prometheus-operator-crds.yaml
+  - kube-prometheus-stack.yaml
