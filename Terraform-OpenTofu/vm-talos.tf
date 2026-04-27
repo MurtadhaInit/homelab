@@ -41,7 +41,7 @@ locals {
       cores           = 2
       memory          = 2048
       disk_gb         = 15
-      longhorn_disk_gb = 15
+      longhorn_disk_gb = 25
     }
     "talos-worker-2" = {
       role            = "worker"
@@ -50,7 +50,7 @@ locals {
       cores           = 2
       memory          = 2048
       disk_gb         = 15
-      longhorn_disk_gb = 15
+      longhorn_disk_gb = 25
     }
   }
 
