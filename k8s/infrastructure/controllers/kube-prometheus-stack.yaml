@@ -95,6 +95,17 @@ spec:
         retention: 7d
         retentionSize: 6GiB
 
+        # Workers have ~2 GiB total RAM; without an explicit limit Prometheus's
+        # automemlimit picks ~1.8 GiB (90% of node mem) and the kernel OOMKills
+        # the BestEffort process. Setting requests+limits puts the pod in
+        # Burstable QoS and caps Go's heap target at the cgroup limit.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            memory: 768Mi
+
         storageSpec:
           volumeClaimTemplate:
             spec:
