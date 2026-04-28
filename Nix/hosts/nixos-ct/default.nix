@@ -8,8 +8,6 @@
     ../../modules/qbittorrent.nix
     ../../modules/jellyfin.nix
     ../../modules/syncthing.nix
-    ../../modules/prometheus.nix
-    ../../modules/grafana.nix
     ../../modules/caddy.nix
     ../../modules/adguardhome.nix
     ../../modules/prowlarr.nix
@@ -48,14 +46,6 @@
       file = ../../secrets/syncthing-gui-password.age;
       owner = "murtadha";
     };
-    grafana-secret-key = {
-      file = ../../secrets/grafana-secret-key.age;
-      owner = "grafana";
-    };
-    grafana-admin-password = {
-      file = ../../secrets/grafana-admin-password.age;
-      owner = "grafana";
-    };
     syncthing-key = {
       file = ../../secrets/syncthing-key.age;
       owner = "murtadha";
@@ -92,15 +82,6 @@
     guiPasswordFile = config.age.secrets.syncthing-gui-password.path;
     keyFile = config.age.secrets.syncthing-key.path;
     certFile = config.age.secrets.syncthing-cert.path;
-  };
-  homelab.prometheus = {
-    enable = true;
-    proxmoxHostAddress = "10.20.30.40";
-  };
-  homelab.grafana = {
-    enable = true;
-    secretKeyFile = config.age.secrets.grafana-secret-key.path;
-    adminPasswordFile = config.age.secrets.grafana-admin-password.path;
   };
   homelab.caddy = {
     enable = true;

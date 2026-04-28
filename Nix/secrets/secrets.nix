@@ -24,13 +24,6 @@ in
   "syncthing-key.age".publicKeys = [ nixos-ct ];
   "syncthing-cert.age".publicKeys = [ nixos-ct ];
 
-  "grafana-admin-password.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
-  # Generate with: openssl rand -hex 32 | nix run github:ryantm/agenix -- -e grafana-secret-key.age
-  "grafana-secret-key.age".publicKeys = [ nixos-ct ];
-
   # Cloudflare API token for Caddy DNS-01 ACME challenges. Required perms: Zone.Zone:Read, Zone.DNS:Edit
   # Create with: "CF_API_TOKEN=<token>" | nix run github:ryantm/agenix -- -e caddy-cloudflare-token.age
   "caddy-cloudflare-token.age".publicKeys = [

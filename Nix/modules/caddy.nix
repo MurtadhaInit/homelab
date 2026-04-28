@@ -22,14 +22,6 @@ let
       proxy = "localhost:8384";
     }
     {
-      name = "prometheus";
-      proxy = "localhost:${toString config.services.prometheus.port}";
-    }
-    {
-      name = "grafana";
-      proxy = "localhost:${toString config.services.grafana.settings.server.http_port}";
-    }
-    {
       name = "adguard";
       proxy = "localhost:${toString config.services.adguardhome.port}";
     }
