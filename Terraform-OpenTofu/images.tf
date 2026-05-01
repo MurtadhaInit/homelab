@@ -20,6 +20,10 @@ resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
   checksum           = "854109e1f215a29fc3541188297a6ca97c8a8f0f8c4dd6236b78dfdf845bf75e"
   checksum_algorithm = "sha256"
   overwrite          = false
+
+  lifecycle {
+    enabled = false
+  }
 }
 
 resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
@@ -32,6 +36,10 @@ resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
   # The URL for the stable build of the virtIO drivers for Windows - version 0.1.271
   url       = "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win.iso"
   overwrite = false
+
+  lifecycle {
+    enabled = false
+  }
 }
 
 resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {

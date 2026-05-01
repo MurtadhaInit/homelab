@@ -49,7 +49,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
 
   disk {
     datastore_id = var.pve_storage
-    size         = 20
+    size         = 32
   }
 
   operating_system {
