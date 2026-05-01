@@ -1,0 +1,32 @@
+---
+# Grafana dashboards as ConfigMaps, picked up by the kube-prometheus-stack
+# Grafana sidecar (label `grafana_dashboard: "1"`, searchNamespace=ALL).
+#
+# Vendoring community dashboards (rather than relying on the Grafana
+# subchart's `gnetId` fetcher) keeps everything in git — no runtime
+# dependency on grafana.com, `git blame` works on panel diffs, and
+# upgrades are an explicit re-vendor commit.
+#
+# To bump a community dashboard, refetch its latest revision from
+# grafana.com, e.g. for Node Exporter Full (id 1860):
+#   curl -fsSL https://grafana.com/api/dashboards/1860 | jq .revision
+#   curl -fsSL https://grafana.com/api/dashboards/1860/revisions/<N>/download \
+#     -o node-exporter-full.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+# Stable ConfigMap names — the sidecar watches by label, not name, and
+# stable names keep `kubectl get cm` legible across edits.
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"
+
+configMapGenerator:
+  - name: grafana-dashboard-storage
+    files:
+      - storage.json
+  - name: grafana-dashboard-node-exporter-full
+    files:
+      - node-exporter-full.json

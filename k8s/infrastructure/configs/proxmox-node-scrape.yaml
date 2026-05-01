@@ -1,0 +1,25 @@
+---
+# Scrapes node_exporter on the Proxmox host (deployed by
+# Ansible/playbooks/proxmox-node-exporter.yaml). The host sits outside the
+# cluster, so we use a ScrapeConfig with staticConfigs rather than a
+# ServiceMonitor — there's no Service/Endpoints object to discover.
+#
+# jobName is "node-exporter" (matching the in-cluster node-exporter scrape
+# job) so the canned PrometheusRules shipped by kube-prometheus-stack —
+# NodeFilesystemAlmostOutOfSpace, NodeMemoryHighUtilization, ClockSkew, etc.
+# — apply to the Proxmox host without us having to re-author any of them.
+# Disambiguate the host from in-cluster k8s nodes via the `nodename` label
+# (k8s nodes get their own nodename via the prometheus-node-exporter
+# ServiceMonitor relabeling).
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: proxmox-node
+  namespace: monitoring
+spec:
+  jobName: node-exporter
+  staticConfigs:
+    - targets:
+        - 10.20.30.40:9100
+      labels:
+        nodename: proxmox
