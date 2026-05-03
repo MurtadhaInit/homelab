@@ -1,3 +1,15 @@
+resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
+  content_type = "vztmpl"
+  datastore_id = var.pve_storage
+  node_name    = var.pve_hostname
+
+  # The latest NixOS Proxmox LXC template - Update accordingly for new releases
+  url                = "https://hydra.nixos.org/build/320902448/download/1/nixos-image-lxc-proxmox-25.11pre-git-x86_64-linux.tar.xz"
+  checksum           = "335a2c2425ec03f3cabd283fb7e9c094f05133b380fd7a919ee3e2e677777350"
+  checksum_algorithm = "sha256"
+  overwrite          = false
+}
+
 resource "proxmox_virtual_environment_container" "nixos" {
   description   = "A NixOS LXC container generated from a Proxmox LXC image template from Hydra"
   tags          = ["terraform", "ansible"]
@@ -89,5 +101,5 @@ output "nixos_ct_ip" {
 
 output "nixos_ct_ssh" {
   description = "SSH connection command for nixos LXC container"
-  value       = "ssh -i ~/.ssh/keys/proxmox-vms root@${trimsuffix(var.nixos_static_ip, "/24")}"
+  value       = "ssh -i ${trimsuffix(var.vm_ssh_public_key, ".pub")} root@${trimsuffix(var.nixos_static_ip, "/24")}"
 }

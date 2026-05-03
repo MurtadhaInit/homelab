@@ -1,3 +1,13 @@
+resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
+  content_type = "iso"
+  datastore_id = var.pve_storage
+  node_name    = var.pve_hostname
+
+  # The URL for the latest Ubuntu Server LTS minimal cloud image
+  url       = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+  overwrite = false
+}
+
 resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   name        = "ubuntu-vm"
   description = "An Ubuntu cloud image configured with Cloud Init for containers deployment"
@@ -110,5 +120,5 @@ output "ubuntu_vm_ip" {
 
 output "ubuntu_vm_ssh" {
   description = "SSH connection command for ubuntu-vm VM"
-  value       = "ssh -i ~/.ssh/keys/proxmox-vms ${var.vm_regular_username}@${trimsuffix(var.ubuntu_vm_static_ip, "/24")}"
+  value       = "ssh -i ${trimsuffix(var.vm_ssh_public_key, ".pub")} ${var.vm_regular_username}@${trimsuffix(var.ubuntu_vm_static_ip, "/24")}"
 }

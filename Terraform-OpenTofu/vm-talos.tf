@@ -1,3 +1,50 @@
+# === Talos Image Factory ===
+# We declare the extensions we want and let the provider generate the schematic + URL
+
+data "talos_image_factory_extensions_versions" "this" {
+  talos_version = var.talos_version
+  filters = {
+    names = [
+      "qemu-guest-agent",
+      "amd-ucode",
+      "iscsi-tools", # for Longhorn
+      "util-linux-tools" # for Longhorn
+    ]
+  }
+}
+
+resource "talos_image_factory_schematic" "this" {
+  schematic = yamlencode({
+    customization = {
+      systemExtensions = {
+        officialExtensions = data.talos_image_factory_extensions_versions.this.extensions_info.*.name
+      }
+    }
+  })
+}
+
+data "talos_image_factory_urls" "this" {
+  talos_version = var.talos_version
+  schematic_id  = talos_image_factory_schematic.this.id
+  architecture  = "amd64"
+  platform      = "nocloud"
+}
+
+resource "proxmox_download_file" "talos_image" {
+  content_type = "iso"
+  datastore_id = var.pve_storage
+  node_name    = var.pve_hostname
+
+  # disk_image URL is the .raw.xz image — rename to .img for Proxmox/provider compatibility
+  url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
+  file_name = "talos-nocloud-amd64.img"
+}
+
+output "talos_upgrade_image" {
+  description = "Installer image URL for `talosctl upgrade`"
+  value       = data.talos_image_factory_urls.this.urls.installer
+}
+
 # === Talos cluster definition ===
 locals {
   talos_cluster_name     = "homelab"
