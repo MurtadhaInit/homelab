@@ -9,7 +9,7 @@ bootstrap:
     @echo "\n⚙️ Installing Python tools and packages with uv..."
     uv sync
     @echo "\n⚙️ Installing Ansible collections..."
-    uv run ansible-galaxy collection install --upgrade -r Ansible/requirements.yml
+    uv run ansible-galaxy collection install --upgrade -r ansible/requirements.yml
 
 # 1. Generate SSH key pairs locally for the management of Proxmox hosts and VMs
 generate-keys:
@@ -29,7 +29,7 @@ generate-keys:
     done
 
 # 2. Install the generated public SSH key on Proxmox hosts (root password prompt on first run only)
-[working-directory('Ansible')]
+[working-directory('ansible')]
 copy-keys:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -40,7 +40,7 @@ copy-keys:
         done
 
 # 3. Prepare Proxmox hosts
-[working-directory('Ansible')]
+[working-directory('ansible')]
 pve-hosts:
     @echo "\n⚙️ Configuring Proxmox hosts..."
     uv run ansible-playbook playbooks/proxmox-hosts.yaml
