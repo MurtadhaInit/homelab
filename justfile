@@ -14,6 +14,7 @@ bootstrap:
 # 1. Generate SSH key pairs locally for the management of Proxmox hosts and VMs
 generate-keys:
     #!/usr/bin/env bash
+    set -euo pipefail
     for key in proxmox-hosts proxmox-vms; do
         [ -f ~/.ssh/keys/$key ] && continue
         echo "Generating SSH key pair..."
@@ -31,7 +32,7 @@ generate-keys:
 [working-directory('Ansible')]
 copy-keys:
     #!/usr/bin/env bash
-    set -e
+    set -euo pipefail
     uv run ansible-inventory --list \
       | jq -r '.proxmox_hosts.hosts[] as $h | ._meta.hostvars[$h].ansible_host' \
       | while read -r host; do
