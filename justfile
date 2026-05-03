@@ -2,16 +2,16 @@
 default:
     @just --list --unsorted
 
-# Prepare the environment
+# 0. Install dependencies
 bootstrap:
+    @echo "⚙️ Installing CLI tools..."
     mise install
-    @echo "⚙️ Installing Python tools and packages with uv...\n"
+    @echo "\n⚙️ Installing Python tools and packages with uv..."
     uv sync
-    @echo "⚙️ Installing Ansible collections...\n"
-    # in the Ansible directory
-    ansible-galaxy collection install -r Ansible/requirements.yml
+    @echo "\n⚙️ Installing Ansible collections..."
+    uv run ansible-galaxy collection install --upgrade -r Ansible/requirements.yml
 
-# Generate SSH key pairs locally for the management of Proxmox hosts and VMs
+# 1. Generate SSH key pairs locally for the management of Proxmox hosts and VMs
 generate-keys:
     #!/usr/bin/env bash
     for key in proxmox-hosts proxmox-vms; do
@@ -27,14 +27,24 @@ generate-keys:
         fi
     done
 
-# 1. Prepare Proxmox hosts for automation
+# 2. Install the generated public SSH key on Proxmox hosts (root password prompt on first run only)
+[working-directory('Ansible')]
+copy-keys:
+    #!/usr/bin/env bash
+    set -e
+    uv run ansible-inventory --list \
+      | jq -r '.proxmox_hosts.hosts[] as $h | ._meta.hostvars[$h].ansible_host' \
+      | while read -r host; do
+            ssh-copy-id -i ~/.ssh/keys/proxmox-hosts.pub "root@$host"
+        done
+
+# 3. Prepare Proxmox hosts
 [working-directory('Ansible')]
 pve-hosts:
-    @echo "⚙️ Generating SSH keys...\n"
-    ansible-playbook playbooks/generate-keys.yaml
-    @echo "⚙️ Preparing Proxmox hosts...\n"
-    # run with --ask-pass the first time
-    ansible-playbook playbooks/proxmox-hosts.yaml
+    @echo "\n⚙️ Configuring Proxmox hosts..."
+    uv run ansible-playbook playbooks/proxmox-hosts.yaml
+    uv run ansible-playbook playbooks/proxmox-fs.yaml
+    uv run ansible-playbook playbooks/proxmox-node-exporter.yaml
 
 # Plan resources and required changes on Proxmox hosts
 [working-directory('Terraform-OpenTofu')]
@@ -56,3 +66,6 @@ seed-sops-secret:
 [working-directory('k8s')]
 flux-bootstrap:
     flux bootstrap github --owner=$GITHUB_USER --repository=homelab --branch=main --personal --path=k8s/clusters/homelab
+
+# TODO: create recipes for sops (one for encrypting and one for decryption) that does this following some naming convention for all secrets
+# and consider eliminating Ansible Vault in favour of SOPS.

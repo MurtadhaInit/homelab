@@ -1,5 +1,4 @@
 ---
-# NOTE: the root password is required one time only with --ask-pass to set up SSH keys for root
 - name: Prepare Proxmox nodes for remote management
   hosts: proxmox_hosts
   remote_user: root
@@ -9,7 +8,7 @@
     public_ssh_key: "~/.ssh/keys/proxmox-hosts.pub"
 
   tasks:
-    - name: Supply the generated public SSH key to the root user first
+    - name: Supply the generated public SSH key to the root user (if not present)
       ansible.posix.authorized_key:
         key: "{{ lookup('file', public_ssh_key) }}"
         user: root
@@ -111,7 +110,7 @@
           - duf
           - ncdu
           - du-dust
-          - unar
+          - unar # for the occasional manual extraction of split RAR archives
         state: present
         update_cache: true
 

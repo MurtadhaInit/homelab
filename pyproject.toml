@@ -5,8 +5,9 @@ description = "Python dependencies for Ansible and its community roles"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-  "ansible>=13.3.0",
+  "ansible-core>=2.14,<2.21",
   "ansible-lint>=26.1.1",
-  "proxmoxer>=2.2.0",
+  "passlib>=1.7.4",
+  "proxmoxer>=2.3.0",
   "requests>=2.32.5",
 ]

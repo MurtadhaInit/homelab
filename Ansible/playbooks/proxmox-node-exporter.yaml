@@ -5,8 +5,8 @@
   remote_user: root
 
   roles:
-      # NOTE: This role downloads and untars the binary on the controller which would
-      # require 'gnu-tar' to be present on macOS.
+    # NOTE: This role downloads and untars the binary on the controller which would
+    # require 'gnu-tar' to be present on macOS.
     - role: prometheus.prometheus.node_exporter
       vars:
         node_exporter_enabled_collectors:

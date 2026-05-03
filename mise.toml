@@ -6,6 +6,7 @@ KUBECONFIG = "{{ config_root }}/k8s/kubeconfig"
 SOPS_AGE_KEY_FILE = "{{ env.HOME }}/.ssh/keys/sops-age.txt"
 
 [tools]
+jq = "latest"
 age = "latest"
 sops = "latest"
 uv = "latest"

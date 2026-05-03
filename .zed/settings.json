@@ -1,0 +1,16 @@
+{
+  "lsp": {
+    "ansible": {
+      "settings": {
+        "python": {
+          "interpreterPath": ".venv/bin/python",
+        },
+        "validation": {
+          "lint": {
+            "path": ".venv/bin/ansible-lint",
+          },
+        },
+      },
+    },
+  },
+}
