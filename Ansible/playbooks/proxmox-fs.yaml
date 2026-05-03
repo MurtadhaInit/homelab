@@ -113,7 +113,7 @@
 
               [Service]
               Type=oneshot
-              ExecStart=/usr/sbin/btrfs scrub start -B /mnt/media
+              ExecStart=/usr/bin/btrfs scrub start -B /mnt/media
               IOSchedulingClass=idle
               CPUSchedulingPolicy=idle
               Nice=19
