@@ -41,11 +41,33 @@ let
       name = "seerr";
       proxy = "localhost:${toString config.services.seerr.port}";
     }
+    {
+      name = "portainer";
+      proxy = "10.20.30.41:9443";
+      upstreamHttps = true; # Portainer 2.18+ only serves on HTTPS (self-signed)
+    }
+    {
+      name = "proxmox";
+      proxy = "${cfg.proxmoxAddress}:8006";
+      upstreamHttps = true;
+    }
   ];
+
+  mkReverseProxy =
+    svc:
+    if (svc.upstreamHttps or false) then
+      ''
+        reverse_proxy https://${svc.proxy} {
+        	transport http {
+        		tls_insecure_skip_verify
+        	}
+        }''
+    else
+      "reverse_proxy ${svc.proxy}";
 
   mkHttpBlock = svc: ''
     http://${svc.name}.${cfg.domain} {
-    	reverse_proxy ${svc.proxy}
+    	${mkReverseProxy svc}
     }
   '';
 
@@ -54,48 +76,21 @@ let
     	tls {
     		dns cloudflare {env.CF_API_TOKEN}
     	}
-    	reverse_proxy ${svc.proxy}
+    	${mkReverseProxy svc}
     }
   '';
 
-  # Build the Caddyfile directly to bypass the NixOS module's `caddy fmt`
-  # formatting check, which fails with Caddy 2.11+ (exit code 1 when
-  # the input needed reformatting).
+  # Build the Caddyfile directly and pass it via configFile to bypass the NixOS
+  # module's Caddyfile-formatted derivation, which calls `cp --no-preserve=mode`.
+  # That fails when building via Determinate Nix's native Linux builder on macOS
+  # due to how Apple's Virtualization.framework / VirtioFS handles permission
+  # semantics across the host/guest boundary. Tracked upstream at:
+  # https://github.com/DeterminateSystems/nix-src/issues/421
+  # Once fixed, switch to services.caddy.virtualHosts (cleaner, gets per-vhost
+  # access logs, build-time validation).
   caddyfile = pkgs.writeText "Caddyfile" (
-    ''
-      {
-      	metrics {
-      		per_host
-      	}
-      }
-    ''
-    + lib.concatMapStrings mkHttpBlock services
-    + ''
-
-      http://proxmox.${cfg.domain} {
-      	reverse_proxy https://${cfg.proxmoxAddress}:8006 {
-      		transport http {
-      			tls_insecure_skip_verify
-      		}
-      	}
-      }
-    ''
-    + lib.optionalString (cfg.publicDomain != null) (
-      lib.concatMapStrings mkHttpsBlock services
-      + ''
-
-        proxmox.${cfg.publicDomain} {
-        	tls {
-        		dns cloudflare {env.CF_API_TOKEN}
-        	}
-        	reverse_proxy https://${cfg.proxmoxAddress}:8006 {
-        		transport http {
-        			tls_insecure_skip_verify
-        		}
-        	}
-        }
-      ''
-    )
+    lib.concatMapStrings mkHttpBlock services
+    + lib.optionalString (cfg.publicDomain != null) (lib.concatMapStrings mkHttpsBlock services)
   );
 in
 {

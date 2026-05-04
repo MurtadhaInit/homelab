@@ -1,15 +1,22 @@
 ---
-- name: Configure an Ubuntu cloud image VM with Docker
-  hosts: ubuntu-docker-vm
-  remote_user: automator
+- name: Configure an Ubuntu cloud image VM with Docker and Portainer
+  hosts: ubuntu-vm
+  remote_user: murtadha
 
   tasks:
-    - name: Add Docker GPG apt Key
+    - name: Ensure /etc/apt/keyrings exists
+      become: true
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker GPG apt key
       become: true
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/keyrings/docker.asc
-        mode: "a+r"
+        mode: '0644'
 
     - name: Get architecture
       changed_when: false
@@ -17,11 +24,18 @@
         cmd: dpkg --print-architecture
       register: arch
 
-    - name: Add Docker Repository
+    - name: Add Docker apt repository
       become: true
-      ansible.builtin.apt_repository:
-        repo: "deb [arch={{ arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: deb
+        uris: https://download.docker.com/linux/ubuntu
+        suites: "{{ ansible_facts['lsb']['codename'] }}"
+        components: stable
+        architectures: "{{ arch.stdout }}"
+        signed_by: /etc/apt/keyrings/docker.asc
         state: present
+        enabled: true
 
     - name: Install Docker packages
       become: true
@@ -33,46 +47,48 @@
           - containerd.io
           - docker-buildx-plugin
           - docker-compose-plugin
+          - python3-docker  # Docker SDK for Python, used by community.docker modules
         state: present
 
-    # - name: Install Docker Module for Python
-    #   ansible.builtin.pip:
-    #     name: docker
-
-    - name: Create a docker group
-      ansible.builtin.group:
-        name: docker
-        state: present
-
-    - name: Add the user to the docker group (and no one else)
+    - name: Add the user to the docker group
       become: true
       ansible.builtin.user:
-        name: "{{ ansible_user_id }}"
+        name: "{{ ansible_facts['user_id'] }}"
         groups:
           - docker
-
-    - name: Change the ownership and permissions of .docker directory
-      ansible.builtin.file:
-        mode: 'g+rwx'
-        owner: "{{ ansible_user_id }}"
-        path: "/home/{{ ansible_user_id }}/.docker"
-        recurse: true
-        state: directory
+        append: true
 
     - name: Set logging limits to avoid exhausting disk space
       become: true
       ansible.builtin.copy:
         dest: /etc/docker/daemon.json
-        mode: '644'
-        content: '
+        mode: '0644'
+        content: |
           {
-            "log-driver": "json-file",
+            "log-driver": "local",
             "log-opts": {
               "max-size": "100m",
               "max-file": "5"
             }
-          }'
+          }
       notify: Restart Docker
+
+    - name: Create Portainer data volume
+      become: true
+      community.docker.docker_volume:
+        name: portainer_data
+
+    - name: Run Portainer CE
+      become: true
+      community.docker.docker_container:
+        name: portainer
+        image: portainer/portainer-ce:lts
+        restart_policy: always
+        published_ports:
+          - "9443:9443"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - portainer_data:/data
 
   handlers:
     - name: Restart Docker

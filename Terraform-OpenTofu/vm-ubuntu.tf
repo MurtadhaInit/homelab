@@ -97,7 +97,7 @@ resource "proxmox_virtual_environment_file" "user_data_cloud_config" {
         - ${trimspace(file(var.vm_ssh_public_key))}
     packages:
         - qemu-guest-agent
-        - podman
+        # - podman
     runcmd:
       - systemctl enable qemu-guest-agent
       - systemctl start qemu-guest-agent

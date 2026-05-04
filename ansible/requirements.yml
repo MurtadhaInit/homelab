@@ -10,3 +10,6 @@ collections:
   # TODO: also requires: brew install gnu-tar
   - name: prometheus.prometheus
     version: "0.29.1"
+  # https://docs.ansible.com/ansible/latest/collections/community/docker/
+  - name: community.docker
+    version: "5.2.0"
