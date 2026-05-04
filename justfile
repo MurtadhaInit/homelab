@@ -47,15 +47,34 @@ pve-hosts:
     uv run ansible-playbook playbooks/proxmox-fs.yaml
     uv run ansible-playbook playbooks/proxmox-node-exporter.yaml
 
-# Plan resources and required changes on Proxmox hosts
+# 4.a Plan resource deployment
 [working-directory('Terraform-OpenTofu')]
-vms-plan:
+deploy-plan:
     tofu plan
 
-# Build resources on Proxmox hosts + further configuration
+# 4.b Build/provision resources
 [working-directory('Terraform-OpenTofu')]
-vms-apply:
+deploy-apply:
     tofu apply -auto-approve
+
+# 5. Configure VMs / LXC containers - baseline
+[working-directory('ansible')]
+pve-postconfig:
+    @echo "\n⚙️ Configuring Proxmox VMs / LXC containers..."
+    uv run ansible-playbook playbooks/ubuntu-docker.yaml
+    uv run ansible-playbook playbooks/proxmox-nixos-ct.yaml
+
+# TODO: two groups: one for nixos deploy-rs provisioning and one for k8s (flux, sops...etc)
+
+# Deploy Nix configuration to targets
+[working-directory('Nix')]
+nix-deploy:
+    nix run github:serokell/deploy-rs .
+
+# Update the Flake inputs
+[working-directory('Nix')]
+nix-update:
+    nix flake update
 
 # 1. Supply the Age private key to the cluster to allow Flux to decrypt SOPS-encrypted Secret resources
 [working-directory('k8s')]
