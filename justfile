@@ -57,32 +57,34 @@ deploy-plan:
 deploy-apply:
     tofu apply -auto-approve
 
-# 5. Configure VMs / LXC containers - baseline
+# 5. Configure VMs / LXC containers (baseline)
 [working-directory('ansible')]
 pve-postconfig:
     @echo "\n⚙️ Configuring Proxmox VMs / LXC containers..."
     uv run ansible-playbook playbooks/ubuntu-docker.yaml
     uv run ansible-playbook playbooks/proxmox-nixos-ct.yaml
 
-# TODO: two groups: one for nixos deploy-rs provisioning and one for k8s (flux, sops...etc)
-
 # Deploy Nix configuration to targets
+[group('nix')]
 [working-directory('Nix')]
 nix-deploy:
     nix run github:serokell/deploy-rs .
 
 # Update the Flake inputs
+[group('nix')]
 [working-directory('Nix')]
 nix-update:
     nix flake update
 
 # 1. Supply the Age private key to the cluster to allow Flux to decrypt SOPS-encrypted Secret resources
+[group('k8s')]
 [working-directory('k8s')]
 seed-sops-secret:
     kubectl create namespace flux-system
     cat ~/.ssh/keys/sops-age.txt | kubectl create secret generic sops-age --namespace=flux-system --from-file=sops-age.agekey=/dev/stdin
 
 # 2. Bootstrap the cluster with Flux (install Flux controllers and every other resource defined in the repo)
+[group('k8s')]
 [working-directory('k8s')]
 flux-bootstrap:
     flux bootstrap github --owner=$GITHUB_USER --repository=homelab --branch=main --personal --path=k8s/clusters/homelab

@@ -1,5 +1,32 @@
 # Home Infrastructure
 
+Table of Contents
+
+- [Goals (_the what_)](#goals-the-what)
+- [Motivation (_the why_)](#motivation-the-why)
+- [Implementation (_the how_)](#implementation-the-how)
+  - [Architectural Overview](#architectural-overview)
+  - [Workflow](#workflow)
+  - [Nix](#nix)
+  - [Kubernetes](#kubernetes)
+  - [Observability](#observability)
+- [Services](#services)
+
+---
+
+To get started you need `mise` and `just` installed. Then executing the `just` command
+anywhere inside the repo will show all the available recipes. This includes a
+step-by-step numbered sequence for getting the infrastructure up and running.
+
+`just bootstrap` will take care of installing all the required CLIs locally through
+`mise`.
+
+Common utility commands for deployment (which are likely to be triggered more frequently)
+are grouped together per the respective platform (Kubernetes vs. Nix).
+
+> [!NOTE]
+> You can also use `just --choose` to fuzzy find available recipes.
+
 ## Goals (_the what_)
 
 This is essentially a collection of various IaC scripts and definitions whose
@@ -137,7 +164,7 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
      creating the worker + controlplane VMs (generate secrets, define machine config,
      bootstrap `etcd`... etc).
 4. Once VMs / LXC containers are created, further baseline configurations are
-     performed using Ansible playbooks as well.
+   performed using Ansible playbooks as well.
    - We deploy NixOS as a privileged LXC container (unprivileged has caused various
      file permission issues), and hence we require additional steps after creating
      the container because token-based Proxmox API access cannot perform those steps.
@@ -149,7 +176,7 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
 5. At this point, VMs and containers have the required baseline configuration, and
    each can be managed going forward with the specialised tools and technologies
    suitable for each platform. This is also where services and applications are
-   deployed. See the [Nix](Nix) and [Kubernetes](Kubernetes) sections below.
+   deployed. See the [Nix](#nix) and [Kubernetes](#kubernetes) sections below.
 
 ### Nix
 
@@ -165,6 +192,19 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
 
 ### Kubernetes
 
+### Networking
+
 ### Observability
+
+This is still work in progress as I become more familiar with the various observability
+solutions (and stacks) available.
+
+However, the current setup involves Prometheus (metrics), Alertmanager (alerts),
+and Grafana (visualisations) deployed in Kubernetes through the `kube-prometheus-stack`
+Helm chart. The Proxmox host has a `node_exporter` installed through an Ansible
+playbook and hence it's being scraped along with the k8s nodes.
+
+I installed Uptime Kuma through hand-written manifests, translating the Docker
+Compose example they have in the docs into k8s resources.
 
 ## Services
