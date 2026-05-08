@@ -1,14 +1,24 @@
 # Home Infrastructure
 
-Table of Contents
+> A declarative, GitOps-driven homelab on Proxmox, Talos Linux, NixOS, and Kubernetes.
+
+[![Last commit](https://img.shields.io/github/last-commit/MurtadhaInit/homelab?style=flat-square&logo=git&logoColor=white)](https://github.com/MurtadhaInit/homelab/commits/main)
+[![Repo size](https://img.shields.io/github/repo-size/MurtadhaInit/homelab?style=flat-square)](https://github.com/MurtadhaInit/homelab)
+[![Stars](https://img.shields.io/github/stars/MurtadhaInit/homelab?style=flat-square&logo=github)](https://github.com/MurtadhaInit/homelab/stargazers)
+
+<p align="center">
+  <img src="./docs/architecture.gif" alt="Architecture diagram"/>
+</p>
+
+## Table of Contents
 
 - [Goals (_the what_)](#goals-the-what)
 - [Motivation (_the why_)](#motivation-the-why)
 - [Implementation (_the how_)](#implementation-the-how)
-  - [Architectural Overview](#architectural-overview)
   - [Workflow](#workflow)
   - [Nix](#nix)
   - [Kubernetes](#kubernetes)
+  - [Networking](#networking)
   - [Observability](#observability)
 - [Services](#services)
 
@@ -66,26 +76,32 @@ This is an ever-evolving design which has gone through major changes over time.
 The approaches and technologies employed here are constantly changing. Some of these
 technologies include:
 
-<p>
-  <img height="40" alt="Proxmox" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/proxmox.svg"/>
-  <img height="40" alt="Talos" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/talos.svg"/>
-  <img height="40" alt="NixOS" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nixos.svg"/>
-  <img height="40" alt="Docker" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/docker.svg"/>
-  <img height="40" alt="Kubernetes" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kubernetes.svg"/>
-  <img height="40" alt="Cilium" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/cilium.svg"/>
-  <img height="40" alt="Flux" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/flux-cd.svg"/>
-  <img height="40" alt="Helm" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/helm.svg"/>
-  <img height="40" alt="cert-manager" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/cert-manager.svg"/>
-  <img height="40" alt="Longhorn" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/longhorn.svg"/>
-  <img height="40" alt="OpenTofu" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/opentofu.svg"/>
-  <img height="40" alt="Ansible" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/ansible.svg"/>
-  <img height="40" alt="AdGuard Home" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/adguard-home.svg"/>
-  <img height="40" alt="Grafana" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg"/>
-  <img height="40" alt="Prometheus" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg"/>
-  <img height="40" alt="Loki" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/loki.svg"/>
-  <img height="40" alt="Uptime Kuma" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg"/>
-  <img height="40" alt="Cloudflare" src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/cloudflare.svg"/>
-</p>
+<table>
+  <tr>
+    <td align="center" width="110"><img height="40" alt="Proxmox" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/proxmox.svg"/><br/><sub>Proxmox</sub></td>
+    <td align="center" width="110"><img height="40" alt="Talos" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/talos.svg"/><br/><sub>Talos</sub></td>
+    <td align="center" width="110"><img height="40" alt="NixOS" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nixos.svg"/><br/><sub>NixOS</sub></td>
+    <td align="center" width="110"><img height="40" alt="Docker" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/docker.svg"/><br/><sub>Docker</sub></td>
+    <td align="center" width="110"><img height="40" alt="Kubernetes" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/kubernetes.svg"/><br/><sub>Kubernetes</sub></td>
+    <td align="center" width="110"><img height="40" alt="Cilium" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/cilium.svg"/><br/><sub>Cilium</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="110"><img height="40" alt="Flux" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/flux-cd.svg"/><br/><sub>Flux</sub></td>
+    <td align="center" width="110"><img height="40" alt="Helm" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/helm.svg"/><br/><sub>Helm</sub></td>
+    <td align="center" width="110"><img height="40" alt="cert-manager" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/cert-manager.svg"/><br/><sub>cert-manager</sub></td>
+    <td align="center" width="110"><img height="40" alt="Longhorn" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/longhorn.svg"/><br/><sub>Longhorn</sub></td>
+    <td align="center" width="110"><img height="40" alt="OpenTofu" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/opentofu.svg"/><br/><sub>OpenTofu</sub></td>
+    <td align="center" width="110"><img height="40" alt="Ansible" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/ansible.svg"/><br/><sub>Ansible</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="110"><img height="40" alt="AdGuard Home" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/adguard-home.svg"/><br/><sub>AdGuard Home</sub></td>
+    <td align="center" width="110"><img height="40" alt="Grafana" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/grafana.svg"/><br/><sub>Grafana</sub></td>
+    <td align="center" width="110"><img height="40" alt="Prometheus" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/prometheus.svg"/><br/><sub>Prometheus</sub></td>
+    <td align="center" width="110"><img height="40" alt="Loki" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/loki.svg"/><br/><sub>Loki</sub></td>
+    <td align="center" width="110"><img height="40" alt="Uptime Kuma" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg"/><br/><sub>Uptime Kuma</sub></td>
+    <td align="center" width="110"><img height="40" alt="Cloudflare" src="https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/cloudflare.svg"/><br/><sub>Cloudflare</sub></td>
+  </tr>
+</table>
 
 I generally try to establish a stable foundation to build upon, which is why my
 Hypervisor layer (Proxmox) is intentionally minimal in terms of adjustments: I don't
@@ -121,10 +137,6 @@ preventing downtime and service disruption.
 For everything else, I prefer the GitOps approach to declaratively define and continuously
 deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
 
-### Architectural Overview
-
-![architecture](./docs/architecture.gif)
-
 ### Workflow
 
 1. After installing Proxmox on bare metal, we start first by generating an SSH key
@@ -151,7 +163,7 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
 3. We deploy resources primarily with OpenTofu (Terraform can also be used)
    , and we provision most VMs with static IP addresses (and/or other initialisation
    steps) using CloudInit, either as templates or as the minimal equivalent
-   initilisation block from Proxmox.
+   initialisation block from Proxmox.
    - The `bpg/proxmox` provider is used to create VMs and LXC containers. We supply
      it with a similar (or the same) Proxmox API token to the one we used with Ansible.
      We also provide it with SSH credentials (the key generated earlier) to be able
@@ -192,7 +204,53 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
 
 ### Kubernetes
 
+The current cluster deployment goes like this:
+
+1. Once we hit `tofu apply -auto-approve` OpenTofu will start deploying VMs and
+   create other resources on Proxmox. This will include the creation of 5 nodes:
+   3 controlplane + 2 workers for Kubernetes. Those are defined (along with cluster
+   information) in `vm-talos.tf`.
+2. After that, OpenTofu will take care of creating machine secrets, machine configurations,
+   bootstrapping `etcd`, and applying the config. All in `talos.tf`.
+3. 
+
 ### Networking
+
+At the moment, I'm using two reverse proxies simultaneously: The first is Caddy,
+deployed on my NixOS LXC container and is proxying to my Nix services on the
+same container as well to Portainer (on a different VM) and to the Proxmox Web
+UI (i.e. to the Proxmox host IP). And the second is Cilium through the Gateway
+API on my k8s cluster.
+
+The future plan is to consolidate onto one reverse proxy, which is the Gateway API,
+and to retire Caddy (disabling the Nix module) but keeping it as an emergency backup.
+
+My local DNS solution is currently AdGuard Home, but I might try Technitium in the
+future. In addition to block lists, I have two DNS rewrites configured:
+
+1. The first is a wildcard for all subdomains of `home.murtadha.dev` (which is
+   itself a subdomain of my main domain). It directs traffic to `10.20.30.50` where
+   my Caddy reverse proxy directs traffic to the appropriate backend (NixOS service
+   on the same host).
+2. The second is also a wildcard but for `*.k8s.murtadha.dev` this time. Directing
+   all traffic to the `homelab` gateway configured in my k8s cluster, which in turn
+   acts as a reverse proxy to the services hosted inside the cluster.
+
+Obviously, the existence of two domain names is unnecessary, especially with one
+revealing underlying implementation details (`*.k8s`), so in the future, only the
+first will be used, directing traffic to the k8s gateway, which will proxy to services
+outside the cluster (like those deployed on the NixOS container) if needed.
+
+Both web servers are terminating connections from/to the client with TLS using DNS-01
+challenge through Let's Encrypt, and in which certificates are automatically obtained
+and renewed through the Cloudflare API.
+
+Cloudflare is my external DNS solution. A token is injected into Caddy's environment
+and is stored encrypted in this repo using `agenix`. Similarly, a token is provided
+to `cert-manager` inside the k8s cluster but this time it's deployed as a k8s
+`Secret` with Flux and the encryption solution is `SOPS`. `cert-manager` takes care
+of signing and renewing the certificate which is used by the annotated `Gateway`
+resource.
 
 ### Observability
 
@@ -208,3 +266,10 @@ I installed Uptime Kuma through hand-written manifests, translating the Docker
 Compose example they have in the docs into k8s resources.
 
 ## Services
+
+| Service | Description | Platform | Status |
+|---|---|---|:---:|
+| **Syncthing** | File sync between MacBook and homelab; stable device IDs via Nix mean both ends pair automatically with shared ignore patterns and versioning | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
+| **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin is a solid alternative) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
+
+More services to come.
