@@ -12,17 +12,51 @@
 
 ## Table of Contents
 
-- [Goals (_the what_)](#goals-the-what)
-- [Motivation (_the why_)](#motivation-the-why)
-- [Implementation (_the how_)](#implementation-the-how)
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Implementation](#implementation)
   - [Workflow](#workflow)
   - [Nix](#nix)
   - [Kubernetes](#kubernetes)
   - [Networking](#networking)
   - [Observability](#observability)
 - [Services](#services)
+- [Roadmap](#roadmap)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
 
----
+## Overview
+
+This is essentially a collection of various IaC scripts and definitions whose
+primary goal is declaratively defining all my home servers and services, as well
+as providing the ability to bootstrap everything from scratch in the least amount
+of time and with minimal manual setup. The observability stack gradually introduced
+aims to keep infrastructure and services continuously reliable.
+
+I aim for this homelab to be a learning and experimentation playground, where I
+can try different tools (for evaluation) or services (to see if they add value to
+my life). I also gain the benefit of privacy, digital sovereignty, and data ownership.
+Plus homelabbing and self-hosting are just fun; they quickly turned into an addictive
+hobby on their own.
+
+The reason I'm using what some would consider "overkill" technologies and platforms
+(like k8s) for a homelab setup is that I also want my own infrastructure to be as
+closely aligned as possible to industry standards and to enterprise tooling and
+tech stacks.
+
+Flexibility is another goal. E.g., one would ask, why not deploy k8s on bare metal
+and skip the abstraction layer (and the accompanying maintenance overhead) of the
+Proxmox hypervisor? The simple answer is flexibility: what if I want to run other
+VMs? or to quickly deploy and experiment with some new technology? or to play with
+Docker/Podman? or even to use Windows Server for some reason (I have a VM definition
+ready)?
+
+This flexible setup also allows me to make use of two different approaches for deploying
+and configuring applications, and without much hassle: declarative `systemd` services
+as NixOS modules vs. containerised applications running on a platform like Docker
+or k8s.
+
+## Quick Start
 
 To get started you need `mise` and `just` installed. Then executing the `just` command
 anywhere inside the repo will show all the available recipes. This includes a
@@ -37,40 +71,7 @@ are grouped together per the respective platform (Kubernetes vs. Nix).
 > [!NOTE]
 > You can also use `just --choose` to fuzzy find available recipes.
 
-## Goals (_the what_)
-
-This is essentially a collection of various IaC scripts and definitions whose
-primary goal is declaratively defining all my home servers and services, as well
-as providing the ability to bootstrap everything from scratch in the least amount
-of time and with minimal manual setup. The observability stack gradually introduced
-aims to keep infrastructure and services continuously reliable.
-
-Another goal is flexibility. E.g., one would ask, why not deploy k8s on bare metal
-and skip the abstraction layer (and the accompanying maintenance overhead) of the
-Proxmox hypervisor? The simple answer is flexibility: what if I want to run other
-VMs? or to quickly deploy and experiment with some new technology? or to play with
-Docker/Podman? or even to use Windows Server for some reason (I have a VM definition
-ready)?
-
-This flexible setup also allows me to make use of two different approaches for deploying
-and configuring applications, and without much hassle: declarative `systemd` services
-as NixOS modules vs. containerised applications running on a platform like Docker
-or k8s.
-
-## Motivation (_the why_)
-
-I aim for this homelab to be a learning and experimentation playground, where I
-can try different tools (for evaluation) or services (to see if they add value to
-my life). I also gain the benefit of privacy, digital sovereignty, and data ownership.
-Plus homelabbing and self-hosting are just fun; they quickly turned into an addictive
-hobby on their own.
-
-The reason I'm using what some would consider "overkill" technologies and platforms
-(like k8s) for a homelab setup is that I also want my own infrastructure to be as
-closely aligned as possible to industry standards and to enterprise tooling and
-tech stacks.
-
-## Implementation (_the how_)
+## Implementation
 
 This is an ever-evolving design which has gone through major changes over time.
 The approaches and technologies employed here are constantly changing. Some of these
@@ -139,6 +140,19 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
 
 ### Workflow
 
+```mermaid
+flowchart TD
+    A[Install Proxmox<br/>on bare metal] --> B[Generate SSH keys<br/>+ bootstrap Proxmox access]
+    B --> C[Configure Proxmox hosts<br/>with Ansible playbooks]
+    C --> D[Provision VMs/LXCs<br/>+ Talos cluster<br/>via OpenTofu]
+    D --> E[Baseline-configure<br/>VMs/LXCs with Ansible]
+    E --> F1[Nix path:<br/>deploy-rs + agenix]
+    E --> F2[Kubernetes path:<br/>Flux + Helm/manifests]
+```
+
+<details>
+<summary><strong>Detailed steps</strong></summary>
+
 1. After installing Proxmox on bare metal, we start first by generating an SSH key
    pair on the current workstation and then supplying the public key to the Proxmox
    root user. This prepares the Proxmox hosts for configuration management tools
@@ -190,6 +204,8 @@ deploy my k8s workloads using Flux with Helm releases or handwritten manifests.
    suitable for each platform. This is also where services and applications are
    deployed. See the [Nix](#nix) and [Kubernetes](#kubernetes) sections below.
 
+</details>
+
 ### Nix
 
 - `deploy-rs` is used to deploy NixOS configurations to target machines (the
@@ -212,7 +228,9 @@ The current cluster deployment goes like this:
    information) in `vm-talos.tf`.
 2. After that, OpenTofu will take care of creating machine secrets, machine configurations,
    bootstrapping `etcd`, and applying the config. All in `talos.tf`.
-3. 
+
+> [!NOTE]
+> More steps to come — Flux bootstrap, GitOps reconciliation, and bootstrap secrets are next on the list.
 
 ### Networking
 
@@ -254,10 +272,10 @@ resource.
 
 ### Observability
 
-This is still work in progress as I become more familiar with the various observability
-solutions (and stacks) available.
+> [!NOTE]
+> Work in progress — see [Roadmap](#roadmap) for the next observability milestones.
 
-However, the current setup involves Prometheus (metrics), Alertmanager (alerts),
+The current setup involves Prometheus (metrics), Alertmanager (alerts),
 and Grafana (visualisations) deployed in Kubernetes through the `kube-prometheus-stack`
 Helm chart. The Proxmox host has a `node_exporter` installed through an Ansible
 playbook and hence it's being scraped along with the k8s nodes.
@@ -273,3 +291,20 @@ Compose example they have in the docs into k8s resources.
 | **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin is a solid alternative) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 
 More services to come.
+
+## Roadmap
+
+- [ ] **Logging stack**: deploy Loki and Alloy to complete the LGTM observability rollout
+- [ ] **Reverse proxy consolidation**: route everything through the k8s Gateway API; keep Caddy disabled but available as a fallback
+- [ ] **Single domain**: drop `*.k8s.murtadha.dev` and route all traffic via `home.murtadha.dev`
+- [ ] **DNS**: evaluate Technitium as a potential AdGuard Home replacement
+- [ ] **Flux Operator**: migrate from vanilla Flux (see `plans/flux-operator-migration.md`)
+- [ ] **More services** to self-host
+
+## Acknowledgements
+
+_To be added._
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
