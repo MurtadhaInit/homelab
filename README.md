@@ -229,14 +229,21 @@ services a truly one-command-deploy. See the `modules` directory for available s
 The current cluster deployment goes like this:
 
 1. Once we hit `tofu apply -auto-approve` OpenTofu will start deploying VMs and
-   create other resources on Proxmox. This will include the creation of 5 nodes:
-   3 controlplane + 2 workers for Kubernetes. Those are defined (along with cluster
-   information) in `vm-talos.tf`.
-2. After that, OpenTofu will take care of creating machine secrets, machine configurations,
-   bootstrapping `etcd`, and applying the config. All in `talos.tf`.
-
-> [!NOTE]
-> More steps to come — Flux bootstrap, GitOps reconciliation, and bootstrap secrets are next on the list.
+   create other resources on Proxmox. This includes the the download of an appropriate
+   Talos image from the Talos Image Factory (embedding the required system extensions)
+   and using it to create 5 VMs: 3 controlplane + 2 workers nodes. Those are defined
+   (along with cluster information) in `vm-talos.tf`.
+2. OpenTofu will take care of generating cluster secrets, machine configurations
+   per role: (controlplane vs. worker), push those configurations to the newly
+   created VMs, bootstrap `etcd` (once), retrieve `talosconfig` and `kubeconfig`
+   and save them to disk, and finally install the necessary infrastructure software
+   on the cluster (e.g., Cilium as the CNI) through the Helm provider.
+   All of this takes place in `talos.tf`.
+3. Now the cluster is ready to deploy everything else in a GitOps manner through
+   Flux by pulling this repo and applying everything in `./k8s/clusters/homelab`.
+   Changes made to resources inside the `./k8s` directory are automatically
+   recounciled by Flux controllers with the current state of the cluster, otherwise
+   alerts are sent in the case of failure.
 
 ### Networking
 

@@ -8,6 +8,8 @@ spec:
   interval: 1h
   dependsOn:
     - name: prometheus-operator-crds
+    - name: longhorn
+      namespace: longhorn-system
   chart:
     spec:
       chart: kube-prometheus-stack

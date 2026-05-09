@@ -39,6 +39,8 @@ copy-keys:
             ssh-copy-id -i ~/.ssh/keys/proxmox-hosts.pub "root@$host"
         done
 
+# TODO: add recipes to SSH, generate a token, and store it in secret TF / Ansible files
+
 # 3. Prepare Proxmox hosts
 [working-directory('ansible')]
 pve-hosts:
@@ -75,6 +77,8 @@ nix-deploy:
 [working-directory('Nix')]
 nix-update:
     nix flake update
+
+# TODO: add 'nix' recipes for 'agenix' to edit secrets or the like
 
 # 1. Supply the Age private key to the cluster to allow Flux to decrypt SOPS-encrypted Secret resources
 [group('k8s')]
