@@ -239,11 +239,27 @@ The current cluster deployment goes like this:
    and save them to disk, and finally install the necessary infrastructure software
    on the cluster (e.g., Cilium as the CNI) through the Helm provider.
    All of this takes place in `talos.tf`.
-3. Now the cluster is ready to deploy everything else in a GitOps manner through
-   Flux by pulling this repo and applying everything in `./k8s/clusters/homelab`.
+3. The same `tofu apply` will also bootstrap Flux through the
+   [`flux-operator-bootstrap`][flux-operator-bootstrap] Terraform module: it
+   installs the Flux Operator chart, applies the `FluxInstance` manifest from
+   `k8s/clusters/homelab/flux-system/flux-instance.yaml`, and seeds the SOPS
+   age key as `Secret/sops-age` in the `flux-system` namespace — all via an
+   ephemeral in-cluster `Job`. Once Flux is up, it self-reconciles the
+   `FluxInstance` from the repo, closing the GitOps loop on its own
+   configuration.
+4. Now the cluster automatically reconciles everything else in a GitOps manner
+   through Flux by pulling this repo and applying everything in `k8s/clusters/homelab`.
    Changes made to resources inside the `./k8s` directory are automatically
    recounciled by Flux controllers with the current state of the cluster, otherwise
    alerts are sent in the case of failure.
+
+> [!IMPORTANT]
+> Before running `just deploy-apply`, the SOPS age private key must exist at
+> `~/.ssh/keys/sops-age.txt` (overridable via `-var sops_age_key_path=...`).
+> The file is read at plan time; missing it fails fast before the cluster is
+> touched.
+
+[flux-operator-bootstrap]: https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap
 
 ### Networking
 

@@ -3,12 +3,16 @@ provider "external" {}
 provider "talos" {}
 
 # The kubeconfig is written to disk by local_sensitive_file.kubeconfig
-# during apply — the Helm provider connects lazily when a helm_release
+# during apply — the helm and kubernetes providers connect lazily when a
 # resource is evaluated, by which time the file exists.
 provider "helm" {
   kubernetes = {
     config_path = "${path.module}/../k8s/kubeconfig"
   }
+}
+
+provider "kubernetes" {
+  config_path = "${path.module}/../k8s/kubeconfig"
 }
 
 provider "proxmox" {

@@ -88,3 +88,16 @@ variable "k8s_version" {
   description = "The version of Kubernetes to use in generated machine configuration"
   default     = "v1.35.2"
 }
+
+variable "flux_bootstrap_revision" {
+  type        = number
+  description = "Bump to force the Flux Operator bootstrap Job to re-run (idempotent re-apply)"
+  default     = 1
+}
+
+variable "sops_age_key_path" {
+  type        = string
+  description = "Path to the SOPS age private key file. Seeded into the cluster as Secret/sops-age in flux-system"
+  default     = "~/.ssh/keys/sops-age.txt"
+  sensitive   = true
+}

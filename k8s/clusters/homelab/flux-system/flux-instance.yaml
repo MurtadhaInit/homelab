@@ -3,11 +3,8 @@ kind: FluxInstance
 metadata:
   name: flux
   namespace: flux-system
-  annotations:
-    fluxcd.controlplane.io/reconcileEvery: "1h"
 spec:
   distribution:
-    # Auto-upgrade within 2.x; pin tighter (e.g. "2.7.x") to slow upgrades.
     version: "2.x"
     registry: "ghcr.io/fluxcd"
     artifact: "oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests"
@@ -27,4 +24,4 @@ spec:
     ref: "refs/heads/main"
     path: "k8s/clusters/homelab"
     interval: "1m"
-    # No pullSecret — public repo, anonymous HTTPS clone.
+    # public repo so no pullSecret (anonymous HTTPS clone)

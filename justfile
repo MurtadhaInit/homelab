@@ -80,18 +80,5 @@ nix-update:
 
 # TODO: add 'nix' recipes for 'agenix' to edit secrets or the like
 
-# 1. Supply the Age private key to the cluster to allow Flux to decrypt SOPS-encrypted Secret resources
-[group('k8s')]
-[working-directory('k8s')]
-seed-sops-secret:
-    kubectl create namespace flux-system
-    cat ~/.ssh/keys/sops-age.txt | kubectl create secret generic sops-age --namespace=flux-system --from-file=sops-age.agekey=/dev/stdin
-
-# 2. Bootstrap the cluster with Flux (install Flux controllers and every other resource defined in the repo)
-[group('k8s')]
-[working-directory('k8s')]
-flux-bootstrap:
-    flux bootstrap github --owner=$GITHUB_USER --repository=homelab --branch=main --personal --path=k8s/clusters/homelab
-
 # TODO: create recipes for sops (one for encrypting and one for decryption) that does this following some naming convention for all secrets
 # and consider eliminating Ansible Vault in favour of SOPS.

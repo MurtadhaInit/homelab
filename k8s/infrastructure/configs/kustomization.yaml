@@ -6,3 +6,4 @@ resources:
   - gateway.yaml
   - proxmox-node-scrape.yaml
   - grafana-dashboards
+  - flux-web-ui.yaml

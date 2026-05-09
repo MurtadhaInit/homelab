@@ -1,6 +1,5 @@
 [env]
 _.python.venv = ".venv"
-_.file = ".env"
 TALOSCONFIG = "{{ config_root }}/k8s/talosconfig"
 KUBECONFIG = "{{ config_root }}/k8s/kubeconfig"
 SOPS_AGE_KEY_FILE = "{{ env.HOME }}/.ssh/keys/sops-age.txt"
@@ -13,5 +12,5 @@ uv = "latest"
 opentofu = "latest"
 helm = "latest"
 flux2 = "latest"
-kubectl = "1.35" # should match the version of Kubernetes deployed
-talosctl = "1.12" # should match the version of Talos Linux deployed
+kubectl = "1.35"  # should match the version of Kubernetes deployed
+talosctl = "1.12"  # should match the version of Talos Linux deployed
