@@ -15,14 +15,13 @@ spec:
         - name: flux-operator
           port: 9080
 ---
-# Cilium's gateway proxy runs as a host-network DaemonSet (cilium-envoy in
-# kube-system). When it forwards to a backend pod, the source is the node
-# IP, which Cilium classifies as the `host` (same node) or `remote-node`
-# (different node) identity — neither of which is matched by a standard
-# NetworkPolicy `namespaceSelector`. The chart-shipped flux-operator-web
-# policy and a kube-system namespaceSelector therefore both silently fail
-# to admit gateway traffic, producing a 503 "connection timeout" at the
-# Envoy upstream. A CiliumNetworkPolicy with fromEntities is required.
+# Cilium's gateway proxy (cilium-envoy) tags upstream connections with the
+# reserved `ingress` identity rather than the host/remote-node of the node
+# it runs on. Standard NetworkPolicy `namespaceSelector` rules don't match
+# this — neither does the chart-shipped flux-operator-web policy — so
+# gateway traffic to port 9080 is policy-denied at the backend pod's BPF
+# program, surfacing as a 503 "connection timeout" at the Envoy upstream.
+# A CiliumNetworkPolicy with fromEntities=ingress is required.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -34,8 +33,7 @@ spec:
       app.kubernetes.io/name: flux-operator
   ingress:
     - fromEntities:
-        - host
-        - remote-node
+        - ingress
       toPorts:
         - ports:
             - port: "9080"
