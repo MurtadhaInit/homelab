@@ -6,24 +6,30 @@
 [![Repo size](https://img.shields.io/github/repo-size/MurtadhaInit/homelab?style=flat-square)](https://github.com/MurtadhaInit/homelab)
 [![Stars](https://img.shields.io/github/stars/MurtadhaInit/homelab?style=flat-square&logo=github)](https://github.com/MurtadhaInit/homelab/stargazers)
 
+This repo is primarily intended to give you inspiration and ideas on how to deploy
+applications and services in your homelab using either the Nix or Kubernetes ecosystem,
+while also showcasing various explorations into self-hosting technologies and approaches.
+
 <p align="center">
   <img src="./docs/architecture.gif" alt="Architecture diagram"/>
 </p>
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Quick Start](#quick-start)
-- [Implementation](#implementation)
-  - [Workflow](#workflow)
-  - [Nix](#nix)
-  - [Kubernetes](#kubernetes)
-  - [Networking](#networking)
-  - [Observability](#observability)
-- [Services](#services)
-- [Roadmap](#roadmap)
-- [Acknowledgements](#acknowledgements)
-- [License](#license)
+- [Home Infrastructure](#home-infrastructure)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Quick Start](#quick-start)
+  - [Implementation](#implementation)
+    - [Workflow](#workflow)
+    - [Nix](#nix)
+    - [Kubernetes](#kubernetes)
+    - [Networking](#networking)
+    - [Observability](#observability)
+  - [Services](#services)
+  - [Roadmap](#roadmap)
+  - [Acknowledgements](#acknowledgements)
+  - [License](#license)
 
 ## Overview
 
@@ -228,30 +234,42 @@ services a truly one-command-deploy. See the `modules` directory for available s
 
 The current cluster deployment goes like this:
 
-1. Once we hit `tofu apply -auto-approve` OpenTofu will start deploying VMs and
-   create other resources on Proxmox. This includes the the download of an appropriate
-   Talos image from the Talos Image Factory (embedding the required system extensions)
-   and using it to create 5 VMs: 3 controlplane + 2 workers nodes. Those are defined
-   (along with cluster information) in `vm-talos.tf`.
-2. OpenTofu will take care of generating cluster secrets, machine configurations
-   per role: (controlplane vs. worker), push those configurations to the newly
-   created VMs, bootstrap `etcd` (once), retrieve `talosconfig` and `kubeconfig`
-   and save them to disk, and finally install the necessary infrastructure software
-   on the cluster (e.g., Cilium as the CNI) through the Helm provider.
-   All of this takes place in `talos.tf`.
-3. The same `tofu apply` will also bootstrap Flux through the
-   [`flux-operator-bootstrap`][flux-operator-bootstrap] Terraform module: it
-   installs the Flux Operator chart, applies the `FluxInstance` manifest from
-   `k8s/clusters/homelab/flux-system/flux-instance.yaml`, and seeds the SOPS
-   age key as `Secret/sops-age` in the `flux-system` namespace — all via an
-   ephemeral in-cluster `Job`. Once Flux is up, it self-reconciles the
-   `FluxInstance` from the repo, closing the GitOps loop on its own
-   configuration.
-4. Now the cluster automatically reconciles everything else in a GitOps manner
-   through Flux by pulling this repo and applying everything in `k8s/clusters/homelab`.
-   Changes made to resources inside the `./k8s` directory are automatically
-   recounciled by Flux controllers with the current state of the cluster, otherwise
-   alerts are sent in the case of failure.
+Once we hit `tofu apply -auto-approve` OpenTofu will start deploying VMs and
+create other resources on Proxmox. This includes the download of an appropriate
+Talos image from the Talos Image Factory (embedding the required system extensions)
+and using it to create 5 VMs: 3 controlplane + 2 workers nodes. Those are defined
+(along with cluster information) in `vm-talos.tf`.
+
+OpenTofu will take care of generating cluster secrets (PKI), machine configurations
+per role (controlplane vs. worker), push those configurations to the newly
+created VMs, bootstrap `etcd` (once), retrieve `talosconfig` and `kubeconfig`
+and save them to disk, and finally install the minimally-necessary infrastructure
+software on the cluster for it to be ready. This includes Cilium, a CNI and network
+solution, installed through the Helm provider. All of this takes place in `talos.tf`.
+
+The Flux Operator (along with Flux itself) are then bootstrapped into the cluster
+by the official [`flux-operator-bootstrap`][flux-operator-bootstrap] Terraform module.
+It installs the Flux Operator chart, applies the `FluxInstance` manifest
+from `k8s/clusters/homelab/flux-system/flux-instance.yaml`, and seeds
+the SOPS age key as `Secret/sops-age` in the `flux-system` namespace. All of
+this is done via an ephemeral in-cluster `Job`. This is defined in `flux.tf`.
+
+And since the `FluxInstance` defines a `sync` configuration to deploy resources
+from this Git repo, once Flux is up, it will start automatically reconciling
+everything defined in `k8s/clusters/homelab` by pulling this repo and applying
+these resources in a GitOps manner. Flux will also self-reconcile the same `FluxInstance`
+from the repo, closing the GitOps loop on its own configuration (changing that
+manifest will cause the operator to change Flux itself).
+
+Going forward, changes made to resources inside the `./k8s` directory are automatically
+reconciled by Flux controllers with the current state of the cluster, otherwise
+alerts are sent in the case of failure.
+
+This workflow essentially means (assuming nothing goes wrong) the entire cluster
+and everything installed on it can be bootstrapped from scratch using OpenTofu
+and Flux with one `just deploy-apply` command. Adding or removing k8s-deployed
+applications is simply writing or removing manifests in `./k8s/apps`, comitting,
+and pushing.
 
 > [!IMPORTANT]
 > Before running `just deploy-apply`, the SOPS age private key must exist at
@@ -307,7 +325,7 @@ resource.
 The current setup involves Prometheus (metrics), Alertmanager (alerts),
 and Grafana (visualisations) deployed in Kubernetes through the `kube-prometheus-stack`
 Helm chart. The Proxmox host has a `node_exporter` installed through an Ansible
-playbook and hence it's being scraped along with the k8s nodes.
+playbook and hence it's being scraped along with other k8s nodes (VMs) and components/services.
 
 I installed Uptime Kuma through hand-written manifests, translating the Docker
 Compose example they have in the docs into k8s resources.
@@ -316,22 +334,23 @@ Compose example they have in the docs into k8s resources.
 
 | Service | Description | Platform | Status |
 |---|---|---|:---:|
-| **Syncthing** | File sync between MacBook and homelab; stable device IDs via Nix mean both ends pair automatically with shared ignore patterns and versioning | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
-| **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin is a solid alternative) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
+| **Syncthing** | File sync between MacBook and homelab (as a hub); stable device IDs via Nix mean both ends pair automatically with shared ignore patterns, suitable versioning, and pre-defined shared folders | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
+| **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin/Moonfin are solid alternative clients) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 
 More services to come.
 
 ## Roadmap
 
+- [X] **Flux Operator**: migrate from vanilla Flux (see `plans/flux-operator-migration.md`)
 - [ ] **Logging stack**: deploy Loki and Alloy to complete the LGTM observability rollout
 - [ ] **Reverse proxy consolidation**: route everything through the k8s Gateway API; keep Caddy disabled but available as a fallback
 - [ ] **Single domain**: drop `*.k8s.murtadha.dev` and route all traffic via `home.murtadha.dev`
 - [ ] **DNS**: evaluate Technitium as a potential AdGuard Home replacement
 - [ ] **Remote Linux Nix builder**: build NixOS derivations on a Linux machine inside my infra (avoiding macOS build issues)
-- [ ] **Flux Operator**: migrate from vanilla Flux (see `plans/flux-operator-migration.md`)
 - [ ] **Too many secret solutions** - attempt to eliminate some and simplify this
   aspect
 - [ ] **More services** to self-host
+- [ ] **Adopt Renovate** to update images
 
 ## Acknowledgements
 
