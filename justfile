@@ -78,6 +78,19 @@ nix-deploy:
 nix-update:
     nix flake update
 
+# List all deployed resources (Helm releases and Flux resources)
+[group('k8s')]
+[working-directory('k8s')]
+k8s-status:
+    helm ls -A
+    flux get all -A
+
+# Show the latest cluster events
+[group('k8s')]
+[working-directory('k8s')]
+k8s-events:
+    kubectl get events -A --sort-by=.lastTimestamp
+
 # TODO: add 'nix' recipes for 'agenix' to edit secrets or the like
 
 # TODO: create recipes for sops (one for encrypting and one for decryption) that does this following some naming convention for all secrets

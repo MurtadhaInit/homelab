@@ -18,9 +18,9 @@ spec:
 # Cilium's gateway proxy (cilium-envoy) tags upstream connections with the
 # reserved `ingress` identity rather than the host/remote-node of the node
 # it runs on. Standard NetworkPolicy `namespaceSelector` rules don't match
-# this — neither does the chart-shipped flux-operator-web policy — so
-# gateway traffic to port 9080 is policy-denied at the backend pod's BPF
-# program, surfacing as a 503 "connection timeout" at the Envoy upstream.
+# this (i.e. the chart-shipped flux-operator-web policy) — so gateway traffic
+# to port 9080 is policy-denied at the backend pod's BPF program, surfacing
+# as a 503 "connection timeout" at the Envoy upstream.
 # A CiliumNetworkPolicy with fromEntities=ingress is required.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

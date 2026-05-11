@@ -281,41 +281,47 @@ and pushing.
 
 ### Networking
 
-At the moment, I'm using two reverse proxies simultaneously: The first is Caddy,
+At the moment, I'm using two reverse proxies simultaneously: the first is Caddy,
 deployed on my NixOS LXC container and is proxying to my Nix services on the
-same container as well to Portainer (on a different VM) and to the Proxmox Web
-UI (i.e. to the Proxmox host IP). And the second is Cilium through the Gateway
-API on my k8s cluster.
+same container as well as to services on other VMs/LXCs (e.g., Portainer) and to
+the Proxmox Web UI (the Proxmox host IP + port). The second is Cilium Envoy through
+the Gateway API on my k8s cluster. The future plan is to consolidate onto one reverse
+proxy (Cilium), and to retire Caddy (disabling the Nix module) but keeping it as
+an emergency backup.
 
-The future plan is to consolidate onto one reverse proxy, which is the Gateway API,
-and to retire Caddy (disabling the Nix module) but keeping it as an emergency backup.
+My local DNS solution is currently AdGuard Home. In addition to block lists, I
+have two DNS rewrites configured:
 
-My local DNS solution is currently AdGuard Home, but I might try Technitium in the
-future. In addition to block lists, I have two DNS rewrites configured:
-
-1. The first is a wildcard for all subdomains of `home.murtadha.dev` (which is
-   itself a subdomain of my main domain). It directs traffic to `10.20.30.50` where
-   my Caddy reverse proxy directs traffic to the appropriate backend (NixOS service
-   on the same host).
-2. The second is also a wildcard but for `*.k8s.murtadha.dev` this time. Directing
-   all traffic to the `homelab` gateway configured in my k8s cluster, which in turn
-   acts as a reverse proxy to the services hosted inside the cluster.
+1. The first is a wildcard for all subdomains of `home.murtadha.dev`. It points
+   at `10.20.30.50` (the LXC container's static IP) where my Caddy reverse proxy
+   listens for web traffic (port `80`/`443`) and routes it based on the subdomain
+   to the appropriate backend (likely a NixOS service on the same container —`localhost`).
+2. The second is a wildcard for subdomains of `k8s.murtadha.dev`, pointing at
+   `10.20.30.80`. That IP isn't bound to any physical interface — instead, Cilium's
+   LB IPAM allocates it (from a `CiliumLoadBalancerIPPool`) to the `LoadBalancer`
+   Service backing the `homelab` Gateway, and the worker nodes make it reachable
+   on the LAN by answering ARP requests for it (`CiliumL2AnnouncementPolicy`).
+   Once a connection lands on a worker, Cilium's managed Envoy forwards the request
+   to the right in-cluster Service based on the matching `HTTPRoute` (hostname/path).
 
 Obviously, the existence of two domain names is unnecessary, especially with one
-revealing underlying implementation details (`*.k8s`), so in the future, only the
-first will be used, directing traffic to the k8s gateway, which will proxy to services
-outside the cluster (like those deployed on the NixOS container) if needed.
+revealing underlying implementation details (`*.k8s`) for no reason. So in the
+future, only the first will be used, pointing at the k8s gateway. The gateway should
+also proxy to services outside the cluster, like those deployed on the NixOS container.
 
-Both web servers are terminating connections from/to the client with TLS using DNS-01
-challenge through Let's Encrypt, and in which certificates are automatically obtained
-and renewed through the Cloudflare API.
+Cloudflare is my external DNS solution. Both web servers are terminating client
+connections with TLS using DNS-01 type of challenge through Let's Encrypt. They
+both use the Cloudflare API to automatically create and tear down DNS records to
+satifsfy the challenge when obtaining/renewing certificates.
 
-Cloudflare is my external DNS solution. A token is injected into Caddy's environment
+Nix makes it easy to bake a Caddy plugin into the compiled Caddy binary, avoiding
+one of the main downsides of Caddy. The token is injected into Caddy's environment
 and is stored encrypted in this repo using `agenix`. Similarly, a token is provided
-to `cert-manager` inside the k8s cluster but this time it's deployed as a k8s
-`Secret` with Flux and the encryption solution is `SOPS`. `cert-manager` takes care
-of signing and renewing the certificate which is used by the annotated `Gateway`
-resource.
+to `cert-manager` inside the k8s cluster in the form of a k8s `Secret` deployed
+with Flux (and it's also stored encrypted in this repo but this time using `SOPS`).
+`cert-manager` takes care of creating certificate signing requests and renewing
+certificates before expiration. Singed certificates are in turn used by the annotated
+`Gateway` resource for TLS encryption.
 
 ### Observability
 
@@ -347,8 +353,12 @@ More services to come.
 - [ ] **Single domain**: drop `*.k8s.murtadha.dev` and route all traffic via `home.murtadha.dev`
 - [ ] **DNS**: evaluate Technitium as a potential AdGuard Home replacement
 - [ ] **Remote Linux Nix builder**: build NixOS derivations on a Linux machine inside my infra (avoiding macOS build issues)
-- [ ] **Too many secret solutions** - attempt to eliminate some and simplify this
-  aspect
+- [ ] **Too many secret solutions**: attempt to eliminate some and simplify this aspect
+- [ ] **Split LXC containers** to minimise potential downtime if things go wrong with one NixOS service / deployment
+- [ ] **Make use of VLANs** for network isolation and security
+- [ ] **DNS redundancy** to avoid network issues if the local DNS server goes down
+- [ ] **Integrate Tailscale/Netbird** for remote access
+- [ ] **Replace Portainer with Dockerhand** for improved Docker environment management
 - [ ] **More services** to self-host
 - [ ] **Adopt Renovate** to update images
 
