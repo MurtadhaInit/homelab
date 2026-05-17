@@ -60,7 +60,9 @@ ready)?
 This flexible setup also allows me to make use of two different approaches for deploying
 and configuring applications, and without much hassle: declarative `systemd` services
 in the form of NixOS modules, and containerised applications running on a platform
-like Docker or k8s.
+like Docker or k8s. This is arguably the best of both worlds: combining the enterprise
+scalability of a robust, widely-adopted platform like k8s and the relative
+"simplicity" or straightforwardness of declarative NixOS services.
 
 ## Quick Start
 
@@ -116,12 +118,12 @@ Some of the services I self-host are installed on a NixOS LXC container running
 privileged on the Proxmox host, and others are containerised and running on my
 k8s cluster.
 
-The reason for this split is that certain services I want to be "just working",
-without the management overhead that comes with k8s, or even the general upkeep
-required for containerised applications. However, this also comes down to the
-availability of high quality NixOS modules (which I'm then wrapping with my own
-custom ones), the number of options they expose, and the reliability at which
-configurations are deterministically applied.
+The reason for this split is that certain services I want to be "just working"
+(i.e., to set-it-and-forget-it), without the management overhead and general
+upkeep that comes with k8s. However, this also comes down to the availability of
+high quality NixOS modules (which I'm then wrapping with my own custom ones), the
+number of options they expose, and the reliability at which configurations are
+deterministically applied.
 
 For instance, with my local DNS solution (AdGuard Home), it's easier to define all
 the configurations, including DNS re-writes, filtering lists, and even login credentials
@@ -141,6 +143,13 @@ preventing downtime and service disruption.
 
 For everything else, I prefer the GitOps approach to declaratively define and continuously
 deploy my k8s workloads using Flux with Helm releases and handwritten manifests.
+
+> [!NOTE]
+> But why not Docker? the simple and honest answer: it's a bit too easy and less
+  interesting (I already am familiar with Docker); plus there isn't as large of
+  a learning opportunity compared to k8s. Though I do have a Docker deployment
+  on the Ubuntu VM (installed and configured with Ansible) which I'm also
+  exploring and playing with.
 
 ### Workflow
 
@@ -283,7 +292,7 @@ and pushing.
 
 At the moment, I'm using two reverse proxies simultaneously: the first is Caddy,
 deployed on my NixOS LXC container and is proxying to my Nix services on the
-same container as well as to services on other VMs/LXCs (e.g., Portainer) and to
+same container as well as to services on other VMs/LXCs and to
 the Proxmox Web UI (the Proxmox host IP + port). The second is Cilium Envoy through
 the Gateway API on my k8s cluster. The future plan is to consolidate onto one reverse
 proxy (Cilium), and to retire Caddy (disabling the Nix module) but keeping it as
@@ -312,7 +321,7 @@ also proxy to services outside the cluster, like those deployed on the NixOS con
 Cloudflare is my external DNS solution. Both web servers are terminating client
 connections with TLS using DNS-01 type of challenge through Let's Encrypt. They
 both use the Cloudflare API to automatically create and tear down DNS records to
-satifsfy the challenge when obtaining/renewing certificates.
+satisfy the challenge when obtaining/renewing certificates.
 
 Nix makes it easy to bake a Caddy plugin into the compiled Caddy binary, avoiding
 one of the main downsides of Caddy. The token is injected into Caddy's environment
@@ -320,7 +329,7 @@ and is stored encrypted in this repo using `agenix`. Similarly, a token is provi
 to `cert-manager` inside the k8s cluster in the form of a k8s `Secret` deployed
 with Flux (and it's also stored encrypted in this repo but this time using `SOPS`).
 `cert-manager` takes care of creating certificate signing requests and renewing
-certificates before expiration. Singed certificates are in turn used by the annotated
+certificates before expiration. Signed certificates are in turn used by the annotated
 `Gateway` resource for TLS encryption.
 
 ### Observability
