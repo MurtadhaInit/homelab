@@ -51,6 +51,10 @@ let
       proxy = "${cfg.proxmoxAddress}:8006";
       upstreamHttps = true;
     }
+    {
+      name = "qui";
+      proxy = "localhost:7476";
+    }
   ];
 
   mkReverseProxy =
@@ -121,7 +125,7 @@ in
       enable = true;
       package = pkgs.caddy.withPlugins {
         plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-        hash = "sha256-8HpPZ/VoiV/k0ZYcnXHmkwuEYKNpURKTN19aYZRLPoM=";
+        hash = "sha256-VHm9POg2KixGsMsAcfFFDMK9x6niRJ1iJV9kkSwkSjc=";
       };
       configFile = caddyfile;
     };

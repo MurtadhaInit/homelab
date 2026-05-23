@@ -11,6 +11,11 @@ in
 {
   options.homelab.qbittorrent = {
     enable = lib.mkEnableOption "Enable qBittorrent-nox with homelab defaults";
+    quiSessionSecret = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Path to a file containing the qui session secret (if enabling qui)";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -32,8 +37,8 @@ in
         };
         Preferences = {
           WebUI = {
-            AlternativeUIEnabled = true;
-            RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
+            # AlternativeUIEnabled = true;
+            # RootFolder = "${pkgs.vuetorrent}/share/vuetorrent";
             Username = "murtadha";
             # Generate a password: nix run git+https://codeberg.org/feathecutie/qbittorrent_password:main -- -p <password>
             # TODO: for testing. replace later with proper secrets
@@ -42,6 +47,13 @@ in
           General.Locale = "en";
         };
       };
+    };
+
+    services.qui = lib.mkIf (cfg.quiSessionSecret != null) {
+      enable = true;
+      openFirewall = true; # default port is 7476 (and default host is 127.0.0.1)
+      secretFile = cfg.quiSessionSecret;
+      # settings = { };
     };
   };
 }

@@ -51,4 +51,11 @@ in
     nixos-ct
     murtadha
   ];
+
+  # qui (qBittorrent client) session secret.
+  # Create with (Nushell): openssl rand -hex 32 | str trim | nix run github:ryantm/agenix -- -e quiSessionSecret.age
+  "quiSessionSecret.age".publicKeys = [
+    nixos-ct
+    murtadha
+  ];
 }
