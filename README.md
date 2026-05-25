@@ -26,6 +26,7 @@ while also showcasing various explorations into self-hosting technologies and ap
     - [Kubernetes](#kubernetes)
     - [Networking](#networking)
     - [Observability](#observability)
+    - [Agentic GitOps](#agentic-gitops)
   - [Services](#services)
   - [Roadmap](#roadmap)
   - [Acknowledgements](#acknowledgements)
@@ -344,6 +345,23 @@ playbook and hence it's being scraped along with other k8s nodes (VMs) and compo
 
 I installed Uptime Kuma through hand-written manifests, translating the Docker
 Compose example they have in the docs into k8s resources.
+
+### Agentic GitOps
+
+The [Flux Operator MCP Server](https://fluxoperator.dev/docs/mcp/prompting/)
+is configured in this repo (`.mcp.json`) and automatically installed as a CLI
+through `mise` along with the other tools. This gives any MCP-compatible AI
+assistant (Claude Code, Cursor, Codex, etc.) direct access to the Kubernetes cluster
+and its Flux resources. The assistant can be prompteed to inspect Flux installations,
+query resource status and events, search up-to-date Flux documentation, analyze
+pod logs and metrics, trigger reconciliations, and perform structured root cause
+analysis on failing HelmReleases or Kustomizations.
+
+Troubleshooting guidelines from the upstream project can be included as agent
+[instructions](https://fluxoperator.dev/docs/mcp/instructions/) and modified based
+on the unique cluster properties to guide assistants into following the recommended
+analysis workflows (e.g., walking the dependency chain from a Kustomization
+through its source and inventory before pulling pod logs).
 
 ## Services
 
