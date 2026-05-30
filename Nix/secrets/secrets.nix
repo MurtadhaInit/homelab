@@ -58,4 +58,13 @@ in
     nixos-ct
     murtadha
   ];
+
+  # Tailscale auth key for unattended login of the homelab machine subnet router.
+  # Generate a *reusable* and *tagged* key in the admin console:
+  # Settings > Keys > Generate auth key, then encrypt with (Nushell):
+  # "<tskey-auth-...>" | nix run github:ryantm/agenix -- -e tailscale-authkey.age
+  "tailscale-authkey.age".publicKeys = [
+    nixos-ct
+    murtadha
+  ];
 }

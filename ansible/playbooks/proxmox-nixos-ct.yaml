@@ -1,5 +1,8 @@
 ---
-- name: Configure NixOS LXC container on Proxmox (features and bind mounts)
+# API tokens can't set certain things on privileged containers (only root@pam *password* auth can),
+# so we perform those tasks imperatively here following the initial LXC creation with Terraform.
+# These tasks include feature flags (for nesting), device passthrough (for TUN), and bind mounts.
+- name: Configure NixOS LXC container on Proxmox (imperative tasks on privileged LXCs, not possible via Proxmox API)
   hosts: pve-host-1
   remote_user: root
 
@@ -19,8 +22,7 @@
       changed_when: false
       when: ct_status.rc == 0
 
-    # API tokens can't set feature flags on privileged containers (only root@pam can),
-    # so we set nesting here. Nesting is required for nsncd (mount namespaces).
+    # Nesting is required for nsncd (mount namespaces).
     - name: Enable nesting feature
       ansible.builtin.command: pct set {{ nixos_ct_id }} -features nesting=1
       when:
@@ -28,6 +30,32 @@
         - "'nesting=1' not in ct_config.stdout"
       changed_when: true
       notify: Reboot NixOS container
+
+    # Tailscale (subnet router) needs /dev/net/tun. `pct set -dev0` is the
+    # supported Proxmox 8.1+ method and survives Proxmox UI edits cleanly, but it
+    # validates the device on the *host* — and /dev/net/tun only appears once the
+    # `tun` kernel module is loaded — so load+persist it on the host first.
+    - name: Pass through the TUN device for Tailscale
+      block:
+        - name: Ensure the tun kernel module loads on boot (Proxmox host)
+          ansible.builtin.copy:
+            dest: /etc/modules-load.d/tun.conf
+            content: "tun\n"
+            owner: root
+            group: root
+            mode: "0644"
+
+        - name: Load the tun kernel module now (Proxmox host)
+          ansible.builtin.command: modprobe tun
+          changed_when: false
+
+        - name: Pass through the TUN device into the container
+          ansible.builtin.command: pct set {{ nixos_ct_id }} -dev0 /dev/net/tun
+          when:
+            - ct_status.rc == 0
+            - "'dev0' not in ct_config.stdout"
+          changed_when: true
+          notify: Reboot NixOS container
 
     - name: Add bind mount for media directory
       ansible.builtin.command: >

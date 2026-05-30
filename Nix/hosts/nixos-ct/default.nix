@@ -10,6 +10,7 @@
     ../../modules/syncthing.nix
     ../../modules/caddy.nix
     ../../modules/adguardhome.nix
+    ../../modules/tailscale.nix
     ../../modules/prowlarr.nix
     ../../modules/sonarr.nix
     ../../modules/sabnzbd.nix
@@ -76,6 +77,9 @@
     quiSessionSecret = {
       file = ../../secrets/quiSessionSecret.age;
     };
+    tailscale-authkey = {
+      file = ../../secrets/tailscale-authkey.age;
+    };
   };
 
   homelab.qbittorrent = {
@@ -113,4 +117,10 @@
     serverSecretsFile = config.age.secrets.sabnzbd-server.path;
   };
   homelab.seerr.enable = true;
+  homelab.tailscale = {
+    enable = true;
+    advertiseRoutes = [ "10.20.30.0/24" ];
+    acceptDns = false;
+    authKeyFile = config.age.secrets.tailscale-authkey.path;
+  };
 }
