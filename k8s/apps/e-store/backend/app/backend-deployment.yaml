@@ -37,7 +37,7 @@ spec:
                 - ALL
       containers:
         - name: e-store-backend
-          image: ghcr.io/murtadhainit/e-store-backend:v0.1.0
+          image: ghcr.io/murtadhainit/e-store-backend:0.1.0
           ports:
             - name: http
               containerPort: 4210
