@@ -333,6 +333,27 @@ with Flux (and it's also stored encrypted in this repo but this time using `SOPS
 certificates before expiration. Signed certificates are in turn used by the annotated
 `Gateway` resource for TLS encryption.
 
+For remote access I use [Tailscale](https://tailscale.com/) (a mesh VPN built on
+WireGuard) to reach my self-hosted services from anywhere and _without_
+exposing anything publicly. This means no port forwarding and no services on a
+public IP, just an authenticated, fine-controlled, end-to-end encrypted overlay
+mesh network (a "tailnet") between peers.
+
+Rather than installing Tailscale on every host, the NixOS LXC container runs as
+a **subnet router**: it sits on both the tailnet and the LAN, and advertises the
+`10.20.30.0/24` route. That single node then forwards traffic from any tailnet peer
+onto the LAN, so remote clients can reach things like the k8s Gateway at
+`10.20.30.80` or Caddy at `10.20.30.50` as if they were on the home network.
+
+AdGuard Home is registered as the tailnet's _global_ nameserver with _Override
+DNS servers_ enabled, so every DNS query from a connected device is resolved by
+AdGuard whether I'm home or away (rather than split DNS that would only forward
+the homelab domain, e.g. `home.murtadha.dev`). The internal names still
+resolve to the same LAN IPs and route through the subnet router, plus the same
+block lists and filtering follow me off the network as a bonus.
+
+See the end-to-end [setup guide](docs/tailscale-setup.md).
+
 ### Observability
 
 > [!NOTE]
@@ -384,10 +405,11 @@ More services to come.
 - [ ] **Split LXC containers** to minimise potential downtime if things go wrong with one NixOS service / deployment
 - [ ] **Make use of VLANs** for network isolation and security
 - [ ] **DNS redundancy** to avoid network issues if the local DNS server goes down
-- [ ] **Integrate Tailscale/Netbird** for remote access
+- [X] **Integrate Tailscale** for remote access (subnet router on the NixOS LXC, AdGuard as the tailnet nameserver)
 - [ ] **Replace Portainer with Dockerhand** for improved Docker environment management
 - [ ] **More services** to self-host
 - [ ] **Adopt Renovate** to update images
+- [ ] **Adopt Kyverno** to refuse to run an image not carrying valid provenance attestation from my pipeline (for the e-store deployment)
 
 ## Acknowledgements
 
