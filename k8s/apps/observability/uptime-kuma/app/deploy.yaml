@@ -4,7 +4,6 @@ metadata:
   labels:
     app: uptime-kuma
   name: uptime-kuma
-  namespace: uptime-kuma
 spec:
   replicas: 1
   selector:

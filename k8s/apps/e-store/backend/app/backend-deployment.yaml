@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: e-store-backend
+  labels:
+    app: e-store-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: e-store-backend
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: e-store-backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - until nc -z mysql 3306; do echo "waiting for mysql"; sleep 2; done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: e-store-backend
+          image: ghcr.io/murtadhainit/e-store-backend:v0.1.0
+          ports:
+            - name: http
+              containerPort: 4210
+          env:
+            - name: DSN
+              valueFrom:
+                secretKeyRef:
+                  name: e-store-db
+                  key: DSN
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

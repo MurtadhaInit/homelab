@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
+  name: e-store-backend
   labels:
-    app: uptime-kuma
-  name: uptime-kuma
+    app: e-store-backend
 spec:
   type: ClusterIP
   selector:
-    app: uptime-kuma
+    app: e-store-backend
   ports:
     - name: http
-      port: 3001
+      port: 4210
       protocol: TCP
       targetPort: http
