@@ -70,7 +70,7 @@
           changed_when: true
           notify: Reboot NixOS container
 
-    - name: Add bind mount for media directory
+    - name: Add bind mount for media LV
       ansible.builtin.command: >
         pct set {{ nixos_ct_id }} -mp0 /mnt/media,mp=/mnt/media
       when:
@@ -84,6 +84,14 @@
       when:
         - ct_status.rc == 0
         - "'mp1' not in ct_config.stdout"
+      changed_when: true
+
+    - name: Add bind mount for bulk SSD (cold media library)
+      ansible.builtin.command: >
+        pct set {{ nixos_ct_id }} -mp2 /mnt/bulk,mp=/mnt/bulk
+      when:
+        - ct_status.rc == 0
+        - "'mp2' not in ct_config.stdout"
       changed_when: true
 
   handlers:

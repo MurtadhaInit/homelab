@@ -5,7 +5,7 @@ collections:
     version: "2.1.0"
   # https://docs.ansible.com/ansible/latest/collections/community/general/
   - name: community.general
-    version: "12.6.0"
+    version: "13.0.1"
   # https://docs.ansible.com/projects/ansible/latest/collections/community/proxmox/index.html
   - name: community.proxmox
     version: "2.0.0-beta1"
