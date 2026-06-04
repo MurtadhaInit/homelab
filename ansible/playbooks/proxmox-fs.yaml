@@ -5,10 +5,19 @@
 
   vars:
     mounts:
+      # NOTE: btrfs on an LVM LV created manually by the Proxmox installer (the 'pve' VG, shared
+      # with root + swap) — that stack is partially out of this playbook's scope/ownership,
+      # so unlike the bulk SSD below there is intentionally no filesystem-creation task for it.
       - path: /mnt/media
         src: /dev/pve/media
         fstype: btrfs
         opts: compress=zstd,noatime
+        dump: "0"
+        passno: "2"
+      - path: /mnt/bulk
+        src: LABEL=bulk
+        fstype: btrfs
+        opts: compress=zstd,noatime,nofail
         dump: "0"
         passno: "2"
       - path: /mnt/usb-hdd
@@ -19,19 +28,17 @@
         passno: "0"
 
   tasks:
-    - name: Install NTFS support
+    - name: Install NTFS support (for external USB 3.5" HDD)
       ansible.builtin.apt:
         name: ntfs-3g
         state: present
 
-    - name: Create mount points
-      ansible.builtin.file:
-        path: "{{ item.path }}"
-        state: directory
-        mode: "0750"
-        owner: murtadha
-        group: murtadha
-      loop: "{{ mounts }}"
+    # Idempotent and safe with force=false (default)
+    - name: Create the btrfs filesystem on the new bulk SSD
+      community.general.filesystem:
+        dev: /dev/disk/by-id/ata-CT1000BX500SSD1_2539E9CB547C
+        fstype: btrfs
+        opts: -L bulk
 
     - name: Mount filesystems and add to fstab
       ansible.posix.mount:
@@ -44,18 +51,32 @@
         state: mounted
       loop: "{{ mounts }}"
 
+    # Runs AFTER the mount so it targets the mounted btrfs root (mkfs leaves it root-owned),
+    # not the shadowed underlying mountpoint.
+    - name: Ensure ownership/permissions on the btrfs mount roots
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: murtadha
+        group: murtadha
+        mode: "0750"
+      # The ntfs disk is excluded on purpose: its ownership is projected from the
+      # uid=/gid=/dmask mount options, so a chown here would be redundant.
+      loop: "{{ mounts | selectattr('fstype', 'equalto', 'btrfs') | list }}"
+
     - name: Create 'To Stream' directory with nocow attribute (avoids btrfs CoW fragmentation for torrent downloads)
       block:
         - name: Create the directory
           ansible.builtin.file:
-            path: /mnt/media/To Stream
+            path: /mnt/bulk/To Stream
             state: directory
             mode: "0750"
             owner: murtadha
             group: murtadha
+        # +C must be set on the empty directory before any files land so they inherit nodatacow
         - name: Disable copy-on-write
           ansible.builtin.command:
-            cmd: chattr +C "/mnt/media/To Stream"
+            cmd: chattr +C "/mnt/bulk/To Stream"
           changed_when: false
 
     - name: Make changes on the Proxmox storage side
@@ -100,30 +121,35 @@
             - { name: media-lv, path: /mnt/media/proxmox }
             # - { name: usb-hdd, path: /mnt/usb-hdd }
 
-    - name: Setup monthly btrfs scrub for the media LV
+    - name: Setup monthly btrfs scrub for the btrfs filesystems
+      vars:
+        btrfs_scrub_mounts:
+          - /mnt/media
+          - /mnt/bulk
       block:
-        - name: Create the scrub service unit
+        - name: Create the scrub service units
           ansible.builtin.copy:
-            dest: /etc/systemd/system/btrfs-scrub-media.service
+            dest: "/etc/systemd/system/btrfs-scrub-{{ item | basename }}.service"
             mode: "0644"
             content: |
               [Unit]
-              Description=Btrfs scrub on /mnt/media
-              ConditionPathIsMountPoint=/mnt/media
+              Description=Btrfs scrub on {{ item }}
+              ConditionPathIsMountPoint={{ item }}
 
               [Service]
               Type=oneshot
-              ExecStart=/usr/bin/btrfs scrub start -B /mnt/media
+              ExecStart=/usr/bin/btrfs scrub start -B {{ item }}
               IOSchedulingClass=idle
               CPUSchedulingPolicy=idle
               Nice=19
-        - name: Create the scrub timer unit
+          loop: "{{ btrfs_scrub_mounts }}"
+        - name: Create the scrub timer units
           ansible.builtin.copy:
-            dest: /etc/systemd/system/btrfs-scrub-media.timer
+            dest: "/etc/systemd/system/btrfs-scrub-{{ item | basename }}.timer"
             mode: "0644"
             content: |
               [Unit]
-              Description=Monthly btrfs scrub on /mnt/media
+              Description=Monthly btrfs scrub on {{ item }}
 
               [Timer]
               OnCalendar=monthly
@@ -132,9 +158,11 @@
 
               [Install]
               WantedBy=timers.target
-        - name: Enable and start the scrub timer
+          loop: "{{ btrfs_scrub_mounts }}"
+        - name: Enable and start the scrub timers
           ansible.builtin.systemd:
-            name: btrfs-scrub-media.timer
+            name: "btrfs-scrub-{{ item | basename }}.timer"
             enabled: true
             state: started
             daemon_reload: true
+          loop: "{{ btrfs_scrub_mounts }}"
