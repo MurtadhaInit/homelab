@@ -34,6 +34,7 @@ in
           QueueingSystemEnabled = false;
           AlternativeGlobalDLSpeedLimit = 15000; # kB/s
           AlternativeGlobalUPSpeedLimit = 5000; # kB/s
+          DefaultSavePath = "/mnt/bulk/To Stream";
         };
         Preferences = {
           WebUI = {
