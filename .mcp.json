@@ -3,6 +3,13 @@
     "flux-operator-mcp": {
       "command": "mise",
       "args": ["exec", "--", "flux-operator-mcp", "serve", "--read-only=false"]
+    },
+    "grafana-mcp": {
+      "command": "mise",
+      "args": ["exec", "--", "uvx", "mcp-grafana"],
+      "env": {
+        "GRAFANA_URL": "https://grafana.k8s.murtadha.dev"
+      }
     }
   }
 }

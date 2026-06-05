@@ -3,6 +3,9 @@ _.python.venv = ".venv"
 TALOSCONFIG = "{{ config_root }}/k8s/talosconfig"
 KUBECONFIG = "{{ config_root }}/k8s/kubeconfig"
 SOPS_AGE_KEY_FILE = "{{ env.HOME }}/.ssh/keys/sops-age.txt"
+# Grafana MCP token, read from the OS keyring (stored via `just grafana-mcp-token`).
+# Tries macOS `security`, then Linux `secret-tool`; `|| true` yields empty (not an error) if unset.
+GRAFANA_SERVICE_ACCOUNT_TOKEN = "{{ exec(command='security find-generic-password -s grafana-mcp-token -w 2>/dev/null || secret-tool lookup service grafana-mcp-token 2>/dev/null || true') }}"
 
 [tools]
 jq = "latest"

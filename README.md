@@ -373,7 +373,7 @@ The [Flux Operator MCP Server](https://fluxoperator.dev/docs/mcp/prompting/)
 is configured in this repo (`.mcp.json`) and automatically installed as a CLI
 through `mise` along with the other tools. This gives any MCP-compatible AI
 assistant (Claude Code, Cursor, Codex, etc.) direct access to the Kubernetes cluster
-and its Flux resources. The assistant can be prompteed to inspect Flux installations,
+and its Flux resources. The assistant can be prompted to inspect Flux installations,
 query resource status and events, search up-to-date Flux documentation, analyze
 pod logs and metrics, trigger reconciliations, and perform structured root cause
 analysis on failing HelmReleases or Kustomizations.
@@ -383,6 +383,19 @@ Troubleshooting guidelines from the upstream project can be included as agent
 on the unique cluster properties to guide assistants into following the recommended
 analysis workflows (e.g., walking the dependency chain from a Kustomization
 through its source and inventory before pulling pod logs).
+
+Alongside it, the [Grafana MCP Server](https://github.com/grafana/mcp-grafana)
+is also wired up in `.mcp.json` (run on demand via `uvx` through `mise`) and
+authenticated with a Grafana service account token kept in the OS keyring and
+injected into the server's environment at runtime by `mise`. See the
+[setup guide](docs/grafana-mcp.md) for details.
+
+This lets an assistant query Prometheus with PromQL to surface cluster bottlenecks
+and saturation, explore the available metrics, and draft or refine dashboards
+directly against the live Grafana instance. Since dashboards created through
+the API only live in Grafana, the GitOps-friendly workflow is to create the dashboard
+and iterate over it with the assistant and then commit the final exported JSON as
+a `ConfigMap` so Flux remains the source of truth.
 
 ## Services
 

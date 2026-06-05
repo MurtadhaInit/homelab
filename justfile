@@ -91,6 +91,26 @@ k8s-status:
 k8s-events:
     kubectl get events -A --sort-by=.lastTimestamp
 
+# Store the Grafana service-account token (for the Grafana MCP) in the OS keyring
+[group('k8s')]
+grafana-mcp-token:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Read silently so the token never lands in shell history
+    read -rsp "Paste the Grafana service-account token: " tok
+    echo
+    [ -n "$tok" ] || { echo "No token provided." >&2; exit 1; }
+    if [[ "$(uname)" == "Darwin" ]]; then
+        security add-generic-password -a "$USER" -s grafana-mcp-token -U -w "$tok"
+    elif command -v secret-tool >/dev/null 2>&1; then
+        printf '%s' "$tok" | secret-tool store --label='Grafana MCP' service grafana-mcp-token
+    else
+        echo "No keyring found (need macOS 'security' or Linux 'secret-tool')." >&2
+        echo "Install libsecret-tools, or store the token with 'pass'." >&2
+        exit 1
+    fi
+    echo "✅ Stored in the OS keyring. Reload the Grafana MCP server in your AI assistant."
+
 # TODO: add 'nix' recipes for 'agenix' to edit secrets or the like
 
 # TODO: create recipes for sops (one for encrypting and one for decryption) that does this following some naming convention for all secrets
