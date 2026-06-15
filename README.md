@@ -26,7 +26,7 @@ while also showcasing various explorations into self-hosting technologies and ap
     - [Kubernetes](#kubernetes)
     - [Networking](#networking)
     - [Observability](#observability)
-    - [Agentic GitOps](#agentic-gitops)
+    - [Agentic GitOps \& observability](#agentic-gitops--observability)
   - [Services](#services)
   - [Roadmap](#roadmap)
   - [Acknowledgements](#acknowledgements)
@@ -367,7 +367,7 @@ playbook and hence it's being scraped along with other k8s nodes (VMs) and compo
 I installed Uptime Kuma through hand-written manifests, translating the Docker
 Compose example they have in the docs into k8s resources.
 
-### Agentic GitOps
+### Agentic GitOps & observability
 
 The [Flux Operator MCP Server](https://fluxoperator.dev/docs/mcp/prompting/)
 is configured in this repo (`.mcp.json`) and automatically installed as a CLI
