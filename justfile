@@ -10,6 +10,8 @@ bootstrap:
     uv sync
     @echo "\n⚙️ Installing Ansible collections..."
     uv run ansible-galaxy collection install --upgrade -r ansible/requirements.yml
+    @echo "\n⚙️ Installing Terraform/OpenTofu provider plugins..."
+    tofu -chdir=Terraform-OpenTofu init -input=false
 
 # 1. Generate SSH key pairs locally for the management of Proxmox hosts and VMs
 generate-keys:
