@@ -24,5 +24,9 @@ terraform {
       source  = "hashicorp/local"
       version = "2.8.0"
     }
+    sops = {
+      source  = "carlpett/sops"
+      version = "1.4.1"
+    }
   }
 }

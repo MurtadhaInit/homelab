@@ -1,7 +1,8 @@
 resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
+  provider     = proxmox.prox
   content_type = "iso"
   datastore_id = var.pve_storage
-  node_name    = var.pve_hostname
+  node_name    = "prox"
 
   # The URL for the latest Ubuntu Server LTS minimal cloud image
   url       = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
@@ -9,10 +10,11 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
 }
 
 resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
+  provider    = proxmox.prox
   name        = "ubuntu-vm"
   description = "An Ubuntu cloud image configured with Cloud Init for containers deployment"
   tags        = ["terraform"]
-  node_name   = var.pve_hostname
+  node_name   = "prox"
   vm_id       = 600
   on_boot     = true
   started     = true
@@ -76,9 +78,10 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
 }
 
 resource "proxmox_virtual_environment_file" "user_data_cloud_config" {
+  provider     = proxmox.prox
   content_type = "snippets"
   datastore_id = var.pve_storage
-  node_name    = var.pve_hostname
+  node_name    = "prox"
   overwrite    = true
 
   source_raw {

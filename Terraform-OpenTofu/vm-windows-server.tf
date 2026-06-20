@@ -1,7 +1,8 @@
 resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
+  provider       = proxmox.prox
   content_type   = "iso"
   datastore_id   = var.pve_storage
-  node_name      = var.pve_hostname
+  node_name      = "prox"
   upload_timeout = 1200
 
   # The ISO for the latest Windows Server 2025 - from MAS: https://massgrave.dev/windows-server-links
@@ -17,9 +18,10 @@ resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
 }
 
 resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
+  provider       = proxmox.prox
   content_type   = "iso"
   datastore_id   = var.pve_storage
-  node_name      = var.pve_hostname
+  node_name      = "prox"
   upload_timeout = 2700
 
   # See: https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers and https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
@@ -33,10 +35,11 @@ resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
 }
 
 resource "proxmox_virtual_environment_vm" "windows-server" {
+  provider    = proxmox.prox
   name        = "windows-server"
   description = "A Windows Server VM for when Windows apps are needed"
   tags        = ["terraform"]
-  node_name   = var.pve_hostname
+  node_name   = "prox"
   vm_id       = 700
   on_boot     = false
   started     = false
@@ -63,7 +66,7 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
   }
   scsi_hardware = "virtio-scsi-single"
   cdrom {
-    file_id = proxmox_virtual_environment_download_file.windows_server_iso.id
+    file_id   = proxmox_virtual_environment_download_file.windows_server_iso.id
     interface = "ide0"
   }
   # NOTE: the current provider doesn't support adding two CD ROMs, so the other needs
@@ -72,10 +75,10 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
   #   file_id = proxmox_virtual_environment_download_file.windows_virtio_drivers.id
   # }
   machine = "pc-q35-9.0"
-  bios = "ovmf"
+  bios    = "ovmf"
   efi_disk {
     datastore_id = var.pve_storage
-    type = "4m"
+    type         = "4m"
   }
   tpm_state {
     datastore_id = var.pve_storage

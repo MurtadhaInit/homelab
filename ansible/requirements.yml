@@ -6,6 +6,11 @@ collections:
   # https://docs.ansible.com/ansible/latest/collections/community/general/
   - name: community.general
     version: "13.0.1"
+  # https://docs.ansible.com/ansible/latest/collections/community/sops/
+  # Provides the `community.sops.sops` vars plugin that decrypts *.sops.yaml in
+  # host_vars/group_vars (the per-host Proxmox API token). Needs the `sops` binary.
+  - name: community.sops
+    version: "2.4.0"
   # https://docs.ansible.com/projects/ansible/latest/collections/community/proxmox/index.html
   - name: community.proxmox
     version: "2.0.0-beta1"

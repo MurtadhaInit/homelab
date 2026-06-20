@@ -1,7 +1,8 @@
 resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
+  provider     = proxmox.prox
   content_type = "vztmpl"
   datastore_id = var.pve_storage
-  node_name    = var.pve_hostname
+  node_name    = "prox"
 
   # The latest NixOS Proxmox LXC template - Update accordingly for new releases
   url                = "https://hydra.nixos.org/build/320902448/download/1/nixos-image-lxc-proxmox-25.11pre-git-x86_64-linux.tar.xz"
@@ -11,9 +12,10 @@ resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
 }
 
 resource "proxmox_virtual_environment_container" "nixos" {
+  provider      = proxmox.prox
   description   = "A NixOS LXC container generated from a Proxmox LXC image template from Hydra"
   tags          = ["terraform", "ansible"]
-  node_name     = var.pve_hostname
+  node_name     = "prox"
   vm_id         = 1000
   start_on_boot = true
   started       = true

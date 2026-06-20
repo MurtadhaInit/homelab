@@ -3,6 +3,12 @@ stores:
     indent: 2
 
 creation_rules:
+  # Proxmox API token: single source of truth read by both Ansible and OpenTofu.
+  # It lives in the Ansible host_vars so it auto-loads for plays; OpenTofu
+  # reads the same file by relative path. Listed first so it wins over the rule below.
+  - path_regex: proxmox-api-token\.sops\.yaml$
+    encrypted_regex: ^(proxmox_api_token_secret)$
+    age: age1judvvl6kdauw8kwu2ul7g0ffrmg0n9ugvznsh440mp8gzx5fwynsyhxxsc
   # Match by filename suffix so the encryption rule travels with the file —
   # secrets live next to the resources that consume them, not in a central dir.
   - path_regex: .*\.sops\.yaml$

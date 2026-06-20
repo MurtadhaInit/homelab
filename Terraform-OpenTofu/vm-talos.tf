@@ -7,7 +7,7 @@ data "talos_image_factory_extensions_versions" "this" {
     names = [
       "qemu-guest-agent",
       "amd-ucode",
-      "iscsi-tools", # for Longhorn
+      "iscsi-tools",     # for Longhorn
       "util-linux-tools" # for Longhorn
     ]
   }
@@ -31,9 +31,10 @@ data "talos_image_factory_urls" "this" {
 }
 
 resource "proxmox_download_file" "talos_image" {
+  provider     = proxmox.prox
   content_type = "iso"
   datastore_id = var.pve_storage
-  node_name    = var.pve_hostname
+  node_name    = "prox"
 
   # disk_image URL is the .raw.xz image — rename to .img for Proxmox/provider compatibility
   url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
@@ -82,21 +83,21 @@ locals {
       longhorn_disk_gb = null
     }
     "talos-worker-1" = {
-      role            = "worker"
-      ip              = "10.20.30.70"
-      vm_id           = 820
-      cores           = 2
-      memory          = 4096
-      disk_gb         = 15
+      role             = "worker"
+      ip               = "10.20.30.70"
+      vm_id            = 820
+      cores            = 2
+      memory           = 4096
+      disk_gb          = 15
       longhorn_disk_gb = 25
     }
     "talos-worker-2" = {
-      role            = "worker"
-      ip              = "10.20.30.71"
-      vm_id           = 821
-      cores           = 2
-      memory          = 4096
-      disk_gb         = 15
+      role             = "worker"
+      ip               = "10.20.30.71"
+      vm_id            = 821
+      cores            = 2
+      memory           = 4096
+      disk_gb          = 15
       longhorn_disk_gb = 25
     }
   }
@@ -108,12 +109,13 @@ locals {
 
 # === Proxmox VMs ===
 resource "proxmox_virtual_environment_vm" "talos" {
+  provider = proxmox.prox
   for_each = local.talos_nodes
 
   name        = each.key
   description = "Talos Linux ${each.value.role} node"
   tags        = ["terraform", "k8s", each.value.role]
-  node_name   = var.pve_hostname
+  node_name   = "prox"
   vm_id       = each.value.vm_id
   on_boot     = true
   started     = true

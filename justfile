@@ -28,18 +28,43 @@ generate-keys:
         fi
     done
 
+# (internal) Print the ansible_host IP of an inventory host; no arg = all proxmox_hosts
+[working-directory('ansible')]
+_pve-ip host='':
+    @uv run ansible-inventory --list | jq -r --arg h '{{ host }}' \
+      '._meta.hostvars as $hv | (if $h == "" then .proxmox_hosts.hosts[] else $h end) | $hv[.].ansible_host // empty'
+
 # 2. Install the generated public SSH key on Proxmox hosts (root password prompt on first run only)
 [working-directory('ansible')]
 copy-keys:
     #!/usr/bin/env bash
     set -euo pipefail
-    uv run ansible-inventory --list \
-      | jq -r '.proxmox_hosts.hosts[] as $h | ._meta.hostvars[$h].ansible_host' \
-      | while read -r host; do
-            ssh-copy-id -i ~/.ssh/keys/proxmox-hosts.pub "root@$host"
-        done
+    just _pve-ip | while read -r host; do
+        ssh-copy-id -i ~/.ssh/keys/proxmox-hosts.pub "root@$host"
+    done
 
-# TODO: add recipes to SSH, generate a token, and store it in secret TF / Ansible files
+# 2.5 (Re)create a Proxmox API token on a host and store it SOPS-encrypted for Ansible & OpenTofu
+[working-directory('ansible')]
+pve-token host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ip=$(just _pve-ip {{ host }})
+    [ -n "$ip" ] || { echo "❌ Host '{{ host }}' not found in the inventory." >&2; exit 1; }
+    echo "⚙️ (Re)creating the root@pam!automation token on {{ host }} ($ip)..."
+    # Remove-then-add makes this re-runnable; the secret is only shown once, at creation.
+    secret=$(ssh -i ~/.ssh/keys/proxmox-hosts "root@$ip" '
+        pveum user token remove root@pam automation >/dev/null 2>&1 || true
+        pveum user token add root@pam automation --privsep 0 --output-format json' \
+      | jq -r '.value // empty')
+    [ -n "$secret" ] || { echo "❌ Token creation returned no secret." >&2; exit 1; }
+    f="inventory/host_vars/{{ host }}/proxmox-api-token.sops.yaml"
+    mkdir -p "$(dirname "$f")"
+    # Encrypt straight from stdin so the plaintext secret never lands on disk.
+    tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
+    printf 'proxmox_api_token_secret: %s\n' "$secret" \
+      | sops encrypt --filename-override "$f" /dev/stdin > "$tmp"
+    mv "$tmp" "$f"
+    echo "✅ Wrote $f — read by both Ansible and OpenTofu."
 
 # 3. Prepare Proxmox hosts
 [working-directory('ansible')]

@@ -1,7 +1,12 @@
 # === Proxmox variables ===
-variable "pve_host_ip" {
-  type        = string
-  description = "The Proxmox host endpoint - IP address"
+# Standalone (un-clustered) nodes, each gets its own provider instance + reads its own SOPS API token.
+# `inventory_host` selects that node's ansible/inventory/host_vars/<host>/proxmox-api-token.sops.yaml.
+variable "pve_hosts" {
+  type = map(object({
+    ip             = string
+    inventory_host = string
+  }))
+  description = "Proxmox nodes keyed by node name (i.e. hostname) — e.g. prox, prox2"
 }
 
 variable "pve_host_port" {
@@ -12,16 +17,6 @@ variable "pve_host_port" {
 variable "pve_host_user" {
   type        = string
   description = "The Proxmox host username to be used (PAM user)"
-}
-
-variable "pve_host_api_token" {
-  type        = string
-  description = "The Proxmox host API token"
-}
-
-variable "pve_hostname" {
-  type        = string
-  description = "The hostname given for the Proxmox host"
 }
 
 variable "pve_host_ssh_key" {
