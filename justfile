@@ -139,4 +139,3 @@ grafana-mcp-token:
 # TODO: add 'nix' recipes for 'agenix' to edit secrets or the like
 
 # TODO: create recipes for sops (one for encrypting and one for decryption) that does this following some naming convention for all secrets
-# and consider eliminating Ansible Vault in favour of SOPS.
