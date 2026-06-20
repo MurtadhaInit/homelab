@@ -176,15 +176,18 @@ flowchart TD
 2. We can then configure Proxmox hosts with Ansible playbooks.
    - One general playbook will perform basic hardening and preparation like
      disabling SSH password access, creating a regular user, giving it sudo
-     access... etc.
+     access, switching Proxmox APT repos... etc.
    - Another playbook will configure storage on the Proxmox node, which is specific
      to my particular layout for this particular host (and only for this current
      Proxmox installation).
    - These playbooks also rely on the Proxmox API, and hence a token needs to be
-     generated first (e.g. from the host console in the Proxmox Web GUI).
-   - For now, the secrets solution for encrypting the token and the
-     regular user credentials is Ansible Vault, using a password file whose default
-     location is set in `ansible.cfg`.
+     generated for each Proxmox host with `just pve-token <host>`, which
+     creates/rotates a `root@pam!automation` token on the host over SSH then
+     stores it SOPS-encrypted in the corresponding Ansible `host_vars` directory.
+     The same token is consumed on the OpenTofu side (single source of truth).
+   - Like k8s secrets, these API tokens (along with the regular-user credentials)
+     are SOPS/age-encrypted. When running playbooks, they are decrypted on the
+     fly via the `community.sops.sops` vars plugin.
    - And finally, another playbook will install Prometheus `node_exporter` to
      expose metrics from the Proxmox nodes for scraping and subsequent alerting
      and monitoring.
@@ -192,14 +195,19 @@ flowchart TD
    , and we provision most VMs with static IP addresses (and/or other initialisation
    steps) using CloudInit, either as templates or as the minimal equivalent
    initialisation block from Proxmox.
-   - The `bpg/proxmox` provider is used to create VMs and LXC containers. We supply
-     it with a similar (or the same) Proxmox API token to the one we used with Ansible.
-     We also provide it with SSH credentials (the key generated earlier) to be able
-     to perform other tasks not ordinarily possible with the API access alone, as
-     per the provider docs.
-   - A `proxmox-hosts.auto.tfvars` file should be created, providing secret values
-     for `pve_host_ip`, `pve_host_port`, `pve_host_user`, `pve_host_api_token`,
-     and `pve_hostname`.
+   - The `bpg/proxmox` provider is used to create VMs and LXC containers. It reads
+     the _same_ Proxmox API SOPS-encrypted token as Ansible, via the `carlpett/sops`
+     provider. We also provide it with SSH credentials (the key generated earlier)
+     to perform tasks not ordinarily possible with API access alone, as per the
+     provider docs.
+   - A `proxmox-hosts.auto.tfvars` file should be created, providing values for
+     `pve_host_port`, `pve_host_user`, and the `pve_hosts` map (each Proxmox
+     node's `ip` + `inventory_host`, the name given to it in Ansible inventory's
+     `hosts.ini`).
+   - Standalone (un-clustered) nodes don't share an API, so each node gets its
+     own aliased provider instance which reads its own SOPS token; and every
+     resource states its node explicitly via `provider = proxmox.<node>` and
+     `node_name = "<node>"`.
    - We use the official `talos` provider to provision the Talos cluster after
      creating the worker and controlplane VMs (generate secrets, define machine
      config, bootstrap `etcd`... etc).

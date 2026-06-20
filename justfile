@@ -45,7 +45,9 @@ copy-keys:
         ssh-copy-id -i ~/.ssh/keys/proxmox-hosts.pub "root@$host"
     done
 
-# 2.5 (Re)create a Proxmox API token on a host and store it SOPS-encrypted for Ansible & OpenTofu
+# NOTE: Set the IPs of Proxmox nodes in Ansible inventory (hosts.ini) under the proxmox_hosts group.
+# The name given to the node there is the one passed to this recipe.
+# 2.5 (Re)create a Proxmox API token on a host and store it SOPS-encrypted for Ansible & OpenTofu.
 [working-directory('ansible')]
 pve-token host:
     #!/usr/bin/env bash
@@ -62,6 +64,7 @@ pve-token host:
     f="inventory/host_vars/{{ host }}/proxmox-api-token.sops.yaml"
     mkdir -p "$(dirname "$f")"
     # Encrypt straight from stdin so the plaintext secret never lands on disk.
+    # We don't write encrypted result straight to $f so a failed run doesn't clobber a good existing file.
     tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
     printf 'proxmox_api_token_secret: %s\n' "$secret" \
       | sops encrypt --filename-override "$f" /dev/stdin > "$tmp"
