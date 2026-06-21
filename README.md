@@ -111,9 +111,9 @@ technologies include:
 
 My general approach is to establish a stable foundation to build upon, which is
 why my Hypervisor layer (Proxmox) is intentionally minimal in terms of adjustments:
-I don't use HA or Ceph storage, and there are only a few configurations applied
-to Proxmox hosts, mainly focusing on baseline hardening, SSH access, and storage
-setup. I defer things like HA further up the stack, into my k8s cluster.
+I don't cluster nodes nor use HA or Ceph storage, and there are only a few configurations
+applied to Proxmox hosts, mainly focusing on baseline hardening, SSH access, and
+storage setup. I defer things like HA further up the stack, into my k8s cluster.
 
 Some of the services I self-host are installed on a NixOS LXC container running
 privileged on the Proxmox host, and others are containerised and running on my
@@ -422,7 +422,7 @@ More services to come.
 - [ ] **Single domain**: drop `*.k8s.murtadha.dev` and route all traffic via `home.murtadha.dev`
 - [ ] **DNS**: evaluate Technitium as a potential AdGuard Home replacement
 - [ ] **Remote Linux Nix builder**: build NixOS derivations on a Linux machine inside my infra (avoiding macOS build issues)
-- [ ] **Too many secret solutions**: attempt to eliminate some and simplify this aspect
+- [X] **Too many secret solutions**: attempt to eliminate some and simplify this aspect
 - [ ] **Split LXC containers** to minimise potential downtime if things go wrong with one NixOS service / deployment
 - [ ] **Make use of VLANs** for network isolation and security
 - [ ] **DNS redundancy** to avoid network issues if the local DNS server goes down
