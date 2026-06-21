@@ -47,6 +47,9 @@ in
           MBP = {
             id = "CYLNY5H-GWUW324-OXEJJTA-E4RGJC4-W5X6HGP-J5DZE6F-E54XXBL-WYQ2MQK";
           };
+          NixOS-Desktop = {
+            id = "Y3GURX2-I7PJNQI-Q5IQEYB-7U6Q743-IZFOH24-ADXUOBJ-KS2NLXW-3ZY5CAL";
+          };
         };
         folders = {
           documents = {
@@ -60,7 +63,10 @@ in
                 maxAge = "31536000"; # keep versions up to 1 year
               };
             };
-            devices = [ "MBP" ];
+            devices = [
+              "MBP"
+              "NixOS-Desktop"
+            ];
           };
         };
       };
