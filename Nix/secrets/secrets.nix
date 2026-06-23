@@ -1,8 +1,13 @@
 let
   # Get with: ssh-keyscan <IP_ADDRESS> | grep ed25519
   nixos-ct = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdw4wgxlGGzgOmHrZEp0sqAwma44dWlGzw6/xySLhiJ";
-  # Get with: age-keygen -y ~/.ssh/keys/age.txt
+  # Generate a new key pair with: age-keygen -o ~/.ssh/keys/age.txt
+  # Then print the public key (to paste here) with: age-keygen -y ~/.ssh/keys/age.txt
   murtadha = "age1fjfzlw6ah4k3kh07ray363e87rt6z8rfhljjxprwhqa7y0pw9vjqvv0f9h";
+  allHosts = [
+    nixos-ct
+    murtadha
+  ];
 in
 {
   # NOTE: Edit with (in this dir): nix run github:ryantm/agenix -- -e <filename>.age
@@ -13,10 +18,7 @@ in
   # E.g. to specify both keys: nix run github:ryantm/agenix -- -r -i ~/.ssh/keys/age.txt -i /tmp/nixos-ct-key
   # Remove the copied private key afterwards: rm /tmp/nixos-ct-key
 
-  "syncthing-gui-password.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
+  "syncthing-gui-password.age".publicKeys = allHosts;
   # Generate a key pair with: nix run nixpkgs#syncthing -- generate --config ./conf --data ./data
   # Then (Nushell): open ./conf/cert.pem | nix run github:ryantm/agenix -- -e syncthing-cert.age
   # And: open ./conf/key.pem | nix run github:ryantm/agenix -- -e syncthing-key.age
@@ -26,10 +28,7 @@ in
 
   # Cloudflare API token for Caddy DNS-01 ACME challenges. Required perms: Zone.Zone:Read, Zone.DNS:Edit
   # Create with: "CF_API_TOKEN=<token>" | nix run github:ryantm/agenix -- -e caddy-cloudflare-token.age
-  "caddy-cloudflare-token.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
+  "caddy-cloudflare-token.age".publicKeys = allHosts;
 
   # Generate with (Nushell): $"PROWLARR__AUTH__APIKEY=(openssl rand -hex 16 | str trim)\n" | nix run github:ryantm/agenix -- -e prowlarr-api-key.age
   "prowlarr-api-key.age".publicKeys = [ nixos-ct ];
@@ -42,29 +41,17 @@ in
   # let nzb_key = (openssl rand -hex 16 | str trim)
   # $"[misc]\napi_key = ($api_key)\nnzb_key = ($nzb_key)\nusername = murtadha\npassword = <your-password>\n" | nix run github:ryantm/agenix -- -e sabnzbd-secrets.age
   # NOTE: avoid special characters in the password
-  "sabnzbd-secrets.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
+  "sabnzbd-secrets.age".publicKeys = allHosts;
   # SABnzbd Usenet server (provider) config and credentials (INI format)
-  "sabnzbd-server.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
+  "sabnzbd-server.age".publicKeys = allHosts;
 
   # qui (qBittorrent client) session secret.
   # Create with (Nushell): openssl rand -hex 32 | str trim | nix run github:ryantm/agenix -- -e quiSessionSecret.age
-  "quiSessionSecret.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
+  "quiSessionSecret.age".publicKeys = allHosts;
 
   # Tailscale auth key for unattended login of the homelab machine subnet router.
   # Generate a *reusable* and *tagged* key in the admin console:
   # Settings > Keys > Generate auth key, then encrypt with (Nushell):
   # "<tskey-auth-...>" | nix run github:ryantm/agenix -- -e tailscale-authkey.age
-  "tailscale-authkey.age".publicKeys = [
-    nixos-ct
-    murtadha
-  ];
+  "tailscale-authkey.age".publicKeys = allHosts;
 }
