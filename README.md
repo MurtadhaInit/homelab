@@ -109,6 +109,11 @@ technologies include:
   </tr>
 </table>
 
+> [!TIP]
+> For the rationale behind each of these choices (and the associated trade-offs),
+> see the [technical decisions doc](docs/decisions.md). It also includes a
+> timestamped log of design decisions taken over the project's lifetime.
+
 My general approach is to establish a stable foundation to build upon, which is
 why my Hypervisor layer (Proxmox) is intentionally minimal in terms of adjustments:
 I don't cluster nodes nor use HA or Ceph storage, and there are only a few configurations
