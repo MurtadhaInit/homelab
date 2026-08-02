@@ -22,6 +22,7 @@
 
   environment.systemPackages = with pkgs; [
     neovim
+    wget
     htop
     curl
     git
