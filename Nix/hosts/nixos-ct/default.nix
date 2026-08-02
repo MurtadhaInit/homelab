@@ -17,6 +17,7 @@
     ../../modules/seerr.nix
   ];
 
+  # ONLY bump up on fresh installs!
   system.stateVersion = "25.11";
 
   proxmoxLXC = {
