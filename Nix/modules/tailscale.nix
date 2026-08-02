@@ -45,16 +45,22 @@ in
       authKeyFile = cfg.authKeyFile;
       # "server" enables IPv4/IPv6 forwarding sysctls required for subnet routing.
       useRoutingFeatures = "server";
-      extraUpFlags =
-        lib.optional (
-          cfg.advertiseRoutes != [ ]
-        ) "--advertise-routes=${lib.concatStringsSep "," cfg.advertiseRoutes}"
-        ++ lib.optional (!cfg.acceptDns) "--accept-dns=false";
+      # Apply these via `tailscale set` (the tailscaled-set unit re-runs it on every
+      # activation) rather than `tailscale up`. extraUpFlags only fire at first auth
+      # via tailscaled-autoconnect and are skipped once the node is Running, so route
+      # or DNS edits made here would otherwise silently never take effect on rebuild.
+      # Both flags are emitted unconditionally: an omitted flag leaves tailscaled's
+      # persisted pref as-is, so clearing routes has to be stated explicitly (an
+      # empty --advertise-routes clears them).
+      extraSetFlags = [
+        "--advertise-routes=${lib.concatStringsSep "," cfg.advertiseRoutes}"
+        "--accept-dns=${lib.boolToString cfg.acceptDns}"
+      ];
     };
 
     # Trust the tailnet interface so peers can reach this host's services
     # (AdGuard DNS, the *arr web UIs, etc.) without per-port firewall rules.
     # The tailnet is private and authenticated, so this is the intended exposure.
-    networking.firewall.trustedInterfaces = [ "tailscale0" ];
+    networking.firewall.trustedInterfaces = [ config.services.tailscale.interfaceName ];
   };
 }
