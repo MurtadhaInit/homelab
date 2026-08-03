@@ -96,8 +96,23 @@ pve-postconfig:
     uv run ansible-playbook playbooks/ubuntu-docker.yaml
     uv run ansible-playbook playbooks/proxmox-nixos-ct.yaml
 
+# macOS cannot build a NixOS toplevel: its /nix is case-insensitive, so buildEnv
+# mangles the symlinks it merges. From macOS we therefore build on the target and
+# skip deploy-rs's pre-deploy `nix flake check` (the checks in flake.nix), since
+# that builds the toplevel locally. From Linux the build is native and case-sensitive,
+# so it runs locally (better CPU perf) and keeps those checks - hence the per-platform
+# command variants.
+
 # Deploy Nix configuration to targets
 [group('nix')]
+[macos]
+[working-directory('Nix')]
+nix-deploy:
+    nix run github:serokell/deploy-rs . -- --skip-checks --remote-build
+
+# Deploy Nix configuration to targets
+[group('nix')]
+[linux]
 [working-directory('Nix')]
 nix-deploy:
     nix run github:serokell/deploy-rs .
