@@ -28,6 +28,11 @@
     git
   ];
 
+  # Install the terminfo outputs of the terminals we might SSH in from (ghostty,
+  # kitty, wezterm, ...) so TERM resolves for every user and every SSH client,
+  # rather than depending on the client shipping its own terminfo on connect.
+  environment.enableAllTerminfo = true;
+
   services.openssh = {
     enable = true;
     settings = {
