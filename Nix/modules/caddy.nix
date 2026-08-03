@@ -55,6 +55,10 @@ let
       name = "qui";
       proxy = "localhost:7476";
     }
+    {
+      name = "stash";
+      proxy = "localhost:${toString config.services.stash.settings.port}";
+    }
   ];
 
   mkReverseProxy =

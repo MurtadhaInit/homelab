@@ -54,4 +54,14 @@ in
   # Settings > Keys > Generate auth key, then encrypt with (Nushell):
   # "<tskey-auth-...>" | nix run github:ryantm/agenix -- -e tailscale-authkey.age
   "tailscale-authkey.age".publicKeys = allHosts;
+
+  # Stash web UI password (this file must hold the bcrypt *hash*).
+  # Create with (Nushell): htpasswd -nbB -C 12 murtadha "<your-password>" | split row ":" | get 1 | str trim | nix run github:ryantm/agenix -- -e stash-password.age
+  "stash-password.age".publicKeys = allHosts;
+  # Stash JWT signing secret. Create with (Nushell):
+  # openssl rand -hex 32 | str trim | nix run github:ryantm/agenix -- -e stash-jwt-secret.age
+  "stash-jwt-secret.age".publicKeys = allHosts;
+  # Stash session store secret. Create with (Nushell):
+  # openssl rand -hex 32 | str trim | nix run github:ryantm/agenix -- -e stash-session-key.age
+  "stash-session-key.age".publicKeys = allHosts;
 }
