@@ -32,43 +32,16 @@
       notify: Reboot NixOS container
 
     # Tailscale (subnet router) needs /dev/net/tun passed into the container.
-    # `pct set -dev0` is the supported Proxmox 8.1+ method and survives Proxmox UI
+    # `pct set -dev0` is the supported passthrough method and survives Proxmox UI
     # edits cleanly. Note: `tun` is built into the PVE kernel, so /dev/net/tun is
     # auto-created on the host at boot -- no module loading required.
-    #
-    # The catch is a Proxmox errno bug that the `nixos` ostype triggers. At start,
-    # PVE::LXC probes `/usr/share/lxc/config/<ostype>.common.conf`
-    # (LXC.pm: `$inc = common.conf if !-f $inc`). Proxmox ships no
-    # nixos.common.conf, so that `-f` test leaves errno=ENOENT; the very next step
-    # stat()s the passthrough device, succeeds, but doesn't reset errno -- and the
-    # validation `die "Device $path does not exist" if $! == ENOENT` reads the
-    # stale errno, aborting `pct start` with a bogus missing-device error. (This
-    # only bites the cold-boot/full-start path; hot-plugging dev0 onto a running CT
-    # skips the ostype probe, which is why it worked until the host was rebooted.)
-    # Providing the file -- chaining to the generic common.conf, exactly what the
-    # fallback already does -- keeps errno clean.
-    - name: Pass through the TUN device for Tailscale
-      block:
-        - name: Provide nixos.common.conf so dev0 passthrough validation succeeds
-          ansible.builtin.copy:
-            dest: /usr/share/lxc/config/nixos.common.conf
-            content: |
-              # Managed by Ansible (proxmox-nixos-ct.yaml). Proxmox ships no
-              # nixos.common.conf; its absence trips a dev0-passthrough errno bug
-              # that aborts `pct start`. Chain to the generic config it falls back
-              # to anyway, so the `-f` probe finds a file and leaves errno clean.
-              lxc.include = /usr/share/lxc/config/common.conf
-            owner: root
-            group: root
-            mode: "0644"
-
-        - name: Pass through the TUN device into the container
-          ansible.builtin.command: pct set {{ nixos_ct_id }} -dev0 /dev/net/tun
-          when:
-            - ct_status.rc == 0
-            - "'dev0' not in ct_config.stdout"
-          changed_when: true
-          notify: Reboot NixOS container
+    - name: Pass through the TUN device into the container
+      ansible.builtin.command: pct set {{ nixos_ct_id }} -dev0 /dev/net/tun
+      when:
+        - ct_status.rc == 0
+        - "'dev0' not in ct_config.stdout"
+      changed_when: true
+      notify: Reboot NixOS container
 
     - name: Add bind mount for media LV
       ansible.builtin.command: >
