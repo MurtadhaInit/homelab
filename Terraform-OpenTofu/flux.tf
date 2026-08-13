@@ -14,12 +14,21 @@
 
 module "flux_operator_bootstrap" {
   source  = "controlplaneio-fluxcd/flux-operator-bootstrap/kubernetes"
-  version = "0.5.0"
+  version = "0.8.0"
 
   revision = var.flux_bootstrap_revision
 
   gitops_resources = {
     instance_yaml = file("${path.module}/../k8s/clusters/homelab/flux-system/flux-instance.yaml")
+
+    # Leaving this unset means "latest chart at apply time", which freezes the
+    # operator version at first apply day, while the FluxInstance keeps tracking
+    # newer (potentially incompatible) Flux releases.
+    # E.g. operator >= 0.53.0 is what added Flux 2.9 support.
+    # Pin and move in lockstep with distribution.version in flux-instance.yaml.
+    operator_chart = {
+      version = "0.58.0"
+    }
   }
 
   managed_resources = {
