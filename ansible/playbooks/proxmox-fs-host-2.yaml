@@ -1,0 +1,40 @@
+---
+# sdb (the spare 120GB disk): formatted as an LVM-thin pool instead of btrfs 'dir' storage for
+# thin provisioning, fast snapshots, and real block devices for VMs, while avoiding CoW
+# fragmentation for VM images.
+#
+# sda (the primary, 250GB Crucial MX500 disk): holds the PVE installer-created btrfs root, and
+# hence it's out of Ansible's scope (much like 'pve' VG on the first PVE node).
+- name: Setup storage on the second Proxmox node
+  hosts: pve-host-2 # hostname/node name: 'prox2'
+  remote_user: root
+
+  tasks:
+    - name: Create the volume group on the dedicated disk
+      community.general.lvg:
+        vg: vmdata
+        pvs: /dev/disk/by-id/ata-Samsung_SSD_850_EVO_120GB_S21MNWAFB211012
+
+    - name: Create the thin pool (consumes all free space in the VG)
+      community.general.lvol:
+        vg: vmdata
+        thinpool: vmdata
+        size: 100%FREE
+
+    # community.proxmox.proxmox_storage has no 'lvmthin' type (only cephfs, cifs, dir,
+    # iscsi, nfs, pbs, rbd and zfspool), so registering storage imperatively on the node.
+    - name: Read the current Proxmox storage configuration
+      ansible.builtin.slurp:
+        src: /etc/pve/storage.cfg
+      register: storage_cfg
+
+    # 'rootdir' allows LXC rootfs volumes, 'images' allows VM disks
+    - name: Register the thin pool as Proxmox storage
+      ansible.builtin.command: >-
+        pvesm add lvmthin local-lvmthin
+        --vgname vmdata
+        --thinpool vmdata
+        --content rootdir,images
+        --nodes prox2
+      when: '"lvmthin: local-lvmthin" not in (storage_cfg.content | b64decode)'
+      changed_when: true

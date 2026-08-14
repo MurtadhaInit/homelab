@@ -1,6 +1,6 @@
 ---
-- name: Setup filesystem mounts on Proxmox host
-  hosts: pve-host-1
+- name: Setup storage (e.g. filesystem mounts) on the first Proxmox node
+  hosts: pve-host-1 # hostname/node name: 'prox'
   remote_user: root
 
   vars:
@@ -64,19 +64,28 @@
       # uid=/gid=/dmask mount options, so a chown here would be redundant.
       loop: "{{ mounts | selectattr('fstype', 'equalto', 'btrfs') | list }}"
 
-    - name: Create 'To Stream' directory with nocow attribute (avoids btrfs CoW fragmentation for torrent downloads)
+      # locations for torrent downloads
+    - name: Create required directories + avoid btrfs CoW fragmentation for append-heavy writes
+      vars:
+        nocow_dirs:
+          - /mnt/bulk/To Stream
+          # TODO: Whitespace-free replacement for 'To Stream' (e.g. important for Stash lib path)
+          # To migrate remaining files into and rm the one above
+          - /mnt/bulk/to-stream
       block:
-        - name: Create the directory
+        - name: Create the directories
           ansible.builtin.file:
-            path: /mnt/bulk/To Stream
+            path: "{{ item }}"
             state: directory
             mode: "0750"
             owner: murtadha
             group: murtadha
+          loop: "{{ nocow_dirs }}"
         # +C must be set on the empty directory before any files land so they inherit nodatacow
         - name: Disable copy-on-write
           ansible.builtin.command:
-            cmd: chattr +C "/mnt/bulk/To Stream"
+            cmd: chattr +C "{{ item }}"
+          loop: "{{ nocow_dirs }}"
           changed_when: false
 
     - name: Make changes on the Proxmox storage side

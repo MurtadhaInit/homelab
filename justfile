@@ -76,7 +76,8 @@ pve-token host:
 pve-hosts:
     @echo "\n⚙️ Configuring Proxmox hosts..."
     uv run ansible-playbook playbooks/proxmox-hosts.yaml
-    uv run ansible-playbook playbooks/proxmox-fs.yaml
+    uv run ansible-playbook playbooks/proxmox-fs-host-1.yaml
+    uv run ansible-playbook playbooks/proxmox-fs-host-2.yaml
     uv run ansible-playbook playbooks/proxmox-node-exporter.yaml
 
 # 4.a Plan resource deployment

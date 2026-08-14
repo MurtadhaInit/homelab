@@ -120,9 +120,9 @@ in
     users.users.stash.extraGroups = [ "murtadha" ];
 
     # BindReadOnlyPaths= fails the unit when its source is missing, so the library
-    # directory has to exist.
+    # directory has to exist. Note that systemd-tmpfiles auto-creates the parent
+    # directory if it's missing (but as root:root 0755).
     systemd.tmpfiles.rules = [
-      "d ${dirOf cfg.libraryPath} 0750 murtadha murtadha -"
       "d ${cfg.libraryPath} 0750 murtadha murtadha -"
     ];
   };
