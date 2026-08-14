@@ -7,7 +7,7 @@ Grafana panel set so the data is actually surfaced.
 
 ## Rationale
 
-The monthly scrub configured in `ansible/playbooks/proxmox-fs.yaml` had been
+The monthly scrub configured in `ansible/playbooks/proxmox-fs-host-1.yaml` had been
 silently failing on every fire (Apr 1, May 1) since deployment because the
 `ExecStart` referenced `/usr/sbin/btrfs` — Debian 12 / PVE 8 use merged-`/usr`
 and the binary is at `/usr/bin/btrfs`. No alerting existed, so the failures
@@ -54,14 +54,14 @@ k8s monitoring stack (kube-prometheus-stack)
 
 ### 1. Fix the scrub `ExecStart` path — DONE
 
-`ansible/playbooks/proxmox-fs.yaml:116` changed from `/usr/sbin/btrfs` to
+`ansible/playbooks/proxmox-fs-host-1.yaml:160` changed from `/usr/sbin/btrfs` to
 `/usr/bin/btrfs`. Re-run the playbook; the `ansible.builtin.copy` rewrites the
 unit and `ansible.builtin.systemd` with `daemon_reload: true` picks it up.
 
 Verification:
 
 ```nu
-just ansible-playbook proxmox-fs.yaml
+just ansible-playbook proxmox-fs-host-1.yaml
 ssh root@10.20.30.40 'systemctl start btrfs-scrub-media.service'
 ssh root@10.20.30.40 'btrfs scrub status /mnt/media'  # should report real progress / completion
 ```
@@ -127,7 +127,7 @@ mv -f "$tmp_file" "$out_file"
 trap - EXIT
 ```
 
-**Wiring into the existing service** — extend `proxmox-fs.yaml` so the unit
+**Wiring into the existing service** — extend `proxmox-fs-host-1.yaml` so the unit
 gains `ExecStopPost=` (runs once after every scrub finish, success or failure):
 
 ```yaml
@@ -258,11 +258,11 @@ plan.
 
 ## Order of Operations
 
-1. Re-run `proxmox-fs.yaml` with the path fix → confirm a manual scrub
+1. Re-run `proxmox-fs-host-1.yaml` with the path fix → confirm a manual scrub
    completes successfully (`systemctl start btrfs-scrub-media.service` then
    `btrfs scrub status /mnt/media`). This validates the foundation before
    layering monitoring on top.
-2. Add the textfile script + `ExecStopPost` + 15-min timer in `proxmox-fs.yaml`.
+2. Add the textfile script + `ExecStopPost` + 15-min timer in `proxmox-fs-host-1.yaml`.
    Re-run, confirm `/var/lib/node_exporter/btrfs_scrub.prom` exists and metrics
    appear in Prometheus (`{__name__=~"btrfs_scrub.*"}`).
 3. Apply `PrometheusRules`. Trigger `BtrfsScrubServiceFailed` deliberately
