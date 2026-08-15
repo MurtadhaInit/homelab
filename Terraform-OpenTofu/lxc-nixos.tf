@@ -29,12 +29,12 @@ resource "proxmox_virtual_environment_container" "nixos" {
 
   cpu {
     architecture = "amd64"
-    cores        = 2
+    cores        = 4
   }
 
   memory {
     dedicated = 2048
-    swap      = 2048
+    swap      = 512
   }
 
   initialization {
@@ -81,7 +81,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
   # same reasons.
 
   lifecycle {
-    ignore_changes = [mount_point]
+    ignore_changes = [mount_point, device_passthrough]
   }
 }
 
