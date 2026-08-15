@@ -25,6 +25,7 @@ while also showcasing various explorations into self-hosting technologies and ap
     - [Nix](#nix)
     - [Kubernetes](#kubernetes)
     - [Networking](#networking)
+    - [Storage](#storage)
     - [Observability](#observability)
     - [Agentic GitOps \& observability](#agentic-gitops--observability)
   - [Services](#services)
@@ -367,6 +368,15 @@ block lists and filtering follow me off the network as a bonus.
 
 See the end-to-end [setup guide](docs/tailscale-setup.md).
 
+### Storage
+
+Below is the physical storage layout (number, type, and capacity of drives), the
+filesystem on each, and the corresponding mount point on the Proxmox host.
+
+<p>
+  <img src="./docs/storage.svg" alt="Storage overview diagram"/>
+</p>
+
 ### Observability
 
 > [!NOTE]
@@ -413,7 +423,7 @@ a `ConfigMap` so Flux remains the source of truth.
 ## Services
 
 | Service | Description | Platform | Status |
-|---|---|---|:---:|
+| --- | --- | --- | :---: |
 | **Syncthing** | File sync between MacBook and homelab (as a hub); stable device IDs via Nix mean both ends pair automatically with shared ignore patterns, suitable versioning, and pre-defined shared folders | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 | **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin/Moonfin are solid alternative clients) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 

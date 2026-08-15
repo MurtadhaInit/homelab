@@ -1,0 +1,82 @@
+<mxfile host="Electron">
+  <diagram name="Page-1" id="U9t46SGkzTVPRg1Fl73T">
+    <mxGraphModel dx="1058" dy="810" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="9woP1nAya1sU-CTdPB3g-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="260" width="590" x="40" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="9woP1nAya1sU-CTdPB3g-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Atkinson Hyperlegible Mono;fontStyle=1;fontSize=13;" value="prox (pve-host-1)" vertex="1">
+          <mxGeometry height="30" width="150" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-7" edge="1" parent="1" source="__kOlemPXg9kfuNnOxZ6-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;dashed=1;endArrow=open;endFill=0;" target="__kOlemPXg9kfuNnOxZ6-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-1" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#82b366;fillColor=#d5e8d4;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;" value="KINGSTON SNVS500G&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;(466 GB M.2 NVME SSD)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="150" x="50" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;" value="Crucial BX500 1TB&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;(932 GB 2.5&quot; SATA SSD)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="150" x="50" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-3" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#d6b656;fillColor=#fff2cc;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;" value="HGST&amp;nbsp;Deskstar NAS 3TB&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;(&lt;/span&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;2.7 TB USB 3.5&quot; HDD&lt;/span&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="150" x="50" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-6" parent="1" style="text;html=1;whiteSpace=wrap;fillColor=#e1d5e7;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;strokeColor=#9673a6;dashed=1;strokeWidth=2;" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;LVM PV&amp;nbsp;→&amp;nbsp;VG &quot;pve&quot;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Mono&quot;&gt;1. pve-swap (8GB)&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Mono&quot; style=&quot;&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;2. pve-root (96GB) - &lt;/span&gt;EXT4&lt;span style=&quot;font-weight: 400;&quot;&gt; - /&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Mono&quot; style=&quot;&quot;&gt;&lt;span style=&quot;font-weight: 400;&quot;&gt;3. pve-media (361GB) - &lt;/span&gt;btrfs&lt;span style=&quot;font-weight: 400;&quot;&gt; - /mnt/media&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="330" x="290" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-8" parent="1" style="text;html=1;whiteSpace=wrap;fillColor=#e1d5e7;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;strokeColor=#9673a6;dashed=1;strokeWidth=2;" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;Atkinson Hyperlegible Mono&amp;quot;; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;btrfs&lt;/span&gt;&lt;span style=&quot;font-family: &amp;quot;Atkinson Hyperlegible Mono&amp;quot;; font-weight: 400; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt; -&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; text-align: center; font-weight: 400;&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Mono&quot;&gt;/mnt/bulk&lt;/font&gt;&lt;/span&gt;&lt;span style=&quot;font-family: &amp;quot;Atkinson Hyperlegible Mono&amp;quot;; font-weight: 400; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="50" width="190" x="290" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-9" edge="1" parent="1" source="__kOlemPXg9kfuNnOxZ6-2" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;dashed=1;endArrow=open;endFill=0;" target="__kOlemPXg9kfuNnOxZ6-8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="150" as="sourcePoint" />
+            <mxPoint x="320" y="175" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-10" parent="1" style="text;html=1;whiteSpace=wrap;fillColor=#e1d5e7;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;strokeColor=#9673a6;dashed=1;strokeWidth=2;" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Mono&quot;&gt;NTFS&lt;span style=&quot;font-weight: 400;&quot;&gt; - /mnt/usb-hdd (via ntfs-3g)&lt;/span&gt;&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="50" width="280" x="290" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-11" edge="1" parent="1" source="__kOlemPXg9kfuNnOxZ6-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;dashed=1;endArrow=open;endFill=0;" target="__kOlemPXg9kfuNnOxZ6-10">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="190" as="sourcePoint" />
+            <mxPoint x="340" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="9woP1nAya1sU-CTdPB3g-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="160" width="590" x="40" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="9woP1nAya1sU-CTdPB3g-6" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Atkinson Hyperlegible Mono;fontStyle=1;fontSize=13;" value="prox2 (pve-host-2)" vertex="1">
+          <mxGeometry height="30" width="150" x="40" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;" value="Crucial MX500 250GB&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;(233 GB M.2 SATA SSD)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="150" x="50" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-5" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;" value="Samsung 850 EVO 120GB&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;(112 GB 2.5&quot; SATA SSD)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="150" x="50" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-12" parent="1" style="text;html=1;whiteSpace=wrap;fillColor=#e1d5e7;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;strokeColor=#9673a6;dashed=1;strokeWidth=2;" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;Atkinson Hyperlegible Mono&amp;quot;; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;btrfs&lt;/span&gt;&lt;span style=&quot;font-family: &amp;quot;Atkinson Hyperlegible Mono&amp;quot;; font-weight: 400; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt; -&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; text-align: center; font-weight: 400;&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Mono&quot;&gt;/&lt;/font&gt;&lt;/span&gt;&lt;span style=&quot;font-family: &amp;quot;Atkinson Hyperlegible Mono&amp;quot;; font-weight: 400; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="140" x="270" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-13" edge="1" parent="1" source="__kOlemPXg9kfuNnOxZ6-4" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;dashed=1;endArrow=open;endFill=0;" target="__kOlemPXg9kfuNnOxZ6-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="300" as="sourcePoint" />
+            <mxPoint x="400" y="325" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-15" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=#d79b00;fillColor=#ffe6cc;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;" value="eMMC 64GB&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;(57.7 GB - CasaOS)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="150" x="50" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-14" parent="1" style="text;html=1;whiteSpace=wrap;fillColor=#e1d5e7;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Atkinson Hyperlegible Next;strokeColor=#9673a6;dashed=1;strokeWidth=2;" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: rgb(0, 0, 0);&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Next&quot;&gt;&lt;font&gt;LVM PV&amp;nbsp;→&amp;nbsp;VG &quot;&lt;/font&gt;vmdata&lt;font&gt;&quot;&amp;nbsp;&lt;/font&gt;&lt;/font&gt;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;→&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: rgb(0, 0, 0);&quot;&gt;&lt;font face=&quot;Atkinson Hyperlegible Next&quot;&gt;&amp;nbsp;&lt;/font&gt;&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;thin pool &quot;vmdata&quot;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="290" x="270" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="__kOlemPXg9kfuNnOxZ6-16" edge="1" parent="1" source="__kOlemPXg9kfuNnOxZ6-5" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;endArrow=open;endFill=0;" target="__kOlemPXg9kfuNnOxZ6-14">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="410" as="sourcePoint" />
+            <mxPoint x="280" y="410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
