@@ -97,23 +97,18 @@ pve-postconfig:
     uv run ansible-playbook playbooks/ubuntu-docker.yaml
     uv run ansible-playbook playbooks/proxmox-nixos-ct.yaml
 
-# macOS cannot build a NixOS toplevel: its /nix is case-insensitive, so buildEnv
-# mangles the symlinks it merges. From macOS we therefore build on the target and
-# skip deploy-rs's pre-deploy `nix flake check` (the checks in flake.nix), since
-# that builds the toplevel locally. From Linux the build is native and case-sensitive,
-# so it runs locally (better CPU perf) and keeps those checks - hence the per-platform
-# command variants.
+# Building a NixOS toplevel on macOS using Determinate Nix's native Linux builder needs BOTH:
+#   1. a case-sensitive /nix volume:
+#        curl -fsSL https://install.determinate.systems/nix | sh -s -- install macos --determinate --case-sensitive
+#        Then request access to the native linux builder feature after logging in to FlakeHub.
+#   2. `use-case-hack = false` in /etc/nix/nix.custom.conf
+# Otherwise, create a macOS-scoped Justfile recipe that skips flake checks & builds on the remote host:
+#        nix run github:serokell/deploy-rs . -- --skip-checks --remote-build
+# Why all this? By default, macOS's /nix is case-insensitive and so it can't build a NixOS toplevel
+# because buildEnv mangles the symlinks it merges.
 
 # Deploy Nix configuration to targets
 [group('nix')]
-[macos]
-[working-directory('Nix')]
-nix-deploy:
-    nix run github:serokell/deploy-rs . -- --skip-checks --remote-build
-
-# Deploy Nix configuration to targets
-[group('nix')]
-[linux]
 [working-directory('Nix')]
 nix-deploy:
     nix run github:serokell/deploy-rs .
