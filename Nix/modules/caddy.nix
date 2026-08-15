@@ -47,11 +47,6 @@ let
       upstreamHttps = true; # Portainer 2.18+ only serves on HTTPS (self-signed)
     }
     {
-      name = "proxmox";
-      proxy = "${cfg.proxmoxAddress}:8006";
-      upstreamHttps = true;
-    }
-    {
       name = "qui";
       proxy = "localhost:7476";
     }
@@ -59,7 +54,16 @@ let
       name = "stash";
       proxy = "localhost:${toString config.services.stash.settings.port}";
     }
-  ];
+  ]
+  ++ proxmoxServices;
+
+  # Proxmox nodes are standalone (not clustered).
+  # Keyed by node name so the subdomain matches the hostname.
+  proxmoxServices = lib.mapAttrsToList (node: address: {
+    name = node;
+    proxy = "${address}:8006";
+    upstreamHttps = true; # Proxmox only serves HTTPS (self-signed)
+  }) cfg.proxmoxHosts;
 
   mkReverseProxy =
     svc:
@@ -118,9 +122,16 @@ in
       type = lib.types.path;
       description = "Path to file containing the Cloudflare API token";
     };
-    proxmoxAddress = lib.mkOption {
-      type = lib.types.str;
-      description = "IP address of the Proxmox host";
+    proxmoxHosts = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      example = {
+        prox = "10.20.30.40";
+      };
+      description = ''
+        Proxmox nodes to proxy, keyed by node name and mapped to the node's IP.
+        Each entry gets a `<node>.<domain>` vhost pointing at its Web UI (8006).
+      '';
     };
   };
 

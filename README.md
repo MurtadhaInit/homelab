@@ -307,9 +307,9 @@ and pushing.
 
 At the moment, I'm using two reverse proxies simultaneously: the first is Caddy,
 deployed on my NixOS LXC container and is proxying to my Nix services on the
-same container as well as to services on other VMs/LXCs and to
-the Proxmox Web UI (the Proxmox host IP + port). The second is Cilium Envoy through
-the Gateway API on my k8s cluster. The future plan is to consolidate onto one reverse
+same container as well as to services on other VMs/LXCs and to each Proxmox node's
+Web UI (one `<node>.<domain>` per node). The second is Cilium Envoy through the
+Gateway API on my k8s cluster. The future plan is to consolidate onto one reverse
 proxy (Cilium), and to retire Caddy (disabling the Nix module) but keeping it as
 an emergency backup.
 

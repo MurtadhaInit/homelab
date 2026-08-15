@@ -109,7 +109,10 @@
   };
   homelab.caddy = {
     enable = true;
-    proxmoxAddress = "10.20.30.40";
+    proxmoxHosts = {
+      prox = "10.20.30.40";
+      prox2 = "10.20.30.100";
+    };
     publicDomain = "home.murtadha.dev";
     cloudflareTokenFile = config.age.secrets.caddy-cloudflare-token.path;
   };
