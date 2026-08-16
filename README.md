@@ -2,9 +2,10 @@
 
 > A declarative, GitOps-driven homelab on Proxmox, Talos Linux, NixOS, and Kubernetes.
 
-[![Last commit](https://img.shields.io/github/last-commit/MurtadhaInit/homelab?style=flat-square&logo=git&logoColor=white)](https://github.com/MurtadhaInit/homelab/commits/main)
-[![Repo size](https://img.shields.io/github/repo-size/MurtadhaInit/homelab?style=flat-square)](https://github.com/MurtadhaInit/homelab)
-[![Stars](https://img.shields.io/github/stars/MurtadhaInit/homelab?style=flat-square&logo=github)](https://github.com/MurtadhaInit/homelab/stargazers)
+[![Kubernetes](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FMurtadhaInit%2Fhomelab%2Fmain%2FTerraform-OpenTofu%2Fvariables.tf&search=variable+%22k8s_version%22%5B%5Cs%5CS%5D%2A%3Fdefault%5Cs%2A%3D%5Cs%2A%22%28%5B%5E%22%5D%2B%29%22&replace=%241&label=Kubernetes&color=326CE5&logo=kubernetes&style=for-the-badge&logoColor=white)](https://kubernetes.io)
+[![Talos Linux](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FMurtadhaInit%2Fhomelab%2Fmain%2FTerraform-OpenTofu%2Fvariables.tf&search=variable+%22talos_version%22%5B%5Cs%5CS%5D%2A%3Fdefault%5Cs%2A%3D%5Cs%2A%22%28%5B%5E%22%5D%2B%29%22&replace=%241&label=Talos+Linux&color=FF7300&logo=talos&style=for-the-badge&logoColor=white)](https://www.talos.dev)
+[![Flux](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2FMurtadhaInit%2Fhomelab%2Fmain%2Fk8s%2Fclusters%2Fhomelab%2Fflux-system%2Fflux-instance.yaml&query=%24.spec.distribution.version&label=Flux&color=5468FF&logo=flux&style=for-the-badge&logoColor=white)](https://fluxcd.io)
+[![Nix Flakes](https://img.shields.io/badge/Nix-Flakes-5277C3?style=for-the-badge&logo=nixos&logoColor=white)](https://nixos.org)
 
 This repo is primarily intended to give you inspiration and ideas on how to deploy
 applications and services in your homelab using either the Nix or Kubernetes ecosystem,
