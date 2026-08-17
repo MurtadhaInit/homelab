@@ -144,9 +144,10 @@ resource "talos_machine_bootstrap" "this" {
   depends_on = [talos_machine_configuration_apply.this]
 
   lifecycle {
-    # Re-bootstrap only when the VM itself is rebuilt from scratch.
-    # In-place config changes don't need re-bootstrap.
-    replace_triggered_by = [proxmox_virtual_environment_vm.talos["talos-cp-1"]]
+    # Re-bootstrap only when the VM is rebuilt from scratch.
+    # Referencing the whole resource (instead of by `.id`) also fires on in-place
+    # updates (memory, cores, tags), and replacing this on a live cluster fails.
+    replace_triggered_by = [proxmox_virtual_environment_vm.talos["talos-cp-1"].id]
   }
 }
 
@@ -166,6 +167,14 @@ resource "talos_cluster_kubeconfig" "this" {
   node                 = local.talos_nodes["talos-cp-1"].ip
 
   depends_on = [talos_machine_bootstrap.this]
+
+  # Refresh the cached kubeconfig when the cluster is re-bootstrapped (new CA,
+  # new everything). Using a whole-resource reference here (instead of by `.id`)
+  # to also catch a machine_secrets rotation, which shows up as an in-place update
+  # on the bootstrap.
+  lifecycle {
+    replace_triggered_by = [talos_machine_bootstrap.this]
+  }
 }
 
 # === 5a. Write client configs to disk ===
