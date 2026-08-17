@@ -44,6 +44,18 @@ data "talos_machine_configuration" "controlplane" {
           cni = { name = "none" }
         }
         proxy = { disabled = true }
+
+        # By default Talos binds these components to 127.0.0.1, which is
+        # secure but blocks Prometheus from scraping their /metrics endpoints
+        # (kube-prometheus-stack creates a Service whose Endpoints point at
+        # the node IPs). Bind to all interfaces so the secure metrics ports
+        # (10257 / 10259) are reachable from in-cluster Prometheus.
+        controllerManager = {
+          extraArgs = { bind-address = "0.0.0.0" }
+        }
+        scheduler = {
+          extraArgs = { bind-address = "0.0.0.0" }
+        }
       }
 
       # Virtual IP shared across control plane nodes for HA.
