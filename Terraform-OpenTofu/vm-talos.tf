@@ -30,11 +30,15 @@ data "talos_image_factory_urls" "this" {
   platform      = "nocloud"
 }
 
+# Standalone (un-clustered) Proxmox nodes, so the same image has to be downloaded
+# on every host that runs Talos.
 resource "proxmox_download_file" "talos_image" {
-  provider     = proxmox.prox
+  for_each = local.talos_hosts
+
+  provider     = proxmox.node[each.key]
   content_type = "iso"
-  datastore_id = var.pve_storage
-  node_name    = "prox"
+  datastore_id = var.pve_hosts[each.key].storage.files
+  node_name    = each.key
 
   # disk_image URL is the .raw.xz image — rename to .img for Proxmox/provider compatibility
   url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
@@ -52,10 +56,18 @@ locals {
   talos_cluster_vip      = "10.20.30.59"
   talos_cluster_endpoint = "https://${local.talos_cluster_vip}:6443"
 
+  # Hosts that carry Talos VMs.
+  # Its own list rather than being derived from talos_nodes below, so the boot image
+  # stays staged on a host even while it temporarily has no nodes (e.g. mid-migration).
+  # Can't be folded into pve_hosts because of rule 3 of 'provider for_each' (see providers.tf).
+  talos_hosts = toset(["prox", "prox2"])
+
   # Each entry creates a Proxmox VM and a corresponding Talos machine config.
   # Using a map (not a list) so that adding/removing a node doesn't affect others.
+  # `host` picks which Proxmox node the VM lands on.
   talos_nodes = {
     "talos-cp-1" = {
+      host             = "prox"
       role             = "controlplane"
       ip               = "10.20.30.60"
       vm_id            = 810
@@ -65,6 +77,7 @@ locals {
       longhorn_disk_gb = null
     }
     "talos-cp-2" = {
+      host             = "prox"
       role             = "controlplane"
       ip               = "10.20.30.61"
       vm_id            = 811
@@ -74,6 +87,7 @@ locals {
       longhorn_disk_gb = null
     }
     "talos-cp-3" = {
+      host             = "prox"
       role             = "controlplane"
       ip               = "10.20.30.62"
       vm_id            = 812
@@ -83,6 +97,7 @@ locals {
       longhorn_disk_gb = null
     }
     "talos-worker-1" = {
+      host             = "prox"
       role             = "worker"
       ip               = "10.20.30.70"
       vm_id            = 820
@@ -92,6 +107,7 @@ locals {
       longhorn_disk_gb = 25
     }
     "talos-worker-2" = {
+      host             = "prox"
       role             = "worker"
       ip               = "10.20.30.71"
       vm_id            = 821
@@ -108,14 +124,16 @@ locals {
 }
 
 # === Proxmox VMs ===
+# The node's `host` selects the provider instance, the Proxmox node to place the
+# VM on, and which datastores its disks land on.
 resource "proxmox_virtual_environment_vm" "talos" {
-  provider = proxmox.prox
   for_each = local.talos_nodes
+  provider = proxmox.node[each.value.host]
 
   name        = each.key
   description = "Talos Linux ${each.value.role} node"
   tags        = ["terraform", "k8s", each.value.role]
-  node_name   = "prox"
+  node_name   = each.value.host
   vm_id       = each.value.vm_id
   on_boot     = true
   started     = true
@@ -125,7 +143,7 @@ resource "proxmox_virtual_environment_vm" "talos" {
   machine = "q35"
 
   efi_disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts[each.value.host].storage.disks
     type         = "4m"
   }
 
@@ -147,21 +165,21 @@ resource "proxmox_virtual_environment_vm" "talos" {
   }
 
   disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts[each.value.host].storage.disks
     size         = each.value.disk_gb
     interface    = "scsi0"
     file_format  = "raw"
     ssd          = true
     discard      = "on"
     cache        = "writethrough"
-    file_id      = proxmox_download_file.talos_image.id
+    file_id      = proxmox_download_file.talos_image[each.value.host].id
   }
 
   # Dedicated Longhorn storage disk (workers only)
   dynamic "disk" {
     for_each = each.value.longhorn_disk_gb != null ? [each.value.longhorn_disk_gb] : []
     content {
-      datastore_id = var.pve_secondary_storage
+      datastore_id = var.pve_hosts[each.value.host].storage.data
       size         = disk.value
       interface    = "scsi1"
       file_format  = "raw"
@@ -187,7 +205,7 @@ resource "proxmox_virtual_environment_vm" "talos" {
         gateway = var.vm_gateway
       }
     }
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts[each.value.host].storage.disks
   }
 
   lifecycle {

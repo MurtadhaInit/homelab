@@ -1,10 +1,18 @@
 # === Proxmox variables ===
 # Standalone (un-clustered) nodes, each gets its own provider instance + reads its own SOPS API token.
 # `inventory_host` selects that node's ansible/inventory/host_vars/<host>/proxmox-api-token.sops.yaml.
+#
+# `storage` names the datastore backing each Proxmox content type on that node.
+# Entries are keyed by what they generally hold.
 variable "pve_hosts" {
   type = map(object({
     ip             = string
     inventory_host = string
+    storage = object({
+      files = string # ISOs, LXC templates, cloud-init snippets (content: iso, vztmpl, snippets)
+      disks = string # VM system disks, EFI vars, cloud-init drives, LXC rootfs (content: images, rootdir)
+      data  = string # secondary/bulk data disks — currently only the Longhorn disks
+    })
   }))
   description = "Proxmox nodes keyed by node name (i.e. hostname) — e.g. prox, prox2"
 }
@@ -23,18 +31,6 @@ variable "pve_host_ssh_key" {
   type        = string
   description = "The path to the private SSH key to use when connecting to Proxmox hosts"
   default     = "~/.ssh/keys/proxmox-hosts"
-}
-
-variable "pve_storage" {
-  type        = string
-  description = "The name of storage I'm using for *everything*: VM and container disks, ISOs, snippets...etc"
-  default     = "local"
-}
-
-variable "pve_secondary_storage" {
-  type        = string
-  description = "The name of the secondary Proxmox storage (e.g., for disks)"
-  default     = "media-lv"
 }
 
 # === Shared between various Linux VMs ===

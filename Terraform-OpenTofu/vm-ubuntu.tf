@@ -1,7 +1,7 @@
 resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
-  provider     = proxmox.prox
+  provider     = proxmox.node["prox"]
   content_type = "iso"
-  datastore_id = var.pve_storage
+  datastore_id = var.pve_hosts["prox"].storage.files
   node_name    = "prox"
 
   # The URL for the latest Ubuntu Server LTS minimal cloud image
@@ -10,7 +10,7 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
 }
 
 resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
-  provider    = proxmox.prox
+  provider    = proxmox.node["prox"]
   name        = "ubuntu-vm"
   description = "An Ubuntu cloud image configured with Cloud Init for containers deployment"
   tags        = ["terraform"]
@@ -35,7 +35,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   }
 
   disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts["prox"].storage.disks
     interface    = "scsi0"
     discard      = "on"
     ssd          = true
@@ -52,7 +52,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   bios = "ovmf"
 
   efi_disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts["prox"].storage.disks
     type         = "4m"
   }
 
@@ -73,14 +73,14 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
       }
     }
     user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
-    datastore_id      = var.pve_storage
+    datastore_id      = var.pve_hosts["prox"].storage.disks
   }
 }
 
 resource "proxmox_virtual_environment_file" "user_data_cloud_config" {
-  provider     = proxmox.prox
+  provider     = proxmox.node["prox"]
   content_type = "snippets"
-  datastore_id = var.pve_storage
+  datastore_id = var.pve_hosts["prox"].storage.files
   node_name    = "prox"
   overwrite    = true
 

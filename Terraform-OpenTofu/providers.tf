@@ -17,13 +17,21 @@ provider "kubernetes" {
   config_path = "${path.module}/../k8s/kubeconfig"
 }
 
-# One provider instance per standalone node — there is intentionally NO default, so
-# every proxmox resource must name its node explicitly via `provider = proxmox.<node>`
-# (paired with `node_name = "<node>"`). A non-clustered host's API can't reach the others.
+# One provider instance per standalone node, iterated over the host map — a
+# non-clustered host's API can't reach the others, so every proxmox resource has
+# to pick its instance explicitly via `provider = proxmox.node["<host>"]` (paired
+# with `node_name = "<host>"`).
+# Provider for_each is an OpenTofu exclusive feature, requiring:
+#   1. an alias
+#   2. the value must be statically evaluable (e.g. var.pve_hosts comes from .tfvars ✔︎)
+#   3. resources must not iterate over this same expression. This is so OpenTofu can
+#      still destroy resources in a plan that also removes their provider instance.
 provider "proxmox" {
-  alias     = "prox"
-  endpoint  = "https://${var.pve_hosts["prox"].ip}:${var.pve_host_port}/"
-  api_token = local.pve_api_tokens["prox"]
+  alias    = "node"
+  for_each = var.pve_hosts
+
+  endpoint  = "https://${each.value.ip}:${var.pve_host_port}/"
+  api_token = local.pve_api_tokens[each.key]
 
   # because self-signed TLS certificate is in use
   insecure = true
@@ -34,31 +42,12 @@ provider "proxmox" {
     username    = var.pve_host_user
     private_key = file(var.pve_host_ssh_key) # when/if the SSH agent is not working
     node {
-      name    = "prox"
-      address = var.pve_hosts["prox"].ip
+      name    = each.key
+      address = each.value.ip
     }
   }
 
   # generate a random ID for each VM or Container when the vm_id attribute is not specified
   # this is to guarantee non-conflict of IDs
-  random_vm_ids = true
-}
-
-provider "proxmox" {
-  alias     = "prox2"
-  endpoint  = "https://${var.pve_hosts["prox2"].ip}:${var.pve_host_port}/"
-  api_token = local.pve_api_tokens["prox2"]
-  insecure  = true
-
-  ssh {
-    agent       = true
-    username    = var.pve_host_user
-    private_key = file(var.pve_host_ssh_key)
-    node {
-      name    = "prox2"
-      address = var.pve_hosts["prox2"].ip
-    }
-  }
-
   random_vm_ids = true
 }

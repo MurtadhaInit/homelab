@@ -1,7 +1,7 @@
 resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
-  provider       = proxmox.prox
+  provider       = proxmox.node["prox"]
   content_type   = "iso"
-  datastore_id   = var.pve_storage
+  datastore_id   = var.pve_hosts["prox"].storage.files
   node_name      = "prox"
   upload_timeout = 1200
 
@@ -18,9 +18,9 @@ resource "proxmox_virtual_environment_download_file" "windows_server_iso" {
 }
 
 resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
-  provider       = proxmox.prox
+  provider       = proxmox.node["prox"]
   content_type   = "iso"
-  datastore_id   = var.pve_storage
+  datastore_id   = var.pve_hosts["prox"].storage.files
   node_name      = "prox"
   upload_timeout = 2700
 
@@ -35,7 +35,7 @@ resource "proxmox_virtual_environment_download_file" "windows_virtio_drivers" {
 }
 
 resource "proxmox_virtual_environment_vm" "windows-server" {
-  provider    = proxmox.prox
+  provider    = proxmox.node["prox"]
   name        = "windows-server"
   description = "A Windows Server VM for when Windows apps are needed"
   tags        = ["terraform"]
@@ -58,7 +58,7 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
     model  = "virtio"
   }
   disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts["prox"].storage.disks
     interface    = "scsi0"
     discard      = "on"
     iothread     = true
@@ -77,11 +77,11 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
   machine = "pc-q35-9.0"
   bios    = "ovmf"
   efi_disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts["prox"].storage.disks
     type         = "4m"
   }
   tpm_state {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts["prox"].storage.disks
     version      = "v2.0"
   }
   operating_system {

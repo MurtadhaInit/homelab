@@ -1,7 +1,7 @@
 resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
-  provider     = proxmox.prox
+  provider     = proxmox.node["prox"]
   content_type = "vztmpl"
-  datastore_id = var.pve_storage
+  datastore_id = var.pve_hosts["prox"].storage.files
   node_name    = "prox"
 
   # The latest NixOS Proxmox LXC template - Update accordingly for new releases
@@ -12,7 +12,7 @@ resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
 }
 
 resource "proxmox_virtual_environment_container" "nixos" {
-  provider      = proxmox.prox
+  provider      = proxmox.node["prox"]
   description   = "A NixOS LXC container generated from a Proxmox LXC image template from Hydra"
   tags          = ["terraform", "ansible"]
   node_name     = "prox"
@@ -62,7 +62,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
   }
 
   disk {
-    datastore_id = var.pve_storage
+    datastore_id = var.pve_hosts["prox"].storage.disks
     size         = 32
   }
 
