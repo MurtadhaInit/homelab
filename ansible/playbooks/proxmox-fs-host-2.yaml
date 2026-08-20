@@ -15,11 +15,14 @@
         vg: vmdata
         pvs: /dev/disk/by-id/ata-Samsung_SSD_850_EVO_120GB_S21MNWAFB211012
 
+    # shrink=false keeps this idempotent: on re-runs the VG has no free space left, so
+    # '100%FREE' resolves to 0 and lvol would otherwise treat it as a shrink request.
     - name: Create the thin pool (consumes all free space in the VG)
       community.general.lvol:
         vg: vmdata
         thinpool: vmdata
         size: 100%FREE
+        shrink: false
 
     # community.proxmox.proxmox_storage has no 'lvmthin' type (only cephfs, cifs, dir,
     # iscsi, nfs, pbs, rbd and zfspool), so registering storage imperatively on the node.
@@ -37,4 +40,21 @@
         --content rootdir,images
         --nodes prox2
       when: '"lvmthin: local-lvmthin" not in (storage_cfg.content | b64decode)'
+      changed_when: true
+
+    # The PVE installer creates the btrfs root storage without the 'snippets' content
+    # type (for cloud-init snippets). We add it to enable all content types on local_btrfs.
+    # Imperative on the node for the same reason as the thin pool above: proxmox_storage
+    # has no 'btrfs' type either, and `type` is required for state=present.
+    - name: Read the content types on the btrfs root storage
+      ansible.builtin.command: pvesh get /storage/local-btrfs --output-format json
+      register: local_btrfs_storage
+      changed_when: false
+
+    # `--content` replaces the list rather than appending to it, so we declare all types.
+    - name: Enable all content types on the btrfs root storage
+      ansible.builtin.command: >-
+        pvesm set local-btrfs
+        --content vztmpl,backup,iso,snippets,import,images,rootdir
+      when: "'snippets' not in (local_btrfs_storage.stdout | from_json).content"
       changed_when: true
