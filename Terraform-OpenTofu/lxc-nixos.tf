@@ -33,8 +33,8 @@ resource "proxmox_virtual_environment_container" "nixos" {
   }
 
   memory {
-    dedicated = 2048
-    swap      = 512
+    dedicated = 4096
+    swap      = 1024
   }
 
   initialization {
