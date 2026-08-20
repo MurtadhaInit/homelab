@@ -6,7 +6,8 @@ data "talos_image_factory_extensions_versions" "this" {
   filters = {
     names = [
       "qemu-guest-agent",
-      "amd-ucode",
+      "amd-ucode",       # prox  (AMD Ryzen 5 5600H)
+      "intel-ucode",     # prox2 (Intel N150)
       "iscsi-tools",     # for Longhorn
       "util-linux-tools" # for Longhorn
     ]
@@ -104,17 +105,17 @@ locals {
       cores            = 2
       memory           = 4096
       disk_gb          = 15
-      longhorn_disk_gb = 25
+      longhorn_disk_gb = 60
     }
     "talos-worker-2" = {
-      host             = "prox"
+      host             = "prox2"
       role             = "worker"
       ip               = "10.20.30.71"
       vm_id            = 821
-      cores            = 2
+      cores            = 4
       memory           = 4096
-      disk_gb          = 15
-      longhorn_disk_gb = 25
+      disk_gb          = 20
+      longhorn_disk_gb = 60
     }
   }
 
