@@ -29,7 +29,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
 
   cpu {
     architecture = "amd64"
-    cores        = 4
+    cores        = 8
   }
 
   memory {
