@@ -109,8 +109,22 @@ spec:
         probeSelectorNilUsesHelmValues: false
         scrapeConfigSelectorNilUsesHelmValues: false
 
+        # The startup probe polls /-/ready, which stays 503 for the whole WAL
+        # replay, so this is really "how long may a replay take before the kubelet
+        # kills the container". The 900s default is a trap on a volume this size:
+        # a long replay gets killed, restarts from zero, and loops forever without
+        # ever reaching compaction. 2h is slack for the worst case, and a healthy
+        # WAL replays in seconds anyway.
+        maximumStartupDurationSeconds: 7200
+
         retention: 7d
-        retentionSize: 6GiB
+        # Size-based retention counts the WAL and m-mapped head chunks toward the
+        # total, but only *persisted blocks* can be deleted to honour it — so this
+        # has to leave enough slack for the head (peaks every 2h) plus compaction
+        # scratch. Keep it at ~70% of the volume: at 6GiB on an 8Gi volume the head
+        # could outgrow the remainder, and once the disk fills Prometheus dies
+        # during WAL replay, before retention ever gets a chance to run.
+        retentionSize: 14GiB
 
         # Requests put Prometheus in Burstable QoS (lower OOM eviction priority
         # than BestEffort) and bound Go's automemlimit to the cgroup limit
@@ -131,7 +145,13 @@ spec:
               accessModes: [ReadWriteOnce]
               resources:
                 requests:
-                  storage: 8Gi
+                  # NB: growing this value does NOT grow an existing volume. A
+                  # StatefulSet's volumeClaimTemplate is immutable, so the operator
+                  # recreates the StatefulSet and the PVC is left at its old size.
+                  # Expanding for real means patching the PVC directly first (the
+                  # `longhorn` class has allowVolumeExpansion), then letting this
+                  # land so the template matches what's on disk.
+                  storage: 20Gi
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
