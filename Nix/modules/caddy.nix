@@ -27,11 +27,11 @@ let
     }
     {
       name = "prowlarr";
-      proxy = "localhost:9696";
+      proxy = "localhost:${toString config.services.prowlarr.settings.server.port}";
     }
     {
       name = "sonarr";
-      proxy = "localhost:8989";
+      proxy = "localhost:${toString config.services.sonarr.settings.server.port}";
     }
     {
       name = "sabnzbd";
@@ -48,7 +48,7 @@ let
     }
     {
       name = "qui";
-      proxy = "localhost:7476";
+      proxy = "localhost:${toString config.services.qui.settings.port}";
     }
     {
       name = "stash";
@@ -70,40 +70,33 @@ let
     if (svc.upstreamHttps or false) then
       ''
         reverse_proxy https://${svc.proxy} {
-        	transport http {
-        		tls_insecure_skip_verify
-        	}
+          transport http {
+            tls_insecure_skip_verify
+          }
         }''
     else
       "reverse_proxy ${svc.proxy}";
 
-  mkHttpBlock = svc: ''
-    http://${svc.name}.${cfg.domain} {
-    	${mkReverseProxy svc}
-    }
-  '';
+  # The default log file name is derived from the host name, which mangles the
+  # scheme in `http://` vhosts; name the files after the service instead.
+  mkHttpVHost =
+    svc:
+    lib.nameValuePair "http://${svc.name}.${cfg.domain}" {
+      logFormat = "output file ${config.services.caddy.logDir}/access-${svc.name}.log";
+      extraConfig = mkReverseProxy svc;
+    };
 
-  mkHttpsBlock = svc: ''
-    ${svc.name}.${cfg.publicDomain} {
-    	tls {
-    		dns cloudflare {env.CF_API_TOKEN}
-    	}
-    	${mkReverseProxy svc}
-    }
-  '';
-
-  # Build the Caddyfile directly and pass it via configFile to bypass the NixOS
-  # module's Caddyfile-formatted derivation, which calls `cp --no-preserve=mode`.
-  # That fails when building via Determinate Nix's native Linux builder on macOS
-  # due to how Apple's Virtualization.framework / VirtioFS handles permission
-  # semantics across the host/guest boundary. Tracked upstream at:
-  # https://github.com/DeterminateSystems/nix-src/issues/421
-  # Once fixed, switch to services.caddy.virtualHosts (cleaner, gets per-vhost
-  # access logs, build-time validation).
-  caddyfile = pkgs.writeText "Caddyfile" (
-    lib.concatMapStrings mkHttpBlock services
-    + lib.optionalString (cfg.publicDomain != null) (lib.concatMapStrings mkHttpsBlock services)
-  );
+  mkHttpsVHost =
+    svc:
+    lib.nameValuePair "${svc.name}.${cfg.publicDomain}" {
+      logFormat = "output file ${config.services.caddy.logDir}/access-${svc.name}-public.log";
+      extraConfig = ''
+        tls {
+          dns cloudflare {env.CF_API_TOKEN}
+        }
+        ${mkReverseProxy svc}
+      '';
+    };
 in
 {
   options.homelab.caddy = {
@@ -142,7 +135,9 @@ in
         plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
         hash = "sha256-7GoH8YLCoPmPExQxoga2FHB58zQDoZVf1BBwkVi0SsQ=";
       };
-      configFile = caddyfile;
+      virtualHosts = lib.listToAttrs (
+        map mkHttpVHost services ++ lib.optionals (cfg.publicDomain != null) (map mkHttpsVHost services)
+      );
     };
 
     systemd.services.caddy.serviceConfig.EnvironmentFile = cfg.cloudflareTokenFile;
