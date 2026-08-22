@@ -129,6 +129,9 @@ nix-deploy:
 nix-update:
     nix flake update
 
+# Supplementary: ad-hoc, macOS-only remote-builder setup.
+import 'Nix/remote-builder.just'
+
 # List all deployed resources (Helm releases and Flux resources)
 [group('k8s')]
 [working-directory('k8s')]

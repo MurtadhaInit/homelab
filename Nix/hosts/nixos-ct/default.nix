@@ -39,6 +39,20 @@
   # NOTE: revisit alongside any change to the LXC's allocation.
   nix.settings.max-jobs = 2;
 
+  # Remote-builder target: the Mac's Nix daemon offloads x86_64-linux builds
+  # here (see the `nix-remote-builder` justfile recipe, which generates the key
+  # below and writes the matching `builders` line into /etc/nix/nix.custom.conf).
+  # `trusted-users` is what lets the dedicated user push unsigned paths.
+  users.users.nix-builder = {
+    isNormalUser = true;
+    group = "nix-builder";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMUj6S24kuQDE2NgE/ekkA1nq3/3iFUb7SAbTrKClKtA nix-remote-builder"
+    ];
+  };
+  users.groups.nix-builder = { };
+  nix.settings.trusted-users = [ "nix-builder" ];
+
   # Shared service user — matches the `murtadha` user (UID 1000) on the
   # Proxmox host so bind-mounted files are directly accessible.
   users.users.murtadha = {
