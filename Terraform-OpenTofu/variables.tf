@@ -1,9 +1,11 @@
 # === Proxmox variables ===
 # Standalone (un-clustered) nodes, each gets its own provider instance + reads its own SOPS API token.
-# `inventory_host` selects that node's ansible/inventory/host_vars/<host>/proxmox-api-token.sops.yaml.
+# Each entry is keyed by node name (hostname).
 #
-# `storage` names the datastore backing each Proxmox content type on that node.
-# Entries are keyed by what they generally hold.
+# `inventory_host` selects that node's ansible/inventory/host_vars/<host>/proxmox-api-token.sops.yaml.
+# `storage` names the datastore backing each approximate type of content on that node.
+# The per-node proxmox-fs-host-*.yaml playbooks set the actual Proxmox content types for each node's
+# datastore.
 variable "pve_hosts" {
   type = map(object({
     ip             = string
@@ -15,16 +17,39 @@ variable "pve_hosts" {
     })
   }))
   description = "Proxmox nodes keyed by node name (i.e. hostname) — e.g. prox, prox2"
+
+  default = {
+    prox = {
+      ip             = "10.20.30.40"
+      inventory_host = "pve-host-1"
+      storage = {
+        files = "local"
+        disks = "local"
+        data  = "media-lv"
+      }
+    }
+    prox2 = {
+      ip             = "10.20.30.100"
+      inventory_host = "pve-host-2"
+      storage = {
+        files = "local-btrfs"
+        disks = "local-lvmthin"
+        data  = "local-lvmthin"
+      }
+    }
+  }
 }
 
 variable "pve_host_port" {
   type        = string
   description = "The Proxmox host endpoint - port number"
+  default     = "8006"
 }
 
 variable "pve_host_user" {
   type        = string
   description = "The Proxmox host username to be used (PAM user)"
+  default     = "root"
 }
 
 variable "pve_host_ssh_key" {
