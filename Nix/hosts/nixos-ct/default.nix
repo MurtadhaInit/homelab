@@ -33,6 +33,12 @@
   # Let the Proxmox host handle TRIM for the underlying storage
   services.fstrim.enable = false;
 
+  # Deploys build on this host, so Sizing to this container's limited resources:
+  # the default `auto` runs one derivation per core, and that many concurrent
+  # compilers can exhaust RAM and take running services with them.
+  # NOTE: revisit alongside any change to the LXC's allocation.
+  nix.settings.max-jobs = 2;
+
   # Shared service user — matches the `murtadha` user (UID 1000) on the
   # Proxmox host so bind-mounted files are directly accessible.
   users.users.murtadha = {
