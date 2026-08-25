@@ -123,7 +123,7 @@
         env:
           APP_URL: https://arcane.home.murtadha.dev
           # Caddy on nixos-ct terminates TLS; trust its X-Forwarded-* headers
-          TRUSTED_PROXIES: 10.20.30.0/24
+          TRUSTED_PROXIES: 10.20.30.50/32
           PROJECTS_DIRECTORY: /opt/arcane/projects
           # Arcane starts as root for startup preparation, then drops to a non-root runtime user by default.
           # We set PUID and PGID so that Arcane-created files use a specific host UID/GID instead of the
