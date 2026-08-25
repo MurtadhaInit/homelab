@@ -11,11 +11,6 @@ in
 {
   options.homelab.qbittorrent = {
     enable = lib.mkEnableOption "Enable qBittorrent-nox with homelab defaults";
-    quiSessionSecret = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "Path to a file containing the qui session secret (if enabling qui)";
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -48,33 +43,6 @@ in
           General.Locale = "en";
         };
       };
-    };
-
-    services.qui = lib.mkIf (cfg.quiSessionSecret != null) {
-      enable = true;
-      openFirewall = true; # default port is 7476 (and default host is 127.0.0.1)
-      secretFile = cfg.quiSessionSecret;
-      # settings = { };
-
-      # The premium theme CSS lives in a private repo that only upstream's release
-      # workflow can fetch, so nixpkgs' source build ships the free themes only and
-      # the UI reports "Premium themes not loaded" even with an active license.
-      # Keep the nixpkgs Go build, but embed upstream's prebuilt frontend instead.
-      # Refresh the hash whenever nixpkgs bumps qui (a mismatch fails the build).
-      package = pkgs.qui.overrideAttrs (old: {
-        qui-web = pkgs.fetchzip {
-          url = "https://github.com/autobrr/qui/releases/download/v${old.version}/web-dist.tar.gz";
-          hash = "sha256-GEyGPdfAOERv3kSlon0VfynaoHUm90PXL9ij5d7cQfI=";
-          stripRoot = false;
-          # The tarball nests the assets under web/dist; qui embeds them from the root.
-          postFetch = ''
-            shopt -s dotglob
-            mv "$out/web/dist" "$TMPDIR/dist"
-            rm -rf "$out"/*
-            mv "$TMPDIR/dist"/* "$out/"
-          '';
-        };
-      });
     };
   };
 }

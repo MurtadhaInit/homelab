@@ -46,10 +46,6 @@ let
       proxy = "10.20.30.41:3552";
     }
     {
-      name = "qui";
-      proxy = "localhost:${toString config.services.qui.settings.port}";
-    }
-    {
       name = "stash";
       proxy = "localhost:${toString config.services.stash.settings.port}";
     }

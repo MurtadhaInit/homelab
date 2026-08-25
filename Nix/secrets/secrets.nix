@@ -45,10 +45,6 @@ in
   # SABnzbd Usenet server (provider) config and credentials (INI format)
   "sabnzbd-server.age".publicKeys = allHosts;
 
-  # qui (qBittorrent client) session secret.
-  # Create with (Nushell): openssl rand -hex 32 | str trim | nix run github:ryantm/agenix -- -e quiSessionSecret.age
-  "quiSessionSecret.age".publicKeys = allHosts;
-
   # Tailscale auth key for unattended login of the homelab machine subnet router.
   # Generate a *reusable* and *tagged* key in the admin console:
   # Settings > Keys > Generate auth key, then encrypt with (Nushell):

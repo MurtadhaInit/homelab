@@ -96,9 +96,6 @@
       file = ../../secrets/sabnzbd-server.age;
       owner = "murtadha";
     };
-    quiSessionSecret = {
-      file = ../../secrets/quiSessionSecret.age;
-    };
     tailscale-authkey = {
       file = ../../secrets/tailscale-authkey.age;
     };
@@ -116,10 +113,7 @@
     };
   };
 
-  homelab.qbittorrent = {
-    enable = true;
-    quiSessionSecret = config.age.secrets.quiSessionSecret.path;
-  };
+  homelab.qbittorrent.enable = true;
   homelab.jellyfin.enable = true;
   homelab.syncthing = {
     enable = true;
