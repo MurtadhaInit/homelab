@@ -42,9 +42,8 @@ let
       proxy = "localhost:${toString config.services.seerr.port}";
     }
     {
-      name = "portainer";
-      proxy = "10.20.30.41:9443";
-      upstreamHttps = true; # Portainer 2.18+ only serves on HTTPS (self-signed)
+      name = "arcane";
+      proxy = "10.20.30.41:3552";
     }
     {
       name = "qui";

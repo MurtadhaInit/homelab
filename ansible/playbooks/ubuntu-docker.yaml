@@ -1,5 +1,5 @@
 ---
-- name: Configure an Ubuntu cloud image VM with Docker and Portainer
+- name: Configure an Ubuntu cloud image VM with Docker and Arcane
   hosts: ubuntu-vm
   remote_user: murtadha
 
@@ -73,22 +73,67 @@
           }
       notify: Restart Docker
 
-    - name: Create Portainer data volume
+    - name: Create Arcane config directory
+      become: true
+      ansible.builtin.file:
+        path: /opt/arcane
+        state: directory
+        mode: '0755'
+
+    # Compose projects live here; mounted at the same path inside the
+    # container so bind mounts in project files resolve on the host.
+    # Owned by the PUID/PGID user: Arcane's root startup phase chowns only
+    # /app/data and /builds to PUID:PGID before dropping privileges, so an
+    # external projects dir must be chowned here.
+    - name: Create Arcane projects directory
+      become: true
+      ansible.builtin.file:
+        path: /opt/arcane/projects
+        state: directory
+        owner: "{{ ansible_facts['user_id'] }}"
+        group: "{{ ansible_facts['user_id'] }}"
+        mode: '0750'
+
+    - name: Generate Arcane secrets
+      become: true
+      ansible.builtin.shell:
+        cmd: |
+          umask 077
+          printf 'ENCRYPTION_KEY=%s\nJWT_SECRET=%s\n' \
+            "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > /opt/arcane/arcane.env
+        creates: /opt/arcane/arcane.env
+
+    - name: Create Arcane data volume
       become: true
       community.docker.docker_volume:
-        name: portainer_data
+        name: arcane_data
 
-    - name: Run Portainer CE
+    # Default credentials are `arcane` and `arcane-admin` (change after first login)
+    - name: Run Arcane
       become: true
       community.docker.docker_container:
-        name: portainer
-        image: portainer/portainer-ce:lts
+        name: arcane
+        image: ghcr.io/getarcaneapp/manager:v2.9.0
         restart_policy: always
+        # Host cgroup namespace lets Arcane reliably detect its own container ID (for self-upgrades)
+        cgroupns_mode: host
         published_ports:
-          - "9443:9443"
+          - "3552:3552"
+        env_file: /opt/arcane/arcane.env
+        env:
+          APP_URL: https://arcane.home.murtadha.dev
+          # Caddy on nixos-ct terminates TLS; trust its X-Forwarded-* headers
+          TRUSTED_PROXIES: 10.20.30.0/24
+          PROJECTS_DIRECTORY: /opt/arcane/projects
+          # Arcane starts as root for startup preparation, then drops to a non-root runtime user by default.
+          # We set PUID and PGID so that Arcane-created files use a specific host UID/GID instead of the
+          # built-in non-root user (65532:65532).
+          PUID: "1000"
+          PGID: "1000"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
-          - portainer_data:/data
+          - arcane_data:/app/data
+          - /opt/arcane/projects:/opt/arcane/projects
 
   handlers:
     - name: Restart Docker
