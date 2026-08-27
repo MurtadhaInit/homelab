@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -62,5 +63,39 @@ in
     # (AdGuard DNS, the *arr web UIs, etc.) without per-port firewall rules.
     # The tailnet is private and authenticated, so this is the intended exposure.
     networking.firewall.trustedInterfaces = [ config.services.tailscale.interfaceName ];
+
+    # Tailscale's throughput recommendation for subnet routers and exit nodes:
+    # without rx-udp-gro-forwarding, UDP packets that get *forwarded* are not
+    # candidates for GRO coalescing, which caps throughput through the rest of
+    # the stack. Scoped to traffic transiting to *other* LAN hosts; services on
+    # this node terminate locally and never take the forwarding path.
+    # https://tailscale.com/docs/reference/best-practices/performance
+    #
+    # tailscaled does not apply this itself outside its container image (where
+    # it sits behind TS_EXPERIMENTAL_ENABLE_FORWARDING_OPTIMIZATIONS), so a
+    # subnet router has to carry the unit.
+    systemd.services.tailscale-udp-gro = lib.mkIf (cfg.advertiseRoutes != [ ]) {
+      description = "Enable UDP GRO forwarding on the default-route link for Tailscale";
+      wants = [ "network-online.target" ];
+      after = [ "network-online.target" ];
+      before = [ "tailscaled.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      script = ''
+        # Not `route show 8.8.8.8`, which is what the Tailscale docs print but
+        # actually returns nothing (see tailscale/tailscale#13117).
+        dev=$(${pkgs.iproute2}/bin/ip -o route show default | ${pkgs.gawk}/bin/awk '{print $5; exit}')
+        if [ -z "$dev" ]; then
+          # Fail rather than skip: a subnet router with no default route is
+          # already broken (avoid a silent no-op).
+          echo "no default route; cannot apply UDP GRO tuning" >&2
+          exit 1
+        fi
+        ${pkgs.ethtool}/bin/ethtool -K "$dev" rx-udp-gro-forwarding on rx-gro-list off
+      '';
+    };
   };
 }
