@@ -83,6 +83,15 @@ in
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
+        # network-online.target has no dependencies when wait-online is disabled, so it
+        # can be reached before the default route is installed and the interface lookup
+        # finds nothing. Bounded retry keeps the unit correct either way.
+        Restart = "on-failure";
+        RestartSec = 1;
+      };
+      unitConfig = {
+        StartLimitBurst = 10;
+        StartLimitIntervalSec = 30;
       };
       script = ''
         # Not `route show 8.8.8.8`, which is what the Tailscale docs print but
