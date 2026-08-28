@@ -43,6 +43,7 @@ resource "proxmox_download_file" "talos_image" {
 
   # disk_image URL is the .raw.xz image — rename to .img for Proxmox/provider compatibility
   url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
+  overwrite = false
   file_name = "talos-nocloud-amd64.img"
 }
 
