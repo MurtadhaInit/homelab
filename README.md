@@ -12,7 +12,7 @@ applications and services in your homelab using either the Nix or Kubernetes eco
 while also showcasing various explorations into self-hosting technologies and approaches.
 
 <p align="center">
-  <img src="./docs/architecture.gif" alt="Architecture diagram"/>
+  <img src="./docs/architecture.svg" alt="Architecture diagram"/>
 </p>
 
 ## Table of Contents
