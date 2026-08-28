@@ -85,6 +85,12 @@ variable "ubuntu_vm_static_ip" {
   default     = "10.20.30.41/24"
 }
 
+variable "ubuntu_vm_mac_address" {
+  type        = string
+  description = "The MAC address for the core ubuntu VM, matched on by its cloud-init network config"
+  default     = "BC:24:11:44:E5:77"
+}
+
 # === ct - nixos ===
 variable "nixos_static_ip" {
   type        = string
