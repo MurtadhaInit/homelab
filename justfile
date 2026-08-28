@@ -126,8 +126,39 @@ nix-deploy:
 # Update the Flake inputs
 [group('nix')]
 [working-directory('Nix')]
-nix-update:
+nix-update: && nix-hashes
     nix flake update
+
+# Report hand-pinned module hashes that no longer match their source
+[group('nix')]
+[working-directory('Nix')]
+nix-hashes:
+    #!/usr/bin/env bash
+    # Reports only -- copy any mismatch into the module yourself. Pins are read
+    # back out of the evaluated config rather than the module files, so renaming
+    # or moving a module can't desync this list. Each entry names a fixed-output
+    # derivation; nurl rebuilds it with the hash blanked and reports what came out.
+    set -euo pipefail
+    ATTRS=(
+        'services.caddy.package.src'
+    )
+    flake="path:$PWD"
+    stale=0
+    for attr in "${ATTRS[@]}"; do
+        expr="(builtins.getFlake \"${flake}\").nixosConfigurations.nixos-ct.config.${attr}"
+        pinned=$(nix eval --impure --raw --expr "${expr}.drvAttrs.outputHash")
+        echo "==> ${attr}"
+        actual=$(nix run nixpkgs#nurl -- -e "${expr}" 2>/dev/null)
+        if [[ "${pinned}" == "${actual}" ]]; then
+            echo "    up to date: ${pinned}"
+        else
+            stale=1
+            echo "    STALE"
+            echo "      pinned: ${pinned}"
+            echo "      actual: ${actual}"
+        fi
+    done
+    [[ ${stale} -eq 0 ]] || { echo; echo "Update the hashes above before deploying."; exit 1; }
 
 # Supplementary: ad-hoc, macOS-only remote-builder setup.
 import 'Nix/remote-builder.just'
