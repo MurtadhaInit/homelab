@@ -95,6 +95,7 @@ deploy-apply:
 pve-postconfig:
     @echo "\n⚙️ Configuring Proxmox VMs / LXC containers..."
     uv run ansible-playbook playbooks/ubuntu-docker.yaml
+    uv run ansible-playbook playbooks/ubuntu-nix.yaml
     uv run ansible-playbook playbooks/proxmox-nixos-ct.yaml
 
 # Building a NixOS toplevel on macOS using Determinate Nix's native Linux builder needs BOTH:

@@ -1,0 +1,26 @@
+---
+- name: Install the Nix package manager on an Ubuntu cloud image VM
+  hosts: ubuntu-vm
+  remote_user: murtadha
+
+  tasks:
+    # The Nix Installer Working Group's fork of the Determinate Systems installer:
+    # same install receipt and uninstaller, but it still installs upstream Nix.
+    #
+    # Multi-user install: builds are sandboxed by the root daemon, so they're
+    # unaffected by Ubuntu's apparmor_restrict_unprivileged_userns.
+    # The receipt guarding this task is also what `/nix/nix-installer uninstall`
+    # reads to remove everything cleanly.
+    # Upgrade from inside with `sudo -i nix upgrade-nix`.
+    - name: Install Nix
+      become: true
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail;
+          curl -sSfL https://artifacts.nixos.org/nix-installer |
+          sh -s -- install linux
+          --no-confirm
+          --enable-flakes
+          --extra-conf "trusted-users = root {{ ansible_facts['user_id'] }}"
+        creates: /nix/receipt.json
+        executable: /bin/bash
