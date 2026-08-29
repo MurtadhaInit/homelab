@@ -142,5 +142,6 @@ in
     systemd.services.caddy.serviceConfig.EnvironmentFile = cfg.cloudflareTokenFile;
 
     networking.firewall.allowedTCPPorts = [ 80 ] ++ lib.optional (cfg.publicDomain != null) 443;
+    networking.firewall.allowedUDPPorts = lib.optional (cfg.publicDomain != null) 443;
   };
 }
