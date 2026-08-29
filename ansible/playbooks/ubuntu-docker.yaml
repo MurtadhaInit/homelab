@@ -118,7 +118,7 @@
         # Host cgroup namespace lets Arcane reliably detect its own container ID (for self-upgrades)
         cgroupns_mode: host
         published_ports:
-          - "3552:3552"
+          - "{{ ansible_host }}:3552:3552"
         env_file: /opt/arcane/arcane.env
         env:
           APP_URL: https://arcane.home.murtadha.dev
