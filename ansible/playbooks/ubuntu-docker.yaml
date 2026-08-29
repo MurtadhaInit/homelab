@@ -1,5 +1,5 @@
 ---
-- name: Configure an Ubuntu cloud image VM with Docker and Arcane
+- name: Configure an Ubuntu cloud image VM with Docker, Arcane and Dozzle
   hosts: ubuntu-vm
   remote_user: murtadha
 
@@ -134,6 +134,54 @@
           - /var/run/docker.sock:/var/run/docker.sock
           - arcane_data:/app/data
           - /opt/arcane/projects:/opt/arcane/projects
+
+    # A bind mount rather than a named volume so the user database below can be
+    # written from the host. Dozzle runs as root in-container, so it reads the
+    # directory regardless of the host ownership that lets us write it.
+    - name: Create Dozzle data directory
+      become: true
+      ansible.builtin.file:
+        path: /opt/dozzle/data
+        state: directory
+        owner: "{{ ansible_facts['user_id'] }}"
+        group: "{{ ansible_facts['user_id'] }}"
+        mode: '0750'
+
+    - name: Check for the Dozzle user database
+      ansible.builtin.stat:
+        path: /opt/dozzle/data/users.yml
+      register: dozzle_users
+
+    # Dozzle has no sign-up flow: under `simple` auth it exits at startup when
+    # the user database is missing. Skip rather than fail so the rest of the
+    # post-config run still completes.
+    - name: Explain a missing Dozzle user database
+      when: not dozzle_users.stat.exists
+      ansible.builtin.debug:
+        msg: >-
+          Skipping Dozzle: /opt/dozzle/data/users.yml is missing. Create it on the VM with
+          `read -rsp 'Password: ' p && docker run -i --rm amir20/dozzle generate
+          murtadha --name murtadha > /opt/dozzle/data/users.yml <<<$p`
+          and re-run this playbook.
+
+    - name: Run Dozzle
+      when: dozzle_users.stat.exists
+      become: true
+      community.docker.docker_container:
+        name: dozzle
+        image: amir20/dozzle:v10.7.5
+        restart_policy: always
+        published_ports:
+          - "{{ ansible_host }}:8080:8080"
+        env:
+          DOZZLE_AUTH_PROVIDER: simple
+          DOZZLE_HOSTNAME: "{{ inventory_hostname }}"
+          DOZZLE_ENABLE_ACTIONS: "true"
+          DOZZLE_NO_ANALYTICS: "true"
+          DOZZLE_ENABLE_SHELL: "true"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /opt/dozzle/data:/data
 
   handlers:
     - name: Restart Docker

@@ -226,8 +226,8 @@ flowchart TD
      This applies to both the Terraform/OpenTofu provider as well as the
      Ansible collection. So instead we use an Ansible playbook with imperative commands
      for that purpose.
-   - We use a playbook to install and configure Docker and Arcane on the newly
-     created Ubuntu VM.
+   - We use a playbook to install and configure Docker, Arcane, and Dozzle on the
+     newly created Ubuntu VM.
 5. At this point, VMs and containers have the required baseline configuration, and
    each can be managed going forward with the specialised tools and technologies
    suitable for each platform. This is also where services and applications are
