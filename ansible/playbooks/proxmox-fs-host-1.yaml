@@ -88,6 +88,45 @@
           loop: "{{ nocow_dirs }}"
           changed_when: false
 
+    - name: Export the bulk SSD over NFS
+      block:
+        - name: Install the NFS server
+          ansible.builtin.apt:
+            name: nfs-kernel-server
+            state: present
+
+        # NFSv4 serves everything on port 2049 alone, dropping v3.
+        - name: Serve NFSv4 only
+          ansible.builtin.copy:
+            dest: /etc/nfs.conf.d/homelab.conf
+            mode: "0644"
+            content: |
+              [nfsd]
+              vers3 = n
+          notify: Restart the NFS server
+
+        # A drop-in avoids sharing /etc/exports with the package, which merges into it on upgrades.
+        - name: Create the exports drop-in directory
+          ansible.builtin.file:
+            path: /etc/exports.d
+            state: directory
+            mode: "0755"
+
+        # all_squash + anonuid/anongid maps every client (consumer) identity onto 1000:1000 (murtadha).
+        - name: Export the bulk SSD to the Ubuntu VM
+          ansible.builtin.copy:
+            dest: /etc/exports.d/bulk.exports
+            mode: "0644"
+            content: |
+              /mnt/bulk {{ hostvars['ubuntu-vm'].ansible_host }}(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)
+          notify: Re-export the NFS filesystems
+
+        - name: Enable and start the NFS server
+          ansible.builtin.systemd:
+            name: nfs-server.service
+            enabled: true
+            state: started
+
     - name: Make changes on the Proxmox storage side
       delegate_to: localhost # these modules make API calls to the Proxmox API *from* the controller
       module_defaults:
@@ -175,3 +214,13 @@
             state: started
             daemon_reload: true
           loop: "{{ btrfs_scrub_mounts }}"
+
+  handlers:
+    - name: Restart the NFS server
+      ansible.builtin.systemd:
+        name: nfs-server.service
+        state: restarted
+
+    - name: Re-export the NFS filesystems
+      ansible.builtin.command: exportfs -ra
+      changed_when: true

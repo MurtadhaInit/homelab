@@ -1,0 +1,26 @@
+---
+- name: Mount shared storage on an Ubuntu cloud image VM
+  hosts: ubuntu-vm
+  remote_user: murtadha
+
+  tasks:
+    - name: Install the NFS client
+      become: true
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+
+    # Mounted at the same path it has on the server.
+    # `hard` makes I/O wait out a server restart instead of failing the caller.
+    # `nofail` keeps boot going without the export.
+    # Ordering Docker after the mount is what stops a container from binding the empty
+    # mountpoint on boot; the cost is that Docker waits out the mount attempt when the
+    # server is down.
+    - name: Mount the bulk pool exported by the first Proxmox node
+      become: true
+      ansible.posix.mount:
+        path: /mnt/bulk
+        src: "{{ hostvars['pve-host-1'].ansible_host }}:/mnt/bulk"
+        fstype: nfs4
+        opts: rw,hard,_netdev,nofail,x-systemd.before=docker.service
+        state: mounted
