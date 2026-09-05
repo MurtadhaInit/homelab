@@ -113,7 +113,7 @@
       become: true
       community.docker.docker_container:
         name: arcane
-        image: ghcr.io/getarcaneapp/manager:v2.9.0
+        image: ghcr.io/getarcaneapp/manager:v2.10.2
         restart_policy: always
         # Host cgroup namespace lets Arcane reliably detect its own container ID (for self-upgrades)
         cgroupns_mode: host
