@@ -103,8 +103,8 @@ pve-postconfig:
 #        curl -fsSL https://install.determinate.systems/nix | sh -s -- install macos --determinate --case-sensitive
 #        Then request access to the native linux builder feature after logging in to FlakeHub.
 #   2. `use-case-hack = false` in /etc/nix/nix.custom.conf
-# Why? Because by default, macOS's /nix is case-insensitive and so it can't build a NixOS toplevel
-# as buildEnv mangles the symlinks it merges.
+# Why? By default, macOS's /nix volume is case-insensitive so a NixOS toplevel can't be built there
+# because Nix's `use-case-hack` mangles the symlinks buildEnv merges.
 #
 # However, building on macOS using Determinate Nix is still riddled with other issues, hence the
 # macOS-scoped recipe that skips flake checks and builds on the remote host. This works on any
@@ -161,7 +161,7 @@ nix-hashes:
     done
     [[ ${stale} -eq 0 ]] || { echo; echo "Update the hashes above before deploying."; exit 1; }
 
-# Supplementary: ad-hoc, macOS-only remote-builder setup.
+# Supplementary: run once to setup a self-hosted x86_64-linux remote builder for macOS
 import 'Nix/remote-builder.just'
 
 # List all deployed resources (Helm releases and Flux resources)

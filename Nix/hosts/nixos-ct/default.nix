@@ -33,16 +33,17 @@
   # Let the Proxmox host handle TRIM for the underlying storage
   services.fstrim.enable = false;
 
-  # Deploys build on this host, so Sizing to this container's limited resources:
+  # Deploys build on this host, so sizing to this container's limited resources:
   # the default `auto` runs one derivation per core, and that many concurrent
   # compilers can exhaust RAM and take running services with them.
   # NOTE: revisit alongside any change to the LXC's allocation.
   nix.settings.max-jobs = 2;
 
-  # Remote-builder target: the Mac's Nix daemon offloads x86_64-linux builds
-  # here (see the `nix-remote-builder` justfile recipe, which generates the key
-  # below and writes the matching `builders` line into /etc/nix/nix.custom.conf).
-  # `trusted-users` is what lets the dedicated user push unsigned paths.
+  # Remote-builder target: a Mac can't build x86_64-linux natively, so its Nix
+  # daemon dispatches those builds to this user over SSH.
+  # `trusted-users` lets the user push unsigned paths into this host's store.
+  # `just nix-remote-builder` generates the key below.
+  # The registration of this host as a builder lives in that Mac's nix-darwin config.
   users.users.nix-builder = {
     isNormalUser = true;
     group = "nix-builder";

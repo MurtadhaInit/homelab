@@ -251,9 +251,13 @@ group.
 repo. So with login credentials already in my password manager, this makes many
 services a truly one-command-deploy. See the `modules` directory for available services.
 
-> [!IMPORTANT]
-> Building Linux derivations on macOS requires a linux builder, and for this I'm
-  currently using the Determinate Nix distribution of Nix on my macOS machine.
+> [!NOTE]
+> Building Linux derivations on macOS requires a linux builder, so we build on
+  the target deployment machine instead (using a platform-scoped Justfile recipe
+  variant). We _additionally_ register the provisioned NixOS host (LXC container)
+  as a remote `x86_64-linux` builder for the mac (via SSH over the LAN). So another
+  Justfile recipe generates the key and tests with a remote build, and `nix-darwin`
+  can register the remote builder on the mac side.
 
 ### Kubernetes
 
