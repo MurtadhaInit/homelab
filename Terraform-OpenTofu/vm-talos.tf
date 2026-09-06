@@ -74,7 +74,7 @@ locals {
       ip               = "10.20.30.60"
       vm_id            = 810
       cores            = 2
-      memory           = 2048
+      memory           = 3072
       disk_gb          = 10
       longhorn_disk_gb = null
     }
@@ -84,17 +84,17 @@ locals {
       ip               = "10.20.30.61"
       vm_id            = 811
       cores            = 2
-      memory           = 2048
+      memory           = 3072
       disk_gb          = 10
       longhorn_disk_gb = null
     }
     "talos-cp-3" = {
-      host             = "prox"
+      host             = "prox2"
       role             = "controlplane"
       ip               = "10.20.30.62"
       vm_id            = 812
       cores            = 2
-      memory           = 2048
+      memory           = 3072
       disk_gb          = 10
       longhorn_disk_gb = null
     }
