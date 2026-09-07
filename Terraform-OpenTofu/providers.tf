@@ -26,6 +26,11 @@ provider "kubernetes" {
 #   2. the value must be statically evaluable (e.g. var.pve_hosts comes from .tfvars ✔︎)
 #   3. resources must not iterate over this same expression. This is so OpenTofu can
 #      still destroy resources in a plan that also removes their provider instance.
+# Moving a resource from one node to another requires 2 steps:
+#   1. destroy it on the old host before repointing to the new one.
+#   2. Repoint and re-create the resource on the new one.
+#   - This is because a state refresh reads the resource through the new node's API, finds nothing,
+#     creates the resource there, leaving the original running and unmanaged (dropped from state).
 provider "proxmox" {
   alias    = "node"
   for_each = var.pve_hosts
