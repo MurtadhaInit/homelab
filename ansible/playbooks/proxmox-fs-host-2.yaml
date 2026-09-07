@@ -4,7 +4,8 @@
 # fragmentation for VM images.
 #
 # sda (the primary, 250GB Crucial MX500 disk): holds the PVE installer-created btrfs root, and
-# hence it's out of Ansible's scope (much like 'pve' VG on the first PVE node).
+# hence it's out of Ansible's scope (much like 'pve' VG on the first PVE node) — except for the
+# swapfile, which a btrfs-root install leaves out entirely.
 - name: Setup storage on the second Proxmox node
   hosts: pve-host-2 # hostname/node name: 'prox2'
   remote_user: root
@@ -58,3 +59,62 @@
         --content vztmpl,backup,iso,snippets,import,images,rootdir
       when: "'snippets' not in (local_btrfs_storage.stdout | from_json).content"
       changed_when: true
+
+    # Without swap the kernel's only answer to memory pressure is the OOM killer,
+    # which targets the largest RSS on the box (i.e. a guest). This is a cushion for
+    # cold pages, not capacity: paging out a running VM is far worse than losing cache,
+    # hence the low swappiness. `mkswapfile` is required on btrfs, since a swapfile
+    # can't live on CoW or compressed extents (the root is mounted `compress=zstd`).
+    #
+    # The installer can pick a RAID0 data profile even on a single disk, which the
+    # kernel refuses to swap on ("swapfile must have single data profile"). Convert
+    # before creating the file; an existing swapfile has to go first, since its
+    # extents are allocated under the old profile.
+    - name: Read the data profile of the btrfs root
+      ansible.builtin.command: btrfs filesystem df /
+      register: btrfs_root_df
+      changed_when: false
+
+    - name: Convert the btrfs root to a single data profile
+      when: "'Data, single:' not in btrfs_root_df.stdout"
+      block:
+        - name: Remove any swapfile allocated under the old profile
+          ansible.builtin.file:
+            path: /swapfile
+            state: absent
+
+        - name: Rewrite the data chunks as single
+          ansible.builtin.command: btrfs balance start -dconvert=single /
+          changed_when: true
+
+    - name: Create the swapfile on the btrfs root
+      ansible.builtin.command: btrfs filesystem mkswapfile --size 8g /swapfile
+      args:
+        creates: /swapfile
+
+    - name: Register the swapfile in fstab
+      ansible.posix.mount:
+        path: none
+        src: /swapfile
+        fstype: swap
+        opts: sw
+        state: present
+
+    - name: Read the currently active swap areas
+      ansible.builtin.command: swapon --show=NAME --noheadings
+      register: active_swaps
+      changed_when: false
+
+    - name: Enable the swapfile
+      ansible.builtin.command: swapon /swapfile
+      when: "'/swapfile' not in active_swaps.stdout"
+      changed_when: true
+
+    - name: Keep swap as a cushion rather than a regular memory tier
+      ansible.posix.sysctl:
+        name: vm.swappiness
+        value: '10'
+        sysctl_file: /etc/sysctl.d/99-swappiness.conf
+        sysctl_set: true
+        state: present
+        reload: true
