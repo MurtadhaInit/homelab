@@ -215,6 +215,18 @@
             daemon_reload: true
           loop: "{{ btrfs_scrub_mounts }}"
 
+    # Swap here is the installer's partition and at the default swappiness of 60
+    # the kernel pages out live guest memory while leaving reclaimable page cache
+    # alone (costly when guests have ballooning disabled).
+    - name: Keep swap as a cushion rather than a regular memory tier
+      ansible.posix.sysctl:
+        name: vm.swappiness
+        value: '10'
+        sysctl_file: /etc/sysctl.d/99-swappiness.conf
+        sysctl_set: true
+        state: present
+        reload: true
+
   handlers:
     - name: Restart the NFS server
       ansible.builtin.systemd:
