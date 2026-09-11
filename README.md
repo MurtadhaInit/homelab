@@ -239,9 +239,9 @@ flowchart TD
 
 I write custom modules that wrap the official NixOS ones to add further configurations
 and to customise the exposed settings, so that these modules can be readily included
-and toggled for any NixOS target. E.g., if I switch to a VM instead of an LXC
+and toggled for any NixOS target host. E.g., if I switch to a VM instead of an LXC
 container, or if I split apps into separate containers, the same modules can be
-reused.
+reused and my own module options serve as the interface.
 
 `deploy-rs` is then used to deploy NixOS configurations to target machines (for
 now, just the LXC container). See the relevant `justfile` recipe under the `nix`
