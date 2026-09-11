@@ -14,6 +14,10 @@
       "env": {
         "GRAFANA_URL": "https://grafana.k8s.murtadha.dev"
       }
+    },
+    "siderolabs-docs": {
+      "type": "http",
+      "url": "https://docs.siderolabs.com/mcp"
     }
   }
 }
