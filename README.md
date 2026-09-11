@@ -406,17 +406,20 @@ query resource status and events, search up-to-date Flux documentation, analyze
 pod logs and metrics, trigger reconciliations, and perform structured root cause
 analysis on failing HelmReleases or Kustomizations.
 
-Troubleshooting guidelines from the upstream project can be included as agent
-[instructions](https://fluxoperator.dev/docs/mcp/instructions/) and modified based
-on the unique cluster properties to guide assistants into following the recommended
-analysis workflows (e.g., walking the dependency chain from a Kustomization
-through its source and inventory before pulling pod logs).
+The 3 official [GitOps Agent Skills](https://github.com/fluxcd/agent-skills) from
+Flux CD are already included in the repo for most agents (via `.agents/skills`)
+and for Claude Code (via symlinks in `.claude/skills`). They are installed using
+Vercel's `skills` CLI so they can also be updated with `npx skills update`.
+These skills give agents expertise in Flux CD, Kubernetes, and GitOps best
+practices; and combined with the
+[Flux Schema MCP Server](https://schemas.fluxoperator.dev/agents/) agents can
+generate up-to-date schema-accurate manifests, answer Flux questions, debug the
+live cluster, or audit the repo from various aspects.
 
-Alongside it, the [Grafana MCP Server](https://github.com/grafana/mcp-grafana)
-is also wired up in `.mcp.json` (run on demand via `uvx` through `mise`) and
-authenticated with a Grafana service account token kept in the OS keyring and
-injected into the server's environment at runtime by `mise`. See the
-[setup guide](docs/grafana-mcp.md) for details.
+Alongside that, the [Grafana MCP Server](https://github.com/grafana/mcp-grafana)
+is also wired up in `.mcp.json`. It's authenticated with a Grafana service account
+token kept in the OS keyring and injected into the server's environment at runtime
+by `mise`. See the [setup guide](docs/grafana-mcp.md) for details.
 
 This lets an assistant query Prometheus with PromQL to surface cluster bottlenecks
 and saturation, explore the available metrics, and draft or refine dashboards
