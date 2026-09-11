@@ -4,6 +4,10 @@
       "command": "mise",
       "args": ["exec", "--", "flux-operator-mcp", "serve", "--read-only=false"]
     },
+    "flux-schema-catalog": {
+      "type": "http",
+      "url": "https://schemas.fluxoperator.dev/mcp"
+    },
     "grafana-mcp": {
       "command": "mise",
       "args": ["exec", "--", "uvx", "mcp-grafana"],
