@@ -27,9 +27,21 @@ in
         LegalNotice.Accepted = true;
         BitTorrent.Session = {
           QueueingSystemEnabled = false;
-          AlternativeGlobalDLSpeedLimit = 15000; # kB/s
-          AlternativeGlobalUPSpeedLimit = 5000; # kB/s
-          DefaultSavePath = "/mnt/bulk/To Stream";
+
+          # Headroom on a ~100 Mbit/s uplink to avoid saturating it and starving the ACKs of
+          # every other device.
+          GlobalUPSpeedLimit = 7000; # kB/s (56 Mbps)
+          AlternativeGlobalDLSpeedLimit = 15000; # kB/s (120 Mbps)
+          AlternativeGlobalUPSpeedLimit = 3750; # kB/s (30 Mbps)
+
+          # Peer caps, mostly to limit the churn of short-lived flows through the
+          # router's connection table rather than to limit throughput.
+          MaxConnections = 300; # instead of 500 default
+          MaxConnectionsPerTorrent = 50; # instead of 100 default
+          MaxUploads = 8; # instead of 20 default
+          MaxUploadsPerTorrent = 2; # instead of 4 default
+
+          DefaultSavePath = "/mnt/bulk/to-stream";
         };
         Preferences = {
           WebUI = {
