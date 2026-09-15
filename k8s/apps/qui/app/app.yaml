@@ -18,8 +18,7 @@ data:
   # rather than depend on that heuristic under containerd.
   QUI__HOST: 0.0.0.0
   QUI__PORT: "7476"
-  # Upstream defaults to DEBUG.
-  QUI__LOG_LEVEL: INFO
+  QUI__LOG_LEVEL: INFO # Upstream defaults to DEBUG.
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -53,9 +52,8 @@ spec:
       labels:
         app: qui
     spec:
-      # fsGroup is what makes the Longhorn volume writable: the image only
-      # chowns /config on its PUID/PGID path, which we bypass by setting the
-      # runtime user here instead.
+      # Running as a fixed UID skips the image's PUID/PGID chown of /config,
+      # so fsGroup is what makes the Longhorn volume writable.
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -65,7 +63,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: qui
-          image: ghcr.io/autobrr/qui:v1.28.0
+          image: ghcr.io/autobrr/qui:v1.29.0
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
