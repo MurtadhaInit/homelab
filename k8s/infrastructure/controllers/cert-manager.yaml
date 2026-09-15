@@ -3,6 +3,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: cert-manager
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
@@ -33,3 +37,9 @@ spec:
       enabled: true
     config:
       enableGatewayAPI: true
+    # prometheus:
+    #   enabled: true
+    #   podmonitor:
+    #     enabled: true
+    #   servicemonitor:
+    #     enabled: true # this or podmonitor not both
