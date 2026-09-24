@@ -64,7 +64,6 @@ spec:
       containers:
         - name: qui
           image: ghcr.io/autobrr/qui:v1.29.0
-          imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
