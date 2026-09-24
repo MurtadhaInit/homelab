@@ -7,7 +7,7 @@ spec:
   interval: 1h
   retryInterval: 1m
   timeout: 10m
-  path: ./k8s/apps/observability/uptime-kuma/app
+  path: ./k8s/apps/uptime-kuma/app
   prune: true
   wait: true
   sourceRef:
