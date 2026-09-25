@@ -4,3 +4,4 @@ resources:
   - ./uptime-kuma/ks.yaml
   - ./e-store
   - ./qui/ks.yaml
+  - ./executor/ks.yaml

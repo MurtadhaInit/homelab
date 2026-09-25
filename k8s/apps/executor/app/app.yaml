@@ -1,0 +1,169 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: executor
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: executor-config
+data:
+  EXECUTOR_WEB_BASE_URL: "https://executor.k8s.murtadha.dev"
+  EXECUTOR_BOOTSTRAP_ADMIN_NAME: Murtadha
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: executor-data-pvc
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: executor
+  name: executor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: executor
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: executor
+    spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
+      securityContext:
+        runAsNonRoot: true
+        # The image runs as 65532; fsGroup makes the Longhorn volume writable for it.
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: executor
+          image: ghcr.io/rhyssullivan/executor-selfhost:v1.6.10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 4788
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          envFrom:
+            - configMapRef:
+                name: executor-config
+            - secretRef:
+                name: executor-credentials
+          startupProbe:
+            httpGet:
+              path: api/health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: api/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: executor-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: executor
+  name: executor
+spec:
+  type: ClusterIP
+  selector:
+    app: executor
+  ports:
+    - name: http
+      port: 4788
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: executor
+spec:
+  parentRefs:
+    - name: homelab
+      namespace: gateway-system
+      sectionName: https
+  hostnames:
+    - executor.k8s.murtadha.dev
+  rules:
+    - backendRefs:
+        - name: executor
+          port: 4788
+---
+# Ingress only from the gateway (Cilium tags gateway traffic with the `ingress`
+# identity). Egress to in-cluster pods (DNS, MCP servers) and the internet,
+# but not the home LAN or tailnet.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: executor
+spec:
+  endpointSelector:
+    matchLabels:
+      app: executor
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "4788"
+              protocol: TCP
+  egress:
+    # An empty selector would only match this namespace; this matches pods in every namespace.
+    - toEndpoints:
+        - matchExpressions:
+            - key: k8s:io.kubernetes.pod.namespace
+              operator: Exists
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 100.64.0.0/10
