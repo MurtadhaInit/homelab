@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: karakeep-chrome
+  name: karakeep-chrome
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: karakeep-chrome
+  template:
+    metadata:
+      labels:
+        app: karakeep-chrome
+    spec:
+      # Chrome runs as PID 1 and doesn't reap its exited child processes; sharing the
+      # PID namespace makes the pause container PID 1, which does.
+      shareProcessNamespace: true
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: karakeep-chrome
+          image: ghcr.io/karakeep-app/karakeep-chrome:151.0.7922.47-r1
+          args:
+            - --disable-gpu
+            - --disable-dev-shm-usage
+            - --hide-scrollbars
+            - --disable-blink-features=AutomationControlled
+            - --window-size=1440,900
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 9222
+          startupProbe:
+            httpGet:
+              path: /json/version
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /json/version
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /json/version
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: karakeep-chrome
+  name: karakeep-chrome
+spec:
+  type: ClusterIP
+  selector:
+    app: karakeep-chrome
+  ports:
+    - name: http
+      port: 9222
+      protocol: TCP
+      targetPort: http

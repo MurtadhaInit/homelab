@@ -1,0 +1,76 @@
+# The web pod accepts traffic from the gateway only (Cilium tags gateway traffic
+# with the `ingress` identity, hence the CiliumNetworkPolicy here to utilise fromEntities).
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: karakeep-web
+spec:
+  endpointSelector:
+    matchLabels:
+      app: karakeep-web
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+---
+# Chrome accepts traffic only from karakeep-web and is allowed to reach DNS and
+# the internet but not private ranges or tailnet.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: karakeep-chrome
+spec:
+  podSelector:
+    matchLabels:
+      app: karakeep-chrome
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: karakeep-web
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+---
+# Meilisearch needs no egress (analytics are off), and only accepts traffic from karakeep-web
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: karakeep-meilisearch
+spec:
+  podSelector:
+    matchLabels:
+      app: karakeep-meilisearch
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: karakeep-web
+  egress: []

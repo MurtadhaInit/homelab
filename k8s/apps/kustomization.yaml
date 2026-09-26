@@ -5,3 +5,4 @@ resources:
   - ./e-store
   - ./qui/ks.yaml
   - ./executor/ks.yaml
+  - ./karakeep/ks.yaml

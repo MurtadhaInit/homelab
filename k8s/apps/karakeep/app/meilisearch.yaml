@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: karakeep-meilisearch-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: karakeep-meilisearch
+  name: karakeep-meilisearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: karakeep-meilisearch
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: karakeep-meilisearch
+    spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: karakeep-meilisearch
+          # Pinned to the version Karakeep's compose file ships: Meilisearch can't open an index from
+          # another version. The index is rebuildable, so upgrade by wiping the PVC and reindexing
+          # from Karakeep's admin panel.
+          image: getmeili/meilisearch:v1.41.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 7700
+          volumeMounts:
+            - name: data
+              mountPath: /meili_data
+          env:
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+            - name: MEILI_ENV
+              value: production
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: karakeep-secrets
+                  key: MEILI_MASTER_KEY
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: karakeep-meilisearch-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: karakeep-meilisearch
+  name: karakeep-meilisearch
+spec:
+  type: ClusterIP
+  selector:
+    app: karakeep-meilisearch
+  ports:
+    - name: http
+      port: 7700
+      protocol: TCP
+      targetPort: http

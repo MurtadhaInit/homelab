@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: karakeep-data-pvc
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: karakeep-web
+  name: karakeep-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: karakeep-web
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: karakeep-web
+    spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
+      securityContext:
+        # TODO: run as non-root and enforce 'restricted' in the NS once karakeep-app/karakeep#3113 lands
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: karakeep-web
+          image: ghcr.io/karakeep-app/karakeep:0.33.2
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 3000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          envFrom:
+            - configMapRef:
+                name: karakeep-config
+            - secretRef:
+                name: karakeep-secrets
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: karakeep-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: karakeep-web
+  name: karakeep-web
+spec:
+  type: ClusterIP
+  selector:
+    app: karakeep-web
+  ports:
+    - name: http
+      port: 3000
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: karakeep-web
+spec:
+  parentRefs:
+    - name: homelab
+      namespace: gateway-system
+      sectionName: https
+  hostnames:
+    - karakeep.k8s.murtadha.dev
+  rules:
+    - backendRefs:
+        - name: karakeep-web
+          port: 3000

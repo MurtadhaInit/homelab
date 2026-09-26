@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: karakeep
+resources:
+  - ./ns.yaml
+  - ./netpol.yaml
+  - ./web-app.yaml
+  - ./chrome.yaml
+  - ./meilisearch.yaml
+  - ./secret.sops.yaml
+
+configMapGenerator:
+  - name: karakeep-config
+    literals:
+      - MEILI_ADDR=http://karakeep-meilisearch:7700
+      - BROWSER_WEB_URL=http://karakeep-chrome:9222
+      - DATA_DIR=/data
+      - NEXTAUTH_URL=https://karakeep.k8s.murtadha.dev
+      - DB_WAL_MODE=true # possible because the PV is on block storage (not NFS)
+      # LLM provider for tagging and summarisation
+      - OPENAI_BASE_URL=https://openrouter.ai/api/v1
+      - INFERENCE_CONTEXT_LENGTH=16384
+      # The model used for each purpose
+      - INFERENCE_TEXT_MODEL=z-ai/glm-5.3-flash
+      - INFERENCE_IMAGE_MODEL=z-ai/glm-5.3-flash
