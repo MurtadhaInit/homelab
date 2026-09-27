@@ -302,9 +302,10 @@ and pushing.
 
 > [!IMPORTANT]
 > Before running `just deploy-apply`, the SOPS age private key must exist at
-> `~/.ssh/keys/sops-age.txt` (overridable via `-var sops_age_key_path=...`).
+> `~/.ssh/keys/sops-age.txt`.
 > The file is read at plan time; missing it fails fast before the cluster is
-> touched.
+> touched. See the [secrets guide](docs/secrets.md) for creating, editing, and
+> rotating SOPS secrets.
 
 [flux-operator-bootstrap]: https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap
 
