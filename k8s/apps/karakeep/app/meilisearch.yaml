@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: karakeep-meilisearch-pvc
+  # No prune protection: the index holds only derived data, rebuildable from Karakeep's DB
+  # (Admin Settings → Background Jobs → reindex + regenerate embeddings).
 spec:
   accessModes:
     - ReadWriteOnce
@@ -38,9 +40,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: karakeep-meilisearch
-          # Pinned to the version Karakeep's compose file ships: Meilisearch can't open an index from
-          # another version. The index is rebuildable, so upgrade by wiping the PVC and reindexing
-          # from Karakeep's admin panel.
+          # Pinned to the version Karakeep's compose file ships: Meilisearch refuses to open an index
+          # written by another version, so upgrading means recreating the PVC (see there).
           image: getmeili/meilisearch:v1.41.0
           securityContext:
             allowPrivilegeEscalation: false

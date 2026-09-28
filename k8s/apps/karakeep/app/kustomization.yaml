@@ -7,6 +7,7 @@ resources:
   - ./web-app.yaml
   - ./chrome.yaml
   - ./meilisearch.yaml
+  - ./mcp-server.yaml
   - ./secret.sops.yaml
 
 configMapGenerator:
@@ -17,9 +18,13 @@ configMapGenerator:
       - DATA_DIR=/data
       - NEXTAUTH_URL=https://karakeep.k8s.murtadha.dev
       - DB_WAL_MODE=true # possible because the PV is on block storage (not NFS)
+      - CRAWLER_SCREENSHOT_TIMEOUT_SEC=15
       # LLM provider for tagging and summarisation
       - OPENAI_BASE_URL=https://openrouter.ai/api/v1
       - INFERENCE_CONTEXT_LENGTH=16384
       # The model used for each purpose
       - INFERENCE_TEXT_MODEL=z-ai/glm-5.3-flash
       - INFERENCE_IMAGE_MODEL=z-ai/glm-5.3-flash
+      - EMBEDDING_ENABLE_AUTO_INDEXING=true
+      - EMBEDDING_TEXT_MODEL=openai/text-embedding-3-small
+      - EMBEDDING_DIMENSIONS=1536 # must match the model
