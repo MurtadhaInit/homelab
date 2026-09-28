@@ -15,6 +15,7 @@ metadata:
 data:
   EXECUTOR_WEB_BASE_URL: "https://executor.k8s.murtadha.dev"
   EXECUTOR_BOOTSTRAP_ADMIN_NAME: Murtadha
+  EXECUTOR_ALLOW_LOCAL_NETWORK: "true" # to add k8s-hosted (i.e. local) MCPs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -76,19 +77,19 @@ spec:
                 name: executor-credentials
           startupProbe:
             httpGet:
-              path: api/health
+              path: /api/health
               port: http
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: api/health
+              path: /api/health
               port: http
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
             httpGet:
-              path: api/health
+              path: /api/health
               port: http
             periodSeconds: 30
             timeoutSeconds: 5
@@ -137,8 +138,8 @@ spec:
           port: 4788
 ---
 # Ingress only from the gateway (Cilium tags gateway traffic with the `ingress`
-# identity). Egress to in-cluster pods (DNS, MCP servers) and the internet,
-# but not the home LAN or tailnet.
+# identity). Egress to in-cluster MCP servers, DNS, and the internet; but not
+# the home LAN, tailnet, or other pods.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -155,11 +156,18 @@ spec:
             - port: "4788"
               protocol: TCP
   egress:
-    # An empty selector would only match this namespace; this matches pods in every namespace.
     - toEndpoints:
-        - matchExpressions:
-            - key: k8s:io.kubernetes.pod.namespace
-              operator: Exists
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: karakeep
+            app: karakeep-mcp
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:
