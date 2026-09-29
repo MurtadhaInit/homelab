@@ -7,7 +7,6 @@ resources:
   - ./web-app.yaml
   - ./chrome.yaml
   - ./meilisearch.yaml
-  - ./mcp-server.yaml
   - ./secret.sops.yaml
 
 configMapGenerator:

@@ -15,7 +15,9 @@ metadata:
 data:
   EXECUTOR_WEB_BASE_URL: "https://executor.k8s.murtadha.dev"
   EXECUTOR_BOOTSTRAP_ADMIN_NAME: Murtadha
-  EXECUTOR_ALLOW_LOCAL_NETWORK: "true" # to add k8s-hosted (i.e. local) MCPs
+  # Private addresses are refused otherwise, including in-cluster integrations (e.g.
+  # Karakeep); the CiliumNetworkPolicy below limits which ones are reachable.
+  EXECUTOR_ALLOW_LOCAL_NETWORK: "true"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -138,7 +140,7 @@ spec:
           port: 4788
 ---
 # Ingress only from the gateway (Cilium tags gateway traffic with the `ingress`
-# identity). Egress to in-cluster MCP servers, DNS, and the internet; but not
+# identity). Egress to in-cluster integrations, DNS, and the internet; but not
 # the home LAN, tailnet, or other pods.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -167,7 +169,7 @@ spec:
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: karakeep
-            app: karakeep-mcp
+            app: karakeep-web
     - toCIDRSet:
         - cidr: 0.0.0.0/0
           except:

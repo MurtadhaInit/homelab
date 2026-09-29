@@ -1,5 +1,6 @@
-# The web pod accepts traffic from the gateway and the MCP server only (Cilium tags gateway
-# traffic with the `ingress` identity, hence the CiliumNetworkPolicy here to utilise fromEntities).
+# The web pod accepts traffic from the gateway and Executor (which calls the Karakeep API)
+# only. Cilium tags gateway traffic with the `ingress` identity, hence the
+# CiliumNetworkPolicy here to utilise fromEntities.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -17,7 +18,8 @@ spec:
               protocol: TCP
     - fromEndpoints:
         - matchLabels:
-            app: karakeep-mcp
+            k8s:io.kubernetes.pod.namespace: executor
+            app: executor
       toPorts:
         - ports:
             - port: "3000"
@@ -81,48 +83,3 @@ spec:
             matchLabels:
               app: karakeep-web
   egress: []
----
-# The MCP server holds a Karakeep API key and has no auth of its own, so only Executor
-# may reach it; it only needs DNS and the Karakeep API.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: karakeep-mcp
-spec:
-  podSelector:
-    matchLabels:
-      app: karakeep-mcp
-  policyTypes:
-    - Ingress
-    - Egress
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: executor
-          podSelector:
-            matchLabels:
-              app: executor
-      ports:
-        - port: 8000
-          protocol: TCP
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-    - to:
-        - podSelector:
-            matchLabels:
-              app: karakeep-web
-      ports:
-        - port: 3000
-          protocol: TCP
