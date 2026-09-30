@@ -6,3 +6,4 @@ resources:
   - ./qui/ks.yaml
   - ./executor/ks.yaml
   - ./karakeep/ks.yaml
+  - ./stash/ks.yaml

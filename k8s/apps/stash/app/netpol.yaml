@@ -1,0 +1,17 @@
+# Only the gateway reaches Stash. Cilium tags gateway traffic with the `ingress` identity,
+# hence a CiliumNetworkPolicy to utilise fromEntities. Egress stays open for scrapers and StashDB.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: stash
+spec:
+  endpointSelector:
+    matchLabels:
+      app: stash
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: http
+              protocol: TCP

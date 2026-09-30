@@ -1,0 +1,179 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stash
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stash-config
+data:
+  TZ: Asia/Amman
+  # The image points this at /root/.stash, which a non-root user can't traverse.
+  # On first run, Stash sets the database, plugins and scrapers paths to that file's directory,
+  # and writes them into config.yml as full paths.
+  STASH_CONFIG_FILE: /config/config.yml
+  STASH_BLOBS: /config/blobs # binary blob data (scene covers, images)
+  STASH_METADATA: /config/metadata # stash's metadata
+  STASH_GENERATED: /generated # generated content (screenshots, previews, transcodes, sprites)
+  STASH_CACHE: /cache # any other cache content
+---
+# Config, SQLite database, and blobs (covers, performer images): the state worth backing up.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stash-config-pvc
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+---
+# Previews, sprites, and screenshots: regenerable from the library, and grows with it.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stash-generated-pvc
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: longhorn
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: stash
+  name: stash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stash
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: stash
+    spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        # Skips the recursive chown of every generated file in each volume on each start.
+        # Instead only check the top-level dir in each volume for the right group and perms.
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: stash
+          image: stashapp/stash:v0.31.1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 9999
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: generated
+              mountPath: /generated
+            - name: cache
+              mountPath: /cache
+            # The database stores absolute file paths, so when migrating to k8s we maintained
+            # the old path to match (rather than going with /data for instance).
+            - name: library
+              mountPath: /mnt/bulk/to-stream/stuff
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: stash-config
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 6
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2" # ffmpeg (preview generation, transcoding) takes all it can get
+              memory: 1536Mi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: stash-config-pvc
+        - name: generated
+          persistentVolumeClaim:
+            claimName: stash-generated-pvc
+        - name: cache
+          emptyDir: {}
+        - name: library
+          persistentVolumeClaim:
+            claimName: stash-library
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: stash
+  name: stash
+spec:
+  type: ClusterIP
+  selector:
+    app: stash
+  ports:
+    - name: http
+      port: 9999
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: stash
+spec:
+  parentRefs:
+    - name: homelab
+      namespace: gateway-system
+      sectionName: https
+  hostnames:
+    - stash.k8s.murtadha.dev
+  rules:
+    - backendRefs:
+        - name: stash
+          port: 9999

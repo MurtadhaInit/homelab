@@ -1,0 +1,39 @@
+# The existing media library, mounted by the kubelet's native NFS client.
+#
+# A PV + PVC (rather than an inline `nfs` volume) keeps the server details out of the app and
+# is also the only way to use NFS in a `restricted` namespace, which doesn't allow inline `nfs`
+# volumes. Deleting either object never touches the files: in-tree NFS has no deleter.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: stash-library
+spec:
+  capacity:
+    storage: 1Ti # informational; NFS enforces no size
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  # Reserved for this claim so no other PVC can bind it.
+  claimRef:
+    namespace: stash
+    name: stash-library
+  mountOptions:
+    - nfsvers=4.2
+  nfs:
+    server: 10.20.30.40
+    path: /mnt/bulk/to-stream/stuff
+    readOnly: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stash-library
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeName: stash-library
+  resources:
+    requests:
+      storage: 1Ti

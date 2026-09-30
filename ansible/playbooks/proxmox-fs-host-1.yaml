@@ -113,12 +113,17 @@
             mode: "0755"
 
         # all_squash + anonuid/anongid maps every client (consumer) identity onto 1000:1000 (murtadha).
-        - name: Export the bulk SSD to the Ubuntu VM
+        # The k8s workers (IPs from OpenTofu's vm-talos.tf) get read-only access, since
+        # their kubelets mount on behalf of any pod bound to a PV pointing here.
+        - name: Export the bulk SSD to the Ubuntu VM and the k8s workers
+          vars:
+            k8s_workers: [10.20.30.70, 10.20.30.71]
+            opts: sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000
           ansible.builtin.copy:
             dest: /etc/exports.d/bulk.exports
             mode: "0644"
             content: |
-              /mnt/bulk {{ hostvars['ubuntu-vm'].ansible_host }}(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)
+              /mnt/bulk {{ hostvars['ubuntu-vm'].ansible_host }}(rw,{{ opts }}){% for ip in k8s_workers %} {{ ip }}(ro,{{ opts }}){% endfor %}
           notify: Re-export the NFS filesystems
 
         - name: Enable and start the NFS server
