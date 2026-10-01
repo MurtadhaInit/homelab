@@ -82,16 +82,15 @@
 
     # Compose projects live here; mounted at the same path inside the
     # container so bind mounts in project files resolve on the host.
-    # Owned by the PUID/PGID user: Arcane's root startup phase chowns only
-    # /app/data and /builds to PUID:PGID before dropping privileges, so an
-    # external projects dir must be chowned here.
+    # Root-owned like everything Arcane and the project containers write inside it
+    # (browse with `sudo -i`, edit with `sudoedit`).
     - name: Create Arcane projects directory
       become: true
       ansible.builtin.file:
         path: /opt/arcane/projects
         state: directory
-        owner: "{{ ansible_facts['user_id'] }}"
-        group: "{{ ansible_facts['user_id'] }}"
+        owner: root
+        group: root
         mode: '0750'
 
     - name: Generate Arcane secrets
@@ -113,7 +112,7 @@
       become: true
       community.docker.docker_container:
         name: arcane
-        image: ghcr.io/getarcaneapp/manager:v2.10.2
+        image: ghcr.io/getarcaneapp/manager:v2.14.0
         restart_policy: always
         # Host cgroup namespace lets Arcane reliably detect its own container ID (for self-upgrades)
         cgroupns_mode: host
@@ -125,11 +124,12 @@
           # Caddy on nixos-ct terminates TLS; trust its X-Forwarded-* headers
           TRUSTED_PROXIES: 10.20.30.50/32
           PROJECTS_DIRECTORY: /opt/arcane/projects
-          # Arcane starts as root for startup preparation, then drops to a non-root runtime user by default.
-          # We set PUID and PGID so that Arcane-created files use a specific host UID/GID instead of the
-          # built-in non-root user (65532:65532).
-          PUID: "1000"
-          PGID: "1000"
+          # Arcane starts as root, then drops to PUID:PGID (default 65532:65532, used when these are
+          # unset). 0:0 keeps it root: the Docker socket already gives it root on the host, and only
+          # root can delete the root-owned files that containers leave in bind-mounted project dirs.
+          # The trade-off is that files Arcane writes (compose.yaml, .env) are also root-owned.
+          PUID: "0"
+          PGID: "0"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
           - arcane_data:/app/data
