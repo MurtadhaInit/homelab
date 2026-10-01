@@ -14,6 +14,11 @@ metadata:
   name: stash-config
 data:
   TZ: Asia/Amman
+  # uid 1000 has no /etc/passwd entry in the image, so Stash (built without cgo) can only
+  # resolve the current user from these, and panics at startup without USER.
+  # HOME also needs to be writable for tools like pip that plugins/scrapers may call.
+  USER: stash
+  HOME: /config
   # The image points this at /root/.stash, which a non-root user can't traverse.
   # On first run, Stash sets the database, plugins and scrapers paths to that file's directory,
   # and writes them into config.yml as full paths.
