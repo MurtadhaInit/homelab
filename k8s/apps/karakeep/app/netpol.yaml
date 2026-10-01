@@ -1,6 +1,5 @@
-# The web pod accepts traffic from the gateway and Executor (which calls the Karakeep API)
-# only. Cilium tags gateway traffic with the `ingress` identity, hence the
-# CiliumNetworkPolicy here to utilise fromEntities.
+# The web pod accepts traffic from the gateway only. Cilium tags gateway traffic with the
+# `ingress` identity, hence the CiliumNetworkPolicy here to utilise fromEntities.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -12,14 +11,6 @@ spec:
   ingress:
     - fromEntities:
         - ingress
-      toPorts:
-        - ports:
-            - port: "3000"
-              protocol: TCP
-    - fromEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: executor
-            app: executor
       toPorts:
         - ports:
             - port: "3000"
