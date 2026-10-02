@@ -13,9 +13,9 @@ data:
   OPENAI_BASE_URL: https://openrouter.ai/api/v1
   INFERENCE_CONTEXT_LENGTH: "16384"
   # The model used for each purpose
-  INFERENCE_TEXT_MODEL: z-ai/glm-5.3-flash
-  INFERENCE_IMAGE_MODEL: z-ai/glm-5.3-flash
-  OPENAI_REASONING_EFFORT: minimal # left at its default it thinks for seconds per tag job
+  INFERENCE_TEXT_MODEL: openai/gpt-6-luna
+  INFERENCE_IMAGE_MODEL: openai/gpt-6-luna
+  OPENAI_REASONING_EFFORT: none
   EMBEDDING_ENABLE_AUTO_INDEXING: "true"
   EMBEDDING_TEXT_MODEL: openai/text-embedding-3-small
   EMBEDDING_DIMENSIONS: "1536" # must match the model
