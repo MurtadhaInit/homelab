@@ -9,6 +9,8 @@ data:
   NEXTAUTH_URL: https://karakeep.k8s.murtadha.dev
   DB_WAL_MODE: "true" # possible because the PV is on block storage (not NFS)
   CRAWLER_SCREENSHOT_TIMEOUT_SEC: "15"
+  CRAWLER_NAVIGATE_TIMEOUT_SEC: "60"
+  CRAWLER_JOB_TIMEOUT_SEC: "120" # must cover navigation + screenshot + parsing
   # LLM provider for tagging and summarisation
   OPENAI_BASE_URL: https://openrouter.ai/api/v1
   INFERENCE_CONTEXT_LENGTH: "16384"
@@ -56,7 +58,9 @@ spec:
     spec:
       automountServiceAccountToken: false # the app never calls the Kubernetes API.
       securityContext:
-        # TODO: run as non-root and enforce 'restricted' in the NS once karakeep-app/karakeep#3113 lands
+        # TODO: run as non-root (uid 1000) and enforce 'restricted' in the NS once a release includes karakeep-app/karakeep#3114.
+        # This also fixes Next's EACCES on .next/cache: the image owns it as 1000, and root without
+        # DAC_OVERRIDE (dropped below) can't write there.
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -101,7 +105,7 @@ spec:
               cpu: 50m
               memory: 512Mi
             limits:
-              cpu: 500m
+              cpu: "1" # shared by the web server and the crawl/inference workers
               memory: 1Gi
       volumes:
         - name: data
