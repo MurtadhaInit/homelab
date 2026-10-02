@@ -4,6 +4,7 @@ resources:
   - cert-manager.yaml
   - cloudflare-api-token.sops.yaml
   - longhorn.yaml
+  - reloader.yaml
   - prometheus-operator-crds.yaml
   - kube-prometheus-stack.yaml
   - grafana-admin.sops.yaml

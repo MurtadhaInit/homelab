@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reloader
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: stakater
+  namespace: reloader
+spec:
+  interval: 12h
+  type: oci
+  url: oci://ghcr.io/stakater/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: reloader
+  namespace: reloader
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: reloader
+      version: "2.2.18"
+      sourceRef:
+        kind: HelmRepository
+        name: stakater
+  values:
+    reloader:
+      # Roll pods by stamping a pod-template annotation instead of injecting an env var into
+      # every container (which would be considered config drift by Flux and hence get reverted).
+      reloadStrategy: annotations
+      readOnlyRootFileSystem: true
+      deployment:
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 150m
+            memory: 512Mi

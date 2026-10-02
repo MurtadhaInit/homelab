@@ -23,6 +23,7 @@
 | **Caddy** | "Easier" & well documented, its main downside (plugins are awkward & require a recompile) is mitigated in a NixOS module: the Cloudflare plugin used for DNS-01 challenges to auto-renew TLS certificates is simply defined using `pkgs.caddy.withPlugins`, more of a set-it-and-forget-it | |
 | **AdGuard Home** | Reliable local DNS solution with block lists and DNS rewrites, can be fully declared in a NixOS module (with login credentials) | Single DNS point of failure (redundancy on the roadmap) |
 | **kube-prometheus-stack** | Industry-standard k8s observability stack, mature | Resource-hungry, time-consuming to master and expertly manage |
+| **Reloader** | Automatically rolls workloads when their consumed `Secret`s or `ConfigMap`s change; small controller, opt-in per workload, avoids configuration drift and makes rotating secrets easier and more reliable | One more controller to install and maintain; `Kustomization`'s `*Generator` hash suffixes cover the same needs with slightly less flexibility and fewer customisations & options |
 | **deploy-rs** | Easy NixOS config deployments (and to multiple targets), automatic rollback to the last good revision on failure, well-designed & documented, still actively maintained | |
 | **mise + just** | `mise` pins core project dependencies & CLI tools, cross-platform, reliable & easy to use; `just` is a great makefile replacement: task runner for ordered/ad-hoc (utility) commands & Bash recipes, readable and intuitive file, a launching pad for the project | |
 
