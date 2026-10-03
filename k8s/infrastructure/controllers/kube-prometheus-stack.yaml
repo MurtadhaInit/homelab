@@ -128,13 +128,14 @@ spec:
 
         # Requests put Prometheus in Burstable QoS (lower OOM eviction priority
         # than BestEffort) and bound Go's automemlimit to the cgroup limit
-        # rather than 90% of node memory. The limit is a circuit breaker for
-        # cardinality blow-ups, not a steady-state cap — Prometheus typically
-        # sits well below this for a small homelab scrape volume.
+        # rather than 90% of node memory. The memory request tracks observed
+        # usage (~850Mi p95) so the scheduler doesn't overpack its node. The
+        # limit is a circuit breaker for cardinality blow-ups, not a
+        # steady-state cap.
         resources:
           requests:
             cpu: 100m
-            memory: 512Mi
+            memory: 1Gi
           limits:
             memory: 1500Mi
 
