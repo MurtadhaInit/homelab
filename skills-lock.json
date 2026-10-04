@@ -5,19 +5,19 @@
       "source": "fluxcd/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/gitops-cluster-debug/SKILL.md",
-      "computedHash": "10dc7a7810ed9405b24b67f72b7dff786118758240f1eac9d4f6b7034512595f"
+      "computedHash": "160ab1ff92fb94a60f182696754e84b9fed8db358308b5833e862295447b0742"
     },
     "gitops-knowledge": {
       "source": "fluxcd/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/gitops-knowledge/SKILL.md",
-      "computedHash": "17609cf398a27741f55e513c6975645fde45aec57a8871608f673d7fa0c2411d"
+      "computedHash": "c9a3de3ec90fb251e2746c374f6144f508f2a0cd0de814a8827cef15354e3fcd"
     },
     "gitops-repo-audit": {
       "source": "fluxcd/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/gitops-repo-audit/SKILL.md",
-      "computedHash": "797e73cf3bcba4c807fa0dc86cd490122474502f96d4d5933aa58bf875d322a9"
+      "computedHash": "c613379517ce55e9cb9a5bb53510166bcf42c3f6223149c0ce20cdf692fe4b8c"
     }
   }
 }
