@@ -24,6 +24,15 @@ spec:
 
     defaultRules:
       create: true
+      # The apiserver SLO groups evaluate up to 3d windows of apiserver
+      # histograms every minute. Once that outgrows the page cache, each
+      # evaluation re-reads it from the Longhorn volume, keeping Prometheus and
+      # the instance-manager busy around the clock, for burn-rate alerting
+      # that has little value on a homelab apiserver.
+      rules:
+        kubeApiserverAvailability: false
+        kubeApiserverBurnrate: false
+        kubeApiserverSlos: false
 
     alertmanager:
       enabled: true
