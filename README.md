@@ -268,10 +268,20 @@ services a truly one-command-deploy. See the `modules` directory for available s
 The current cluster deployment goes like this:
 
 Once we hit `tofu apply -auto-approve` OpenTofu will start deploying VMs and
-create other resources on Proxmox. This includes the download of an appropriate
+creating other resources on Proxmox. This includes the download of an appropriate
 Talos image from the Talos Image Factory (embedding the required system extensions)
-and using it to create 5 VMs: 3 controlplane + 2 workers nodes. Those are defined
-(along with cluster information) in `vm-talos.tf`.
+on each Proxmox host (since Proxmox hosts are standalone). This image is then used
+to create 5 VMs in total, 3 controlplane + 2 workers nodes: `talos-cp-1`, `talos-cp-2`,
+and `talos-worker-1` on `prox`, and `talos-cp-3` and `talos-worker-2` on `prox2`.
+Those are defined (along with cluster information) in `vm-talos.tf`.
+
+The control plane is spread 2:1 but isn't HA: there is no quorum-safe way to spread
+`etcd` across two nodes, as losing `prox` (two members) still loses quorum, while
+losing `prox2` doesn't. But we at least get a full copy of `etcd` on a second
+machine, so a dead `prox` doesn't permanently take the cluster state with it. Spreading
+the workers has the benefit that Longhorn's 2-replica setting places those replicas
+on two separate _physical_ machines rather than on two VMs sharing one host.
+A 3rd physical host is planned to achieve true control-plane HA.
 
 OpenTofu will take care of generating cluster secrets (PKI), machine configurations
 per role (controlplane vs. worker), push those configurations to the newly
