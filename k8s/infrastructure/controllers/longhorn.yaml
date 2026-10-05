@@ -35,6 +35,10 @@ spec:
     defaultSettings:
       defaultDataPath: /var/mnt/longhorn
       defaultReplicaCount: 2 # Default number of replicas for volumes created using the Longhorn UI
+      # Stale replica dirs left behind by replica rebuilds and deleted volumes still
+      # count against the disk, and quietly starve it until new replicas can't schedule.
+      # Longhorn only reports them (Settings -> Advanced -> Orphan Resources) unless told to clean up.
+      orphanResourceAutoDeletion: replica-data;instance
     persistence:
       defaultClassReplicaCount: 2 # Replica count of the default Longhorn StorageClass
       # reclaimPolicy: Retain
