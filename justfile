@@ -115,14 +115,14 @@ pve-postconfig:
 [macos]
 [working-directory('Nix')]
 nix-deploy:
-    nix run github:serokell/deploy-rs . -- --skip-checks --remote-build
+    nix run .#deploy-rs -- . --skip-checks --remote-build
 
 # Deploy Nix configuration to targets
 [group('nix')]
 [linux]
 [working-directory('Nix')]
 nix-deploy:
-    nix run github:serokell/deploy-rs .
+    nix run .#deploy-rs -- .
 
 # Update the Flake inputs
 [group('nix')]
