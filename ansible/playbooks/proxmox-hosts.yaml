@@ -123,6 +123,15 @@
     #         update_cache: true
     # TODO: configure the proxmox firewall
 
+    # watchdog-mux defaults to softdog, which lives in the kernel and freezes with it,
+    # so a hard lockup never recovers. Rely instead on the chipset's TCO timer to reset
+    # the host (AMD FCH → sp5100_tco, Intel PCH → iTCO_wdt).
+    - name: Use the chipset's hardware watchdog instead of softdog
+      ansible.builtin.lineinfile:
+        path: /etc/default/pve-ha-manager
+        regexp: "^#?WATCHDOG_MODULE="
+        line: "WATCHDOG_MODULE={{ 'sp5100_tco' if 'AuthenticAMD' in ansible_facts['processor'] else 'iTCO_wdt' }}"
+
     - name: Install general tools
       ansible.builtin.apt:
         name:

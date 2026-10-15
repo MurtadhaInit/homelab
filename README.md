@@ -122,9 +122,10 @@ technologies include:
 
 My general approach is to establish a stable foundation to build upon, which is
 why my Hypervisor layer (Proxmox) is intentionally minimal in terms of adjustments:
-I don't cluster nodes nor use HA or Ceph storage, and there are only a few configurations
-applied to Proxmox hosts, mainly focusing on baseline hardening, SSH access, and
-storage setup. I defer things like HA further up the stack, into my k8s cluster.
+I don't cluster nodes nor use HA or Ceph storage, and there are only a few changes
+applied to Proxmox hosts, mainly focusing on baseline hardening and basic configuration
+(like SSH access, instrumentation, and storage setup). I defer things like HA
+further up the stack, into my k8s cluster.
 
 Some of the services I self-host are installed on a NixOS LXC container running
 privileged on the Proxmox host, and others are containerised and running on my
