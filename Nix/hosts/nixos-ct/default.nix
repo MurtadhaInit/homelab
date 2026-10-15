@@ -131,10 +131,7 @@
     publicDomain = "home.murtadha.dev";
     cloudflareTokenFile = config.age.secrets.caddy-cloudflare-token.path;
   };
-  homelab.adguardhome = {
-    enable = true;
-    publicDomain = "home.murtadha.dev";
-  };
+  homelab.adguardhome.enable = true;
   homelab.prowlarr = {
     enable = true;
     apiKeyFile = config.age.secrets.prowlarr-api-key.path;

@@ -8,6 +8,8 @@ let
   cfg = config.homelab.adguardhome;
 in
 {
+  # Setting default values for easier propagation across multiple instances (hosts)
+  # without repetition
   options.homelab.adguardhome = {
     enable = lib.mkEnableOption "Enable AdGuard Home with homelab defaults";
     domain = lib.mkOption {
@@ -17,13 +19,23 @@ in
     };
     publicDomain = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
-      default = null;
+      default = "home.murtadha.dev";
       description = "Public domain to also resolve via DNS rewrites (e.g. home.murtadha.dev)";
     };
     lanAddress = lib.mkOption {
       type = lib.types.str;
       default = "10.20.30.50";
       description = "LAN IP that all subdomains of the local domain should resolve to";
+    };
+    clusterDomain = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = "k8s.murtadha.dev";
+      description = "Kubernetes cluster domain (e.g. k8s.murtadha.dev) whose subdomains resolve to the Gateway LoadBalancer";
+    };
+    clusterAddress = lib.mkOption {
+      type = lib.types.str;
+      default = "10.20.30.80";
+      description = "LAN IP of the Kubernetes Gateway LoadBalancer";
     };
   };
 
@@ -105,6 +117,11 @@ in
           ++ lib.optional (cfg.publicDomain != null) {
             domain = "*.${cfg.publicDomain}";
             answer = cfg.lanAddress;
+            enabled = true;
+          }
+          ++ lib.optional (cfg.clusterDomain != null) {
+            domain = "*.${cfg.clusterDomain}";
+            answer = cfg.clusterAddress;
             enabled = true;
           };
         };
