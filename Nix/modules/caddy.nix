@@ -49,10 +49,6 @@ let
       name = "dozzle";
       proxy = "10.20.30.41:8080";
     }
-    {
-      name = "stash";
-      proxy = "localhost:${toString config.services.stash.settings.port}";
-    }
   ]
   ++ proxmoxServices;
 

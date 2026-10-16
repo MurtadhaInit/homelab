@@ -15,7 +15,6 @@
     ../../modules/sonarr.nix
     ../../modules/sabnzbd.nix
     ../../modules/seerr.nix
-    ../../modules/stash.nix
   ];
 
   # ONLY bump up on fresh installs!
@@ -100,18 +99,6 @@
     tailscale-oauth-secret = {
       file = ../../secrets/tailscale-oauth-secret.age;
     };
-    stash-password = {
-      file = ../../secrets/stash-password.age;
-      owner = "stash";
-    };
-    stash-jwt-secret = {
-      file = ../../secrets/stash-jwt-secret.age;
-      owner = "stash";
-    };
-    stash-session-key = {
-      file = ../../secrets/stash-session-key.age;
-      owner = "stash";
-    };
   };
 
   homelab.qbittorrent.enable = true;
@@ -146,13 +133,6 @@
     serverSecretsFile = config.age.secrets.sabnzbd-server.path;
   };
   homelab.seerr.enable = true;
-  homelab.stash = {
-    enable = true;
-    libraryPath = "/mnt/bulk/to-stream/stuff";
-    passwordFile = config.age.secrets.stash-password.path;
-    jwtSecretKeyFile = config.age.secrets.stash-jwt-secret.path;
-    sessionStoreKeyFile = config.age.secrets.stash-session-key.path;
-  };
   homelab.tailscale = {
     enable = true;
     advertiseRoutes = [ "10.20.30.0/24" ];
