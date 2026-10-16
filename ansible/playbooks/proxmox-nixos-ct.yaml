@@ -1,7 +1,8 @@
 ---
-# API tokens can't set certain things on privileged containers (only root@pam *password* auth can),
+# Some container settings are restricted to root@pam *password* auth, which API tokens can't set,
 # so we perform those tasks imperatively here following the initial LXC creation with Terraform.
-# These tasks include feature flags (for nesting), device passthrough (for TUN), and bind mounts.
+# These are device passthrough (for TUN) and bind mounts on any container, plus feature flags
+# (for nesting) on privileged ones.
 - name: Configure NixOS LXC container on Proxmox (imperative tasks on privileged LXCs, not possible via Proxmox API)
   hosts: pve-host-1
   remote_user: root
@@ -66,6 +67,39 @@
         - ct_status.rc == 0
         - "'mp2' not in ct_config.stdout"
       changed_when: true
+
+  handlers:
+    - name: Reboot NixOS container
+      ansible.builtin.command: pct reboot {{ nixos_ct_id }}
+      changed_when: true
+
+- name: Configure the 2nd NixOS LXC container on Proxmox (imperative tasks not possible via Proxmox API)
+  hosts: pve-host-2
+  remote_user: root
+
+  vars:
+    nixos_ct_id: 1001
+
+  tasks:
+    - name: Check if NixOS container exists
+      ansible.builtin.command: pct status {{ nixos_ct_id }}
+      register: ct_status
+      changed_when: false
+      failed_when: false
+
+    - name: Get current container config
+      ansible.builtin.command: pct config {{ nixos_ct_id }}
+      register: ct_config
+      changed_when: false
+      when: ct_status.rc == 0
+
+    - name: Pass through the TUN device into the container
+      ansible.builtin.command: pct set {{ nixos_ct_id }} -dev0 /dev/net/tun
+      when:
+        - ct_status.rc == 0
+        - "'dev0' not in ct_config.stdout"
+      changed_when: true
+      notify: Reboot NixOS container
 
   handlers:
     - name: Reboot NixOS container

@@ -4,7 +4,10 @@ resource "proxmox_virtual_environment_download_file" "nixos_lxc_proxmox_image" {
   datastore_id = var.pve_hosts["prox"].storage.files
   node_name    = "prox"
 
-  # The latest NixOS Proxmox LXC template - Update accordingly for new releases
+  # NixOS Proxmox LXC template - optionally update with new releases when building fresh CTs.
+  # The first deploy (through deploy-rs) replaces the template's system anyway (by switching
+  # it to the flake's system), so it only needs to boot and accept SSH (the template's NixOS
+  # version doesn't matter).
   url                = "https://hydra.nixos.org/build/320902448/download/1/nixos-image-lxc-proxmox-25.11pre-git-x86_64-linux.tar.xz"
   checksum           = "335a2c2425ec03f3cabd283fb7e9c094f05133b380fd7a919ee3e2e677777350"
   checksum_algorithm = "sha256"
@@ -20,6 +23,7 @@ resource "proxmox_virtual_environment_container" "nixos" {
   start_on_boot = true
   started       = true
 
+  # For using host UIDs inside (for the bind mounts).
   unprivileged = false
 
   console {
@@ -71,14 +75,9 @@ resource "proxmox_virtual_environment_container" "nixos" {
     type             = "nixos"
   }
 
-  # Bind mount managed via Ansible because API tokens cannot create
+  # NOTE: bind mounts are managed via Ansible because API tokens cannot create
   # bind mounts — requires root@pam *password* authentication.
-  # mount_point {
-  #   volume = "/mnt/media"
-  #   path   = "/mnt/media"
-  # }
-  # features { nesting = true } is also needed for this CT and applied as above for the
-  # same reasons.
+  # The same goes for feature flags like nesting *if* the container is privileged.
 
   lifecycle {
     ignore_changes = [mount_point, device_passthrough]
@@ -94,11 +93,6 @@ resource "random_password" "nixos_ct_pass" {
 output "nixos_ct_pass" {
   value     = random_password.nixos_ct_pass.result
   sensitive = true
-}
-
-output "nixos_ct_ip" {
-  description = "IP address of the nixos LXC container"
-  value       = proxmox_virtual_environment_container.nixos.initialization[0].ip_config[0].ipv4[0].address
 }
 
 output "nixos_ct_ssh" {

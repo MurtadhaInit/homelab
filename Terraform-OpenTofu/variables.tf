@@ -98,6 +98,12 @@ variable "nixos_static_ip" {
   default     = "10.20.30.50/24"
 }
 
+variable "nixos_2_static_ip" {
+  type        = string
+  description = "The static IP address for the second NixOS LXC container"
+  default     = "10.20.30.51/24"
+}
+
 # === k8s ===
 variable "talos_version" {
   type        = string

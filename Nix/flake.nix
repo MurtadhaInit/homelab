@@ -48,6 +48,14 @@
             agenix.nixosModules.default
           ];
         };
+        nixos-ct-2 = nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./hosts/nixos-ct-2
+            agenix.nixosModules.default
+          ];
+        };
       };
 
       deploy.nodes = {
@@ -57,6 +65,14 @@
           profiles.system = {
             user = "root";
             path = deployPkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.nixos-ct;
+          };
+        };
+        nixos-ct-2 = {
+          hostname = "nixos-ct-2";
+          sshUser = "root";
+          profiles.system = {
+            user = "root";
+            path = deployPkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.nixos-ct-2;
           };
         };
       };
