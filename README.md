@@ -379,6 +379,9 @@ a **subnet router**: it sits on both the tailnet and the LAN, and advertises the
 `10.20.30.0/24` route. That single node then forwards traffic from any tailnet peer
 onto the LAN, so remote clients can reach things like the k8s Gateway at
 `10.20.30.80` or Caddy at `10.20.30.50` as if they were on the home network.
+A second, minimal NixOS LXC on `prox2` (`nixos-ct-2`) runs another subnet router
+and AdGuard instance from the same Nix modules. Tailscale fails over to it
+automatically if `nixos-ct` (or `prox`) goes down.
 
 AdGuard Home is registered as the tailnet's _global_ nameserver with _Override
 DNS servers_ enabled, so every DNS query from a connected device is resolved by
@@ -450,6 +453,7 @@ a `ConfigMap` so Flux remains the source of truth.
 | --- | --- | --- | :---: |
 | **Syncthing** | File sync between MacBook and homelab (as a hub); stable device IDs via Nix mean both ends pair automatically with shared ignore patterns, suitable versioning, and pre-defined shared folders | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 | **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin/Moonfin are solid alternative clients) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
+| **Karakeep** | Bookmark manager with AI tagging and summarisation (among other features), exposed to my AI agents through its MCP server (see [post-deploy steps](docs/karakeep.md)) | Kubernetes | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 
 More services to come.
 
@@ -464,7 +468,7 @@ More services to come.
 - [X] **Too many secret solutions**: attempt to eliminate some and simplify this aspect
 - [ ] **Split LXC containers** to minimise potential downtime if things go wrong with one NixOS service / deployment
 - [ ] **Make use of VLANs** for network isolation and security
-- [ ] **DNS redundancy** to avoid network issues if the local DNS server goes down
+- [X] **DNS redundancy** to avoid network issues if the local DNS server goes down
 - [X] **Integrate Tailscale** for remote access (subnet router on the NixOS LXC, AdGuard as the tailnet nameserver)
 - [X] **Replace Portainer with Arcane** for improved Docker environment management
 - [ ] **More services** to self-host
