@@ -7,6 +7,14 @@
 
 let
   cfg = config.homelab.tailscale;
+
+  # Emitted unconditionally: an omitted flag leaves tailscaled's persisted pref
+  # as-is, so clearing routes has to be stated explicitly (an empty
+  # --advertise-routes clears them).
+  prefFlags = [
+    "--advertise-routes=${lib.concatStringsSep "," cfg.advertiseRoutes}"
+    "--accept-dns=${lib.boolToString cfg.acceptDns}"
+  ];
 in
 {
   options.homelab.tailscale = {
@@ -15,8 +23,18 @@ in
       type = lib.types.nullOr lib.types.path;
       default = null;
       description = ''
-        Path to a file containing a Tailscale auth key for unattended login.
+        Path to a file containing a Tailscale OAuth client secret (`auth_keys`
+        scope) for unattended login. Unlike auth keys, it doesn't expire.
         When null, authenticate once interactively with `tailscale up`.
+      '';
+    };
+    advertiseTags = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "tag:subnet-router" ];
+      description = ''
+        Tags the node registers with. Required with an OAuth client secret,
+        which can only create keys for the tags it was granted.
       '';
     };
     advertiseRoutes = lib.mkOption {
@@ -41,21 +59,34 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.authKeyFile == null || cfg.advertiseTags != [ ];
+        message = "homelab.tailscale.advertiseTags must be set when logging in with an OAuth client secret.";
+      }
+    ];
+
     services.tailscale = {
       enable = true;
       authKeyFile = cfg.authKeyFile;
+      # OAuth-minted keys default to ephemeral (node removed once offline) and
+      # needing device approval, neither of which suits a long-lived router.
+      authKeyParameters = {
+        ephemeral = false;
+        preauthorized = true;
+      };
       # "server" enables IPv4/IPv6 forwarding sysctls required for subnet routing.
       useRoutingFeatures = "server";
-      # Apply these via `tailscale set` (the tailscaled-set unit re-runs it on every
-      # activation) rather than `tailscale up`. extraUpFlags only fire at first auth
-      # via tailscaled-autoconnect and are skipped once the node is Running, so route
-      # or DNS edits made here would otherwise silently never take effect on rebuild.
-      # Both flags are emitted unconditionally: an omitted flag leaves tailscaled's
-      # persisted pref as-is, so clearing routes has to be stated explicitly (an
-      # empty --advertise-routes clears them).
-      extraSetFlags = [
-        "--advertise-routes=${lib.concatStringsSep "," cfg.advertiseRoutes}"
-        "--accept-dns=${lib.boolToString cfg.acceptDns}"
+      # Prefs are applied via `tailscale set` (the tailscaled-set unit re-runs it on
+      # every activation): extraUpFlags only fire at first auth via
+      # tailscaled-autoconnect and are skipped once the node is Running, so route or
+      # DNS edits would otherwise silently never take effect on rebuild.
+      extraSetFlags = prefFlags;
+      # `tailscale up` won't log in unless it restates every saved non-default pref
+      # (e.g. ones `set` already applied after a failed first login).
+      # Tags can only be set at login, so they go here alone.
+      extraUpFlags = prefFlags ++ [
+        "--advertise-tags=${lib.concatStringsSep "," cfg.advertiseTags}"
       ];
     };
 

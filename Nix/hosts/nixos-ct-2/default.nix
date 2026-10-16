@@ -25,7 +25,7 @@
   # Let the Proxmox host handle TRIM for the underlying storage
   services.fstrim.enable = false;
 
-  age.secrets.tailscale-authkey.file = ../../secrets/tailscale-authkey.age;
+  age.secrets.tailscale-oauth-secret.file = ../../secrets/tailscale-oauth-secret.age;
 
   homelab.adguardhome.enable = true;
   homelab.tailscale = {
@@ -34,6 +34,7 @@
     # an identical route, and keeps the older one as primary.
     advertiseRoutes = [ "10.20.30.0/24" ];
     acceptDns = false;
-    authKeyFile = config.age.secrets.tailscale-authkey.path;
+    advertiseTags = [ "tag:subnet-router" ];
+    authKeyFile = config.age.secrets.tailscale-oauth-secret.path;
   };
 }

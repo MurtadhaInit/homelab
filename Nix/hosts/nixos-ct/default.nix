@@ -97,8 +97,8 @@
       file = ../../secrets/sabnzbd-server.age;
       owner = "murtadha";
     };
-    tailscale-authkey = {
-      file = ../../secrets/tailscale-authkey.age;
+    tailscale-oauth-secret = {
+      file = ../../secrets/tailscale-oauth-secret.age;
     };
     stash-password = {
       file = ../../secrets/stash-password.age;
@@ -157,6 +157,7 @@
     enable = true;
     advertiseRoutes = [ "10.20.30.0/24" ];
     acceptDns = false;
-    authKeyFile = config.age.secrets.tailscale-authkey.path;
+    advertiseTags = [ "tag:subnet-router" ];
+    authKeyFile = config.age.secrets.tailscale-oauth-secret.path;
   };
 }

@@ -1,6 +1,7 @@
 let
   # Get with: ssh-keyscan <IP_ADDRESS> | grep ed25519
   nixos-ct = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdw4wgxlGGzgOmHrZEp0sqAwma44dWlGzw6/xySLhiJ";
+  nixos-ct-2 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINxYA/fuLFoc7m8wV+fwh40SB9/UjL8ih1FBHhNJKljS";
   # Generate a new key pair with: age-keygen -o ~/.ssh/keys/age.txt
   # Then print the public key (to paste here) with: age-keygen -y ~/.ssh/keys/age.txt
   murtadha = "age1fjfzlw6ah4k3kh07ray363e87rt6z8rfhljjxprwhqa7y0pw9vjqvv0f9h";
@@ -45,11 +46,12 @@ in
   # SABnzbd Usenet server (provider) config and credentials (INI format)
   "sabnzbd-server.age".publicKeys = allHosts;
 
-  # Tailscale auth key for unattended login of the homelab machine subnet router.
-  # Generate a *reusable* and *tagged* key in the admin console:
-  # Settings > Keys > Generate auth key, then encrypt with (Nushell):
-  # "<tskey-auth-...>" | nix run github:ryantm/agenix -- -e tailscale-authkey.age
-  "tailscale-authkey.age".publicKeys = allHosts;
+  # Tailscale OAuth client secret for unattended login of the subnet routers.
+  # Create it in the admin console: Settings -> Trust credentials -> (new) OAuth.
+  # Give the token Auth Keys (write) access with the `tag:subnet-router` tag.
+  # Then encrypt the client secret with (Nushell):
+  # "<tskey-client-...>" | nix run github:ryantm/agenix -- -e tailscale-oauth-secret.age
+  "tailscale-oauth-secret.age".publicKeys = allHosts ++ [ nixos-ct-2 ];
 
   # Stash web UI password (this file must hold the bcrypt *hash*).
   # Create with (Nushell): htpasswd -nbB -C 12 murtadha "<your-password>" | split row ":" | get 1 | str trim | nix run github:ryantm/agenix -- -e stash-password.age
