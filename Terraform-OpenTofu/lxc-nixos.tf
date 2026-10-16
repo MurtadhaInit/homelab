@@ -23,7 +23,8 @@ resource "proxmox_virtual_environment_container" "nixos" {
   start_on_boot = true
   started       = true
 
-  # For using host UIDs inside (for the bind mounts).
+  # Privileged so container UIDs are host UIDs: the bind-mounted media is owned by
+  # host UID 1000, which an unprivileged container would only see as `nobody`.
   unprivileged = false
 
   console {
