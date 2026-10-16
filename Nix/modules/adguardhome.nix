@@ -14,18 +14,13 @@ in
     enable = lib.mkEnableOption "Enable AdGuard Home with homelab defaults";
     domain = lib.mkOption {
       type = lib.types.str;
-      default = "home.lan";
-      description = "Local domain to resolve via DNS rewrites";
-    };
-    publicDomain = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
       default = "home.murtadha.dev";
-      description = "Public domain to also resolve via DNS rewrites (e.g. home.murtadha.dev)";
+      description = "Domain whose subdomains resolve to the reverse proxy via DNS rewrites";
     };
     lanAddress = lib.mkOption {
       type = lib.types.str;
       default = "10.20.30.50";
-      description = "LAN IP that all subdomains of the local domain should resolve to";
+      description = "LAN IP that all subdomains of the domain should resolve to";
     };
     clusterDomain = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
@@ -106,7 +101,7 @@ in
         filtering = {
           protection_enabled = true;
           filtering_enabled = true;
-          # Wildcard rewrite: any subdomain of the local domain
+          # Wildcard rewrite: any subdomain of the domain
           # resolves to the IP where a reverse-proxy handles routing.
           rewrites = [
             {
@@ -115,11 +110,6 @@ in
               enabled = true;
             }
           ]
-          ++ lib.optional (cfg.publicDomain != null) {
-            domain = "*.${cfg.publicDomain}";
-            answer = cfg.lanAddress;
-            enabled = true;
-          }
           ++ lib.optional (cfg.clusterDomain != null) {
             domain = "*.${cfg.clusterDomain}";
             answer = cfg.clusterAddress;

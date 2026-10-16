@@ -59,18 +59,18 @@ nixos-ct (Proxmox LXC on primary node) — 10.20.30.50 (unchanged)
 ├── AdGuard Home
 ├── Caddy, Grafana, Prometheus, Jellyfin, ... (unchanged)
 ├── keepalived (MASTER, priority 150, manages VIP .53)
-└── DNS rewrites: *.home.lan → 10.20.30.50 (this node — where Caddy runs)
+└── DNS rewrites: *.home.murtadha.dev → 10.20.30.50 (this node — where Caddy runs)
 
 nixos-dns (Proxmox LXC on ZimaBoard 2) — 10.20.30.52
 ├── AdGuard Home (same config)
 ├── keepalived (BACKUP, priority 100, takes VIP on failover)
-└── DNS rewrites: *.home.lan → 10.20.30.50 (still points to nixos-ct)
+└── DNS rewrites: *.home.murtadha.dev → 10.20.30.50 (still points to nixos-ct)
 ```
 
 ### How DNS queries flow
 
 ```
-Client → "what's grafana.home.lan?" → VIP (.53, port 53)
+Client → "what's grafana.home.murtadha.dev?" → VIP (.53, port 53)
                                         │
                             whichever AdGuard instance holds the VIP
                                         │
@@ -182,7 +182,6 @@ This host will:
 
   homelab.adguardhome = {
     enable = true;
-    publicDomain = "home.murtadha.dev";
     # lanAddress stays 10.20.30.50 — Caddy runs on nixos-ct, not here
   };
 
@@ -251,7 +250,7 @@ same `modules/adguardhome.nix` module with the same options.
 
 - Upstream DNS servers
 - Filter lists and URLs
-- DNS rewrites (`*.home.lan → 10.20.30.50`, i.e. nixos-ct where Caddy runs)
+- DNS rewrites (`*.home.murtadha.dev → 10.20.30.50`, i.e. nixos-ct where Caddy runs)
 - DNSSEC, ratelimit, rDNS settings
 
 **What does NOT sync (mutable state):**
@@ -340,10 +339,8 @@ After both nodes are running and keepalived is confirmed working:
    - Verify it's blocked regardless of which node is master
 
 6. **DNS rewrites work:**
-   - `dig grafana.home.lan @10.20.30.53` should return `10.20.30.50`
+   - `dig grafana.home.murtadha.dev @10.20.30.53` should return `10.20.30.50`
      (nixos-ct, where Caddy runs)
-   - `dig grafana.home.murtadha.dev @10.20.30.53` should also return
-     `10.20.30.50`
 
 ## Firewall Rules
 
@@ -379,7 +376,7 @@ just remove the VIP from DHCP and disable keepalived.
 - [x] **Hardware**: ZimaBoard 2 (Intel N150, x86_64) — no ARM flake inputs needed
 - [x] **Second node runs Proxmox**: NixOS as LXC container, same as nixos-ct
 - [x] **DNS rewrites stay at `.50`**: Caddy + services run on nixos-ct only.
-      Both AdGuard instances return `.50` for `*.home.lan` / `*.home.murtadha.dev`.
+      Both AdGuard instances return `.50` for `*.home.murtadha.dev`.
       The VIP is only the DNS server address, not the rewrite target
 - [x] **eMMC mitigation**: Install Proxmox on spare Samsung 2.5" SSD via SATA
 

@@ -115,7 +115,7 @@
       prox = "10.20.30.40";
       prox2 = "10.20.30.100";
     };
-    publicDomain = "home.murtadha.dev";
+    domain = "home.murtadha.dev";
     cloudflareTokenFile = config.age.secrets.caddy-cloudflare-token.path;
   };
   homelab.adguardhome.enable = true;

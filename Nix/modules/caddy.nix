@@ -72,19 +72,9 @@ let
     else
       "reverse_proxy ${svc.proxy}";
 
-  # The default log file name is derived from the host name, which mangles the
-  # scheme in `http://` vhosts; name the files after the service instead.
-  mkHttpVHost =
+  mkVHost =
     svc:
-    lib.nameValuePair "http://${svc.name}.${cfg.domain}" {
-      logFormat = "output file ${config.services.caddy.logDir}/access-${svc.name}.log";
-      extraConfig = mkReverseProxy svc;
-    };
-
-  mkHttpsVHost =
-    svc:
-    lib.nameValuePair "${svc.name}.${cfg.publicDomain}" {
-      logFormat = "output file ${config.services.caddy.logDir}/access-${svc.name}-public.log";
+    lib.nameValuePair "${svc.name}.${cfg.domain}" {
       extraConfig = ''
         tls {
           dns cloudflare {env.CF_API_TOKEN}
@@ -98,13 +88,8 @@ in
     enable = lib.mkEnableOption "Enable Caddy reverse proxy with homelab defaults";
     domain = lib.mkOption {
       type = lib.types.str;
-      default = "home.lan";
-      description = "Base domain for service subdomains (e.g. jellyfin.<domain>)";
-    };
-    publicDomain = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "Public domain for HTTPS via Cloudflare DNS-01 (e.g. home.murtadha.dev)";
+      example = "home.murtadha.dev";
+      description = "Base domain for service subdomains (e.g. jellyfin.<domain>), served over HTTPS via Cloudflare DNS-01";
     };
     cloudflareTokenFile = lib.mkOption {
       type = lib.types.path;
@@ -130,14 +115,16 @@ in
         plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
         hash = "sha256-xRJ5evsAJ2akg47j3Bt6YDXJOgX88B/rKNP50KSVyNY=";
       };
-      virtualHosts = lib.listToAttrs (
-        map mkHttpVHost services ++ lib.optionals (cfg.publicDomain != null) (map mkHttpsVHost services)
-      );
+      virtualHosts = lib.listToAttrs (map mkVHost services);
     };
 
     systemd.services.caddy.serviceConfig.EnvironmentFile = cfg.cloudflareTokenFile;
 
-    networking.firewall.allowedTCPPorts = [ 80 ] ++ lib.optional (cfg.publicDomain != null) 443;
-    networking.firewall.allowedUDPPorts = lib.optional (cfg.publicDomain != null) 443;
+    # 80 only serves Caddy's automatic HTTP -> HTTPS redirects
+    networking.firewall.allowedTCPPorts = [
+      80
+      443
+    ];
+    networking.firewall.allowedUDPPorts = [ 443 ]; # HTTP/3
   };
 }

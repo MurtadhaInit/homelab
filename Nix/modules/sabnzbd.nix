@@ -66,10 +66,7 @@ in
         complete_dir = "/mnt/media/downloads/complete";
         par2_multicore = 1;
         fail_hopeless_jobs = 1;
-        host_whitelist = builtins.concatStringsSep ", " [
-          "sabnzbd.${config.homelab.caddy.domain}"
-          "sabnzbd.${config.homelab.caddy.publicDomain}"
-        ];
+        host_whitelist = "sabnzbd.${config.homelab.caddy.domain}";
       };
     };
   };
