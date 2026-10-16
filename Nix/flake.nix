@@ -10,7 +10,6 @@
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.darwin.follows = ""; # save some space by not downloading darwin deps
     };
   };
 

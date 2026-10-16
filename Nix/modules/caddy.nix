@@ -23,7 +23,7 @@ let
     }
     {
       name = "adguard";
-      proxy = "localhost:${toString config.services.adguardhome.port}";
+      proxy = "localhost:${lib.last (lib.splitString ":" config.services.adguardhome.settings.http.address)}";
     }
     {
       name = "prowlarr";
@@ -132,7 +132,7 @@ in
       enable = true;
       package = pkgs.caddy.withPlugins {
         plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-        hash = "sha256-dQvk6ezY6TQ1J7PjhCXnThF/SqVgPwBO8/RXzHCY+js=";
+        hash = "sha256-xRJ5evsAJ2akg47j3Bt6YDXJOgX88B/rKNP50KSVyNY=";
       };
       virtualHosts = lib.listToAttrs (
         map mkHttpVHost services ++ lib.optionals (cfg.publicDomain != null) (map mkHttpsVHost services)

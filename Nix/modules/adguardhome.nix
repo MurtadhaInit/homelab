@@ -43,9 +43,10 @@ in
     services.adguardhome = {
       enable = true;
       openFirewall = true; # only for the Web UI port
-      port = 3080; # Web UI port - the default of 3000 conflicts with the Grafana module
       mutableSettings = true;
       settings = {
+        # Web UI - the default port of 3000 conflicts with the Grafana module
+        http.address = "0.0.0.0:3080";
         # NOTE: The schema version matches the package version
         # Available options: https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file
         users = [
