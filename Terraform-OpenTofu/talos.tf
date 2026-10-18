@@ -221,6 +221,12 @@ resource "helm_release" "cilium" {
   values = [yamlencode({
     ipam = { mode = "kubernetes" }
 
+    # Restart pods when their ConfigMap changes, so an apply takes effect
+    # immediately instead of lingering until the next restart.
+    rollOutCiliumPods = true
+    operator          = { rollOutPods = true }
+    envoy             = { rollOutPods = true }
+
     # Replaces kube-proxy with eBPF-based routing (we disabled kube-proxy in Talos)
     kubeProxyReplacement = true
 
@@ -229,10 +235,8 @@ resource "helm_release" "cilium" {
 
     # L2 announcements — respond to ARP on the LAN for LoadBalancer Service IPs,
     # so the Gateway gets a reachable address without an external LB like MetalLB.
-    # Paired with CiliumL2AnnouncementPolicy + CiliumLoadBalancerIPPool CRs
-    # applied via Flux under k8s/infrastructure/configs/cilium-l2.yaml.
+    # Paired with CiliumL2AnnouncementPolicy + CiliumLoadBalancerIPPool CRs applied via Flux.
     l2announcements = { enabled = true }
-    externalIPs     = { enabled = true }
 
     # L2 uses leader-election leases, which amplifies API-server traffic.
     # Raise the client rate limit so cilium-agent isn't throttled under load.
