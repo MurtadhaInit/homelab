@@ -41,10 +41,11 @@ resource "proxmox_download_file" "talos_image" {
   datastore_id = var.pve_hosts[each.key].storage.files
   node_name    = each.key
 
-  # disk_image URL is the .raw.xz image — rename to .img for Proxmox/provider compatibility
+  # Proxmox can't decompress xz on download, but Image Factory also serves the
+  # uncompressed .raw at the same URL minus .xz.
   url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
   overwrite = false
-  file_name = "talos-nocloud-amd64.img"
+  file_name = "talos-nocloud-amd64.img" # Saved as .img for Proxmox/provider compatibility
 }
 
 output "talos_upgrade_image" {
