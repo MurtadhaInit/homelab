@@ -20,7 +20,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_vm" {
   started     = true
 
   memory {
-    dedicated = 6144
+    dedicated = 4096
     floating  = 2048
   }
 
