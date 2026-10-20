@@ -454,7 +454,7 @@ a `ConfigMap` so Flux remains the source of truth.
 | **Syncthing** | File sync between MacBook and homelab (as a hub); stable device IDs via Nix mean both ends pair automatically with shared ignore patterns, suitable versioning, and pre-defined shared folders | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 | **Jellyfin** | Home media server, accessed primarily via Infuse on Apple TV (Swiftfin/Moonfin are solid alternative clients) | NixOS module | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 | **Karakeep** | Bookmark manager with AI tagging and summarisation (among other features), exposed to my AI agents through its MCP server (see [post-deploy steps](docs/karakeep.md)) | Kubernetes | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
-| **Home Assistant** | Home automation hub for everything IoT and smart home related, running as Home Assistant OS | Proxmox VM | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
+| **Home Assistant** | Home automation hub for everything IoT and smart home related, running as Home Assistant OS (see the [setup guide](./docs/home-assistant.md)) | Proxmox VM | ![Deployed](https://img.shields.io/badge/-deployed-success?style=flat-square) |
 
 More services to come.
 
