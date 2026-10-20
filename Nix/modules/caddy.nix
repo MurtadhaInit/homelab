@@ -49,6 +49,10 @@ let
       name = "dozzle";
       proxy = "10.20.30.41:8080";
     }
+    {
+      name = "homeassistant";
+      proxy = "10.20.30.42:80";
+    }
   ]
   ++ proxmoxServices;
 

@@ -91,6 +91,13 @@ variable "ubuntu_vm_mac_address" {
   default     = "BC:24:11:44:E5:77"
 }
 
+# === vm - haos ===
+variable "haos_mac_address" {
+  type        = string
+  description = "The MAC address for the Home Assistant OS VM, matched by its DHCP reservation on the router"
+  default     = "BC:24:11:4D:D2:BB"
+}
+
 # === ct - nixos ===
 variable "nixos_static_ip" {
   type        = string

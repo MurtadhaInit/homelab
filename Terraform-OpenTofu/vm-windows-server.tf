@@ -108,7 +108,7 @@ resource "proxmox_virtual_environment_vm" "windows-server" {
 #    - This installs all remaining drivers (Balloon, etc.).
 # 4. Activate windows: irm https://get.activated.win | iex
 # 5. Enable remote desktop
-# 6. Install Windows updates then reserve the IP address of 10.20.30.42 for the machine in the router before restarting (restarting will make the machine release the old IP)
+# 6. Install Windows updates then reserve the IP address of 10.20.30.43 for the machine in the router before restarting (restarting will make the machine release the old IP)
 #    - Or set a static IP address in Windows settings (preferred)
 # 7. Use winutil: `irm "https://christitus.com/win" | iex` to load the exported settings file. Install apps and apply tweaks.
 # As Admin: iex "& { $(irm https://christitus.com/win) } -Config [path-to-your-config] -Run"
