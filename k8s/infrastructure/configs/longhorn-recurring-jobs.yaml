@@ -1,0 +1,32 @@
+---
+# Both jobs join the "default" group, which covers every volume without its own recurring jobs.
+#
+# System snapshots (taken by Longhorn itself, e.g. during replica rebuilds) are never purged on
+# their own, and keep holding blocks the live data has since rewritten or deleted.
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-cleanup
+  namespace: longhorn-system
+spec:
+  name: snapshot-cleanup
+  task: snapshot-cleanup
+  cron: "0 3 * * *"
+  groups:
+    - default
+  concurrency: 1
+---
+# Without this, files deleted inside a volume stay allocated in its replicas. Freeing them also lets
+# the node's own trim (e.g. Talos FilesystemTrimConfig) hand the space back to the Proxmox thin pool.
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: filesystem-trim
+  namespace: longhorn-system
+spec:
+  name: filesystem-trim
+  task: filesystem-trim
+  cron: "0 4 * * *"
+  groups:
+    - default
+  concurrency: 1

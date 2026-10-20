@@ -4,6 +4,7 @@ resources:
   - cilium-l2.yaml
   - cluster-issuers.yaml
   - gateway.yaml
+  - longhorn-recurring-jobs.yaml
   - proxmox-node-scrape.yaml
   - grafana-dashboards
   - flux-web-ui.yaml
