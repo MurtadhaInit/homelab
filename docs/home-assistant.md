@@ -8,9 +8,17 @@
      IP in the Home Assistan Web UI).
 2. Visit that address, create an account, and restore from a backup (supplying the
    backup decryption key from a password manager).
-3. If it's a fresh installation: Settings -> System -> Network -> HTTP server ->
-   Reverse proxy -> Trust X-Forwarded-For ☑️ + add the Caddy host IP as a trusted
-   proxy: `10.20.30.50`
+3. If it's a fresh installation:
+   1. Settings -> System -> Network -> HTTP server ->
+      Reverse proxy -> Trust X-Forwarded-For ☑️ + add the Caddy host IP as a trusted
+      proxy: `10.20.30.50`
+   2. Settings -> System -> Network -> Home Assistant URL -> Internet: set to
+      `https://homeassistant.home.murtadha.dev`.
+      - These are the addresses HA gives to other devices and services that need
+        to fetch something from it (and "Internet" is for clients that might not
+        be on the LAN).
+      - That domain resolves on the LAN through AdGuard and similarly on the
+        tailnet since AdGuard is the tailnet's nameserver.
 
 ## Matter over Thread
 
