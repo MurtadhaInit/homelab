@@ -35,8 +35,10 @@ Prerequisites:
 
 Setup:
 
-1. Settings -> Devices & services -> Add integration -> Matter. The Thread
-   integration is then discovered and lists the Apple network under "Other networks".
+1. Settings -> Devices & services -> Add integration -> Matter (accept the
+   prompt to install the Matter Server app). The Thread integration is discovered
+   separately (from the Apple TV's Thread announcement) and lists the Apple network
+   under "Other networks".
 2. Import Apple's Thread credentials into HA. In the iOS Companion app: Settings
    -> Companion app -> Debugging -> Thread -> pick the Apple network -> Transfer
    to Home Assistant.
