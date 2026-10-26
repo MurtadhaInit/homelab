@@ -21,7 +21,7 @@ while also showcasing various explorations into self-hosting technologies and ap
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Quick Start](#quick-start)
-  - [Implementation](#implementation)
+  - [Design and Implementation](#design-and-implementation)
     - [Workflow](#workflow)
     - [Nix](#nix)
     - [Kubernetes](#kubernetes)
@@ -57,7 +57,7 @@ step-by-step numbered sequence for getting the infrastructure up and running. E.
 Common utility commands for deployment (which are likely to be triggered more frequently)
 are grouped together per the respective platform (e.g., Kubernetes vs. Nix).
 
-## Implementation
+## Design and Implementation
 
 This is an ever-evolving design which has gone through major changes over time.
 The approaches and technologies employed here are constantly changing. Some of these
@@ -99,49 +99,58 @@ technologies include:
 > see the [technical decisions doc](docs/decisions.md). It also includes a
 > timestamped log of design decisions taken over the project's lifetime.
 
-My general approach is to establish a stable foundation to build upon, which is
-why my Hypervisor layer (Proxmox) is intentionally minimal in terms of adjustments:
+My approach here is to establish a stable foundation to build upon, which is
+why my Hypervisor layer (Proxmox) is kept intentionally minimal in terms of adjustments:
 I don't cluster nodes nor use HA or Ceph storage, and there are only a few changes
 applied to Proxmox hosts, mainly focusing on baseline hardening and basic configuration
-(like SSH access, instrumentation, and storage setup). I defer things like HA
-further up the stack, into my k8s cluster.
+(SSH access, instrumentation, storage setup, etc). Instead, I defer things like
+HA further up the stack into my k8s cluster where I also make use of a distributed
+storage system like Longhorn for data availability and resilience.
 
-Some of the services I self-host are installed on a NixOS LXC container running
-privileged on the Proxmox host, and others are containerised and running on my
-k8s cluster.
+Some of the services I self-host are installed on a NixOS LXC container on the Proxmox
+host, while others are running containerised on my k8s cluster.
 
-The reason for this split is that certain services I want to be "just working"
-(i.e., to set-it-and-forget-it), without the management overhead and general
-upkeep that comes with k8s. However, this also comes down to the availability of
-high quality NixOS modules (which I'm then wrapping with my own custom ones), the
-number of options they expose, and the reliability at which configurations are
-deterministically applied.
+The advantage of deploying NixOS services is that they mostly "just work" and
+most configurations are fully declarative including those of the host itself.
+However, this also comes down to the availability of high quality NixOS modules,
+the number of options they expose, the reliability at which those configurations
+are deterministically applied, how often the modules get updated, and how soon
+those updates get merged into `nixpkgs`.
 
-For instance, with my local DNS solution (AdGuard Home), it's easier to define all
-the configurations, including DNS re-writes, filtering lists, and even login credentials
-(using `agenix`) in one hand-crafted NixOS module file that wraps the AdGuard service
-and which can be selectively toggled on or off for any machine. Additionally, the
+For my local DNS solution (AdGuard Home), it's easier to define all the configurations,
+including DNS re-writes, filtering lists, and even login credentials (via `agenix`)
+in one hand-crafted NixOS module file that wraps the AdGuard system service and
+which can simply be toggled on or off for any host type. Additionally, the
 "off" here means the service is gone, binaries are unlinked, and even the firewall
-ports previously open are now closed.
+ports previously open are now closed. This makes it trivially easy to deploy
+a failover AdGuard instance on another physical machine with identical and perfectly
+synced configurations without requiring support for DNS server clustering feature.
 
-This idempotency can be contrasted with a tool like Ansible, which is not _truly_
-declarative _nor_ idempotent out of the box: removing a task to install a service
-from a playbook and re-running that playbook against the same target machine doesn't
-actually remove that service. You have to manually SSH and uninstall it yourself.
+This NixOS idempotency can be contrasted with a tool like Ansible operating on a
+generic Linux distribution, which can't be considered _truly_ declarative nor
+_fully_ idempotent out of the box. E.g., removing a task to install a service from
+a playbook and re-running that playbook against the same target machine won't
+remove that service. You still have to manually SSH in and uninstall it yourself.
 
-This NixOS setup is made easier because of `deploy-rs` and its many niceties,
-like reverting to the previous (working) revision right away if a deployment fails,
-preventing downtime and service disruption.
+This NixOS workflow is made easier here due to `deploy-rs` and its many niceties,
+like being able to revert to the previous working revision automatically when a
+deployment fails, preventing downtime and service disruption.
 
-For everything else, I prefer the GitOps approach to declaratively define and continuously
-deploy my k8s workloads using Flux with Helm releases and handwritten manifests.
+For everything else, I prefer the GitOps approach for declaratively defining and
+continuously deploying my k8s workloads via Flux (as Helm releases or as handwritten
+manifests). Often times, this is the preferred route since most application
+developers maintain their own Docker images while most projects don't have an official
+Nix flake and many others in `nixpkgs` are not regularly updated or maintained.
+With the official images there is no 3rd party involved, no separate re-packaging
+process, and image tags are updated as often as the app itself is updated or released.
 
-> [!NOTE]
-> But why not Docker? the simple and honest answer: it's a bit too easy and less
-  interesting (I already am familiar with Docker); plus there isn't as large of
-  a learning opportunity compared to k8s. Though I do have a Docker deployment
-  on the Ubuntu VM (installed and configured with Ansible) which I'm also
-  exploring and playing with.
+Finally, Docker (installed and configured on the Ubuntu VM through Ansible)
+serves as the testing playground for new applications: I use the `compose` content
+from the app's documentation for a new project in Arcane, make a few adjustments,
+then deploy the app from the Arcane Web UI right away. Once satisfied, and if I've
+decided to keep the app, I translate that `compose` file into appropriate kubernetes
+primitives then commit the resulting manifests to deploy the app on my cluster
+and delete the Arcane project afterwards.
 
 ### Workflow
 
