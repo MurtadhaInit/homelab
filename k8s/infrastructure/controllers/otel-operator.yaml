@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: otel
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: open-telemetry
+  namespace: otel
+spec:
+  interval: 12h
+  type: oci
+  url: oci://ghcr.io/open-telemetry/opentelemetry-helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: otel-operator
+  namespace: otel
+spec:
+  interval: 1h
+  dependsOn:
+    # The API server calls the operator's admission webhook to validate collectors' config,
+    # fills in defaults, etc. It does so over TLS, using a cert-manager-issued cert, so until
+    # that cert exists the webhook is unreachable and every OpenTelemetryCollector is rejected.
+    - name: cert-manager
+      namespace: cert-manager
+    # Must exist before the operator starts, which only creates
+    # ServiceMonitors for collectors if the CRD was present at startup
+    - name: prometheus-operator-crds
+      namespace: monitoring
+  chart:
+    spec:
+      chart: opentelemetry-operator
+      version: 0.128.0
+      sourceRef:
+        kind: HelmRepository
+        name: open-telemetry
+  values:
+    manager:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 256Mi

@@ -8,3 +8,4 @@ resources:
   - prometheus-operator-crds.yaml
   - kube-prometheus-stack.yaml
   - grafana-admin.sops.yaml
+  - otel-operator.yaml

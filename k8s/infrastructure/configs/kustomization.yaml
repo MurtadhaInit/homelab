@@ -8,3 +8,4 @@ resources:
   - proxmox-node-scrape.yaml
   - grafana-dashboards
   - flux-web-ui.yaml
+  - otel-collector.yaml
