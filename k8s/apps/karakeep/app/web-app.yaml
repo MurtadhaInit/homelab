@@ -59,9 +59,11 @@ spec:
     spec:
       automountServiceAccountToken: false # the app never calls the Kubernetes API.
       securityContext:
-        # TODO: run as non-root (uid 1000) and enforce 'restricted' in the NS once a release includes karakeep-app/karakeep#3114.
-        # This also fixes Next's EACCES on .next/cache: the image owns it as 1000, and root without
-        # DAC_OVERRIDE (dropped below) can't write there.
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
