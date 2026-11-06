@@ -2,6 +2,7 @@
 .ansible/
 .env
 *.drawio.bkp
+/.cache/
 
 # Kubernetes and Talos client configs (contain sensitive credentials)
 k8s/talosconfig

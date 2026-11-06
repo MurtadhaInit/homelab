@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/stackrox/kube-linter/refs/heads/main/schemas/kube-lint-config.json
+checks:
+  addAllBuiltIn: true
+  exclude:
+    - required-label-owner
+    - required-annotation-email
+    - no-rolling-update-strategy # most of our deployed apps are 'Recreate'
+    - no-node-affinity
+    - minimum-three-replicas
+    - sorted-keys
+    - restart-policy # false positive: unset = Always by default
+    - schema-validation # replaced below
+    - dnsconfig-options # TODO: might reconsider
+customChecks:
+  - name: schema-validation-custom
+    description: Validate resources against their schemas using kubeconform (Kubernetes core + CRDs)
+    remediation: Fix the resource to conform to its schema.
+    template: kubeconform
+    params:
+      strict: true # error if resources contain undocumented fields
+      ignoreMissingSchemas: false
+      cache: .cache/kubeconform # ⚠️ but CRD schemas could go stale (they come from the catalog's main branch)
+      kubernetesVersion: "1.35.0"
+      skipKinds: [Secret] # SOPS-encrypted secrets carry a top-level `sops:` key that strict validation rejects
+      schemaLocations:
+        - default
+        - "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+#   - name: "flux-require-interval" # example
+#     description: "Flux Kustomizations should have spec.interval set"
+#     template: "cel-expression"
+#     params:
+#       check: "object.kind == 'Kustomization' && object.apiVersion.startsWith('kustomize.toolkit.fluxcd.io/') && !has(object.spec.interval) ? 'Flux Kustomization is missing spec.interval' : ''"
+#     remediation: "Set spec.interval on Flux Kustomization resources."

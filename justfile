@@ -197,4 +197,11 @@ grafana-mcp-token:
     fi
     echo "✅ Stored in the OS keyring. Reload the Grafana MCP server in your AI assistant."
 
+# Lint Kubernetes manifests with kube-linter
+[group('k8s')]
+k8s-lint:
+    @echo "\n⚙️ Linting Kubernetes manifests..."
+    mkdir -p .cache/kubeconform
+    mise exec -- kube-linter lint k8s/clusters/homelab/*.yaml $(find k8s -name kustomization.yaml -exec dirname {} +)
+
 # TODO: add 'nix' recipes for 'agenix' to edit secrets or the like
