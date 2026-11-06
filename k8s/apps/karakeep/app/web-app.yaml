@@ -9,9 +9,13 @@ data:
   AUTH_TRUSTED_ORIGINS: "" # limit sign-ins to NEXTAUTH_URL only
   NEXTAUTH_URL: https://karakeep.k8s.murtadha.dev
   DB_WAL_MODE: "true" # possible because the PV is on block storage (not NFS)
-  CRAWLER_SCREENSHOT_TIMEOUT_SEC: "15"
-  CRAWLER_NAVIGATE_TIMEOUT_SEC: "60"
-  CRAWLER_JOB_TIMEOUT_SEC: "120" # must cover navigation + screenshot + parsing
+  # Raised from the defaults (navigate 30, screenshot 5, job 60): JS-heavy pages miss them.
+  # The job timeout must cover navigate + screenshot + challenge wait (15) + parsing (60).
+  CRAWLER_NAVIGATE_TIMEOUT_SEC: "60" # for loading the page (including redirects)
+  CRAWLER_SCREENSHOT_TIMEOUT_SEC: "15" # for taking the viewport screenshot
+  CRAWLER_JOB_TIMEOUT_SEC: "150" # the whole crawl job, from start to finish
+  # Match the home IP's location: bot checks flag a browser whose timezone doesn't match its IP
+  CRAWLER_BROWSER_TIMEZONE: Asia/Amman
   # LLM provider for tagging and summarisation
   OPENAI_BASE_URL: https://openrouter.ai/api/v1
   INFERENCE_CONTEXT_LENGTH: "16384"
@@ -63,6 +67,8 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+        # faster pod restarts: check only the top directory of the volume for the right
+        # group and permissions on volume mounts.
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
@@ -91,6 +97,7 @@ spec:
               port: http
             failureThreshold: 30
             periodSeconds: 10
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /api/health
@@ -108,8 +115,7 @@ spec:
               cpu: 50m
               memory: 512Mi
             limits:
-              cpu: "1" # shared by the web server and the crawl/inference workers
-              memory: 1Gi
+              memory: 1Gi # shared by the web server and the crawl/inference workers
       volumes:
         - name: data
           persistentVolumeClaim:
