@@ -2,15 +2,12 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "ansible"
 		}
 	],
 	"settings": {
 		"ansible.python.interpreterPath": "/Users/murtadha/Projects/homelab/.venv/bin/python",
-		"yaml.customTags": [
-      "!vault scalar"
-		]
+		"vs-kubernetes": {
+			"disable-linters": ["resource-limits"]
+		}
 	}
 }
