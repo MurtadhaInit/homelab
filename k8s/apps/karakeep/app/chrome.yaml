@@ -62,7 +62,6 @@ spec:
               cpu: 50m
               memory: 128Mi
             limits:
-              cpu: "2" # JS-heavy pages (e.g. YouTube) miss the navigate timeout when throttled
               memory: 1Gi
 ---
 apiVersion: v1
