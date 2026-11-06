@@ -91,6 +91,7 @@ technologies include:
   <tr>
     <td align="center" width="110"><img height="40" alt="SOPS" src="https://cdn.jsdelivr.net/gh/cncf/artwork@main/projects/sops/icon/color/sops-icon-color.svg"/><br/><sub>SOPS</sub></td>
     <td align="center" width="110"><img height="40" alt="Reloader" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/reloader.svg"/><br/><sub>Reloader</sub></td>
+    <td align="center" width="110"><img height="40" alt="OpenTelemetry" src="https://cdn.jsdelivr.net/gh/cncf/artwork@main/projects/opentelemetry/icon/color/opentelemetry-icon-color.svg"/><br/><sub>OpenTelemetry</sub></td>
   </tr>
 </table>
 
@@ -453,7 +454,7 @@ More services to come.
 - [ ] **Reverse proxy consolidation**: route everything through the k8s Gateway API; keep Caddy disabled but available as a fallback
 - [ ] **Single domain**: drop `*.k8s.murtadha.dev` and route all traffic via `home.murtadha.dev`
 - [ ] **DNS**: evaluate Technitium as a potential AdGuard Home replacement
-- [ ] **Remote Linux Nix builder**: build NixOS derivations on a Linux machine inside my infra (avoiding macOS build issues)
+- [X] **Remote Linux Nix builder**: build NixOS derivations on a Linux machine inside my infra (avoiding macOS build issues)
 - [X] **Too many secret solutions**: attempt to eliminate some and simplify this aspect
 - [ ] **Split LXC containers** to minimise potential downtime if things go wrong with one NixOS service / deployment
 - [ ] **Make use of VLANs** for network isolation and security
