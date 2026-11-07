@@ -11,6 +11,7 @@ checks:
     - restart-policy # false positive: unset = Always by default
     - schema-validation # replaced below
     - dnsconfig-options # TODO: might reconsider
+    - no-read-only-root-fs # involves trial & error per app to figure out where each writes
 customChecks:
   - name: schema-validation-custom
     description: Validate resources against their schemas using kubeconform (Kubernetes core + CRDs)
