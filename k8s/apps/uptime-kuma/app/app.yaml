@@ -34,6 +34,8 @@ metadata:
   labels:
     app: uptime-kuma
   name: uptime-kuma
+  annotations:
+    ignore-check.kube-linter.io/non-isolated-pod: "isolated by CiliumNetworkPolicy"
 spec:
   replicas: 1
   selector:
@@ -134,3 +136,21 @@ spec:
     - backendRefs:
         - name: uptime-kuma
           port: 3001
+---
+# Only the gateway reaches Uptime Kuma. Cilium tags gateway traffic with the `ingress` identity,
+# hence a CiliumNetworkPolicy to utilise fromEntities. Egress stays open for monitors.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: uptime-kuma
+spec:
+  endpointSelector:
+    matchLabels:
+      app: uptime-kuma
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: http
+              protocol: TCP

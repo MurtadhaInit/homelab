@@ -4,6 +4,7 @@ namespace: e-store
 resources:
   - ./ns.yaml
   - ./db-secret.sops.yaml
+  - ./netpol.yaml
   - ./mysql-statefulset.yaml
   - ./mysql-service.yaml
   - ./backend-deployment.yaml

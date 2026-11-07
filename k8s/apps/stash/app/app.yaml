@@ -64,6 +64,8 @@ metadata:
   labels:
     app: stash
   name: stash
+  annotations:
+    ignore-check.kube-linter.io/non-isolated-pod: "isolated by CiliumNetworkPolicy"
 spec:
   replicas: 1
   selector:

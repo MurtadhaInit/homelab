@@ -40,6 +40,8 @@ metadata:
   labels:
     app: qui
   name: qui
+  annotations:
+    ignore-check.kube-linter.io/non-isolated-pod: "isolated by CiliumNetworkPolicy"
 spec:
   replicas: 1
   selector:
@@ -142,3 +144,21 @@ spec:
     - backendRefs:
         - name: qui
           port: 7476
+---
+# Only the gateway reaches Qui. Cilium tags gateway traffic with the `ingress` identity,
+# hence a CiliumNetworkPolicy to utilise fromEntities. Egress stays open.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: qui
+spec:
+  endpointSelector:
+    matchLabels:
+      app: qui
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: http
+              protocol: TCP
