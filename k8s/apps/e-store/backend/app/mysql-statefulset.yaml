@@ -15,6 +15,7 @@ spec:
       labels:
         app: mysql
     spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
       securityContext:
         runAsUser: 999 # mysql
         runAsGroup: 999

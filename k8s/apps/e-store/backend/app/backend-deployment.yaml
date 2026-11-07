@@ -16,6 +16,7 @@ spec:
       labels:
         app: e-store-backend
     spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
       securityContext:
         runAsNonRoot: true
         seccompProfile:

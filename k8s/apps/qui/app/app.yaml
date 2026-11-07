@@ -52,6 +52,7 @@ spec:
       labels:
         app: qui
     spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
       # Running as a fixed UID skips the image's PUID/PGID chown of /config,
       # so fsGroup is what makes the Longhorn volume writable.
       securityContext:

@@ -46,6 +46,7 @@ spec:
       labels:
         app: uptime-kuma
     spec:
+      automountServiceAccountToken: false # the app never calls the Kubernetes API.
       # The Service name makes Kubernetes inject UPTIME_KUMA_PORT, which
       # collides with the app's own port setting.
       enableServiceLinks: false
