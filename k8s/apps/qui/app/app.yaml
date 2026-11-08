@@ -20,7 +20,7 @@ data:
   QUI__PORT: "7476"
   QUI__LOG_LEVEL: INFO # Upstream defaults to DEBUG.
   # Blocks DNS rebinding: reject requests addressed to any other host name.
-  # /healthz/* is exempt, so kubelet probes by pod IP still pass.
+  # Probes send `Host: localhost` (always allowed) since kubelet would use the pod IP.
   QUI__ALLOWED_HOSTS: qui.k8s.murtadha.dev
 ---
 apiVersion: v1
@@ -91,18 +91,27 @@ spec:
             httpGet:
               path: /healthz/readiness
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /healthz/readiness
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /healthz/liveness
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
