@@ -18,6 +18,10 @@
     "siderolabs-docs": {
       "type": "http",
       "url": "https://docs.siderolabs.com/mcp"
+    },
+    "dozzle": {
+      "type": "streamable-http",
+      "url": "https://dozzle.home.murtadha.dev/api/mcp"
     }
   }
 }
