@@ -112,7 +112,7 @@
       become: true
       community.docker.docker_container:
         name: arcane
-        image: ghcr.io/getarcaneapp/manager:v2.14.0
+        image: ghcr.io/getarcaneapp/manager:v2.17.3
         restart_policy: always
         # Host cgroup namespace lets Arcane reliably detect its own container ID (for self-upgrades)
         cgroupns_mode: host
@@ -169,7 +169,7 @@
       become: true
       community.docker.docker_container:
         name: dozzle
-        image: amir20/dozzle:v10.7.5
+        image: amir20/dozzle:v11.4.2
         restart_policy: always
         published_ports:
           - "{{ ansible_host }}:8080:8080"
