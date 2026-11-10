@@ -93,13 +93,12 @@
         group: root
         mode: '0750'
 
-    - name: Generate Arcane secrets
+    - name: Generate Arcane encryption key
       become: true
       ansible.builtin.shell:
         cmd: |
           umask 077
-          printf 'ENCRYPTION_KEY=%s\nJWT_SECRET=%s\n' \
-            "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > /opt/arcane/arcane.env
+          printf 'ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 32)" > /opt/arcane/arcane.env
         creates: /opt/arcane/arcane.env
 
     - name: Create Arcane data volume
