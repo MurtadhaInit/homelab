@@ -4,6 +4,8 @@ metadata:
   name: e-store-backend
   labels:
     app: e-store-backend
+  annotations:
+    ignore-check.kube-linter.io/read-secret-from-env-var: "the app reads its DSN from env only"
 spec:
   replicas: 1
   selector:
@@ -36,6 +38,12 @@ spec:
             capabilities:
               drop:
                 - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
       containers:
         - name: e-store-backend
           image: ghcr.io/murtadhainit/e-store-backend:0.1.0

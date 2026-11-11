@@ -4,6 +4,8 @@ metadata:
   name: mysql
   labels:
     app: mysql
+  annotations:
+    ignore-check.kube-linter.io/read-secret-from-env-var: "the image exports *_FILE values into env anyway"
 spec:
   serviceName: mysql
   replicas: 1

@@ -20,6 +20,7 @@ metadata:
   name: karakeep-meilisearch
   annotations:
     reloader.stakater.com/auto: "true"
+    ignore-check.kube-linter.io/read-secret-from-env-var: "Meilisearch takes its master key from env only"
 spec:
   replicas: 1
   selector:
