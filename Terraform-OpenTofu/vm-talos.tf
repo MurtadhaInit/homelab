@@ -105,8 +105,8 @@ locals {
       ip               = "10.20.30.70"
       vm_id            = 820
       cores            = 2
-      memory           = 4096
-      disk_gb          = 15
+      memory           = 6144
+      disk_gb          = 30
       longhorn_disk_gb = 60
     }
     "talos-worker-2" = {
@@ -115,8 +115,8 @@ locals {
       ip               = "10.20.30.71"
       vm_id            = 821
       cores            = 4
-      memory           = 4096
-      disk_gb          = 20
+      memory           = 6144
+      disk_gb          = 30
       longhorn_disk_gb = 60
     }
   }
