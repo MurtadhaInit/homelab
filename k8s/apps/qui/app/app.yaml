@@ -20,7 +20,8 @@ data:
   QUI__PORT: "7476"
   QUI__LOG_LEVEL: INFO # Upstream defaults to DEBUG.
   # Blocks DNS rebinding: reject requests addressed to any other host name.
-  # Probes send `Host: localhost` (always allowed) since kubelet would use the pod IP.
+  # Probes send `Host: localhost` (always allowed) since kubelet would otherwise
+  # use the pod IP for the Host header (not in this allowed list).
   QUI__ALLOWED_HOSTS: qui.k8s.murtadha.dev
 ---
 apiVersion: v1
