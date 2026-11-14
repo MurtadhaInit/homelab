@@ -37,6 +37,21 @@ spec:
       enabled: true
     config:
       enableGatewayAPI: true
+    # Requests track typical (1-day average) usage so the scheduler accounts for these pods.
+    resources:
+      requests:
+        cpu: 5m
+        memory: 32Mi
+    cainjector:
+      resources:
+        requests:
+          cpu: 5m
+          memory: 48Mi
+    webhook:
+      resources:
+        requests:
+          cpu: 5m
+          memory: 16Mi
     # prometheus:
     #   enabled: true
     #   podmonitor:
