@@ -39,6 +39,23 @@ spec:
       # count against the disk, and quietly starve it until new replicas can't schedule.
       # Longhorn only reports them (Settings -> Advanced -> Orphan Resources) unless told to clean up.
       orphanResourceAutoDeletion: replica-data;instance
+      # Requests track typical (1-day average) usage so the scheduler accounts for these
+      # pods. Instance-manager memory has no knob: it scales with the volumes it serves.
+      systemManagedCSIComponentsResourceLimits: >-
+        {
+          "csi-attacher": {"requests": {"cpu": "5m", "memory": "16Mi"}},
+          "csi-provisioner": {"requests": {"cpu": "5m", "memory": "16Mi"}},
+          "csi-resizer": {"requests": {"cpu": "5m", "memory": "16Mi"}},
+          "csi-snapshotter": {"requests": {"cpu": "5m", "memory": "16Mi"}},
+          "longhorn-csi-plugin": {"requests": {"cpu": "5m", "memory": "24Mi"}},
+          "node-driver-registrar": {"requests": {"cpu": "5m", "memory": "8Mi"}},
+          "longhorn-liveness-probe": {"requests": {"cpu": "5m", "memory": "16Mi"}}
+        }
+    longhornManager:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 160Mi
     persistence:
       defaultClassReplicaCount: 2 # Replica count of the default Longhorn StorageClass
       # reclaimPolicy: Retain

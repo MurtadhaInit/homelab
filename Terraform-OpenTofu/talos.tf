@@ -224,8 +224,18 @@ resource "helm_release" "cilium" {
     # Restart pods when their ConfigMap changes, so an apply takes effect
     # immediately instead of lingering until the next restart.
     rollOutCiliumPods = true
-    operator          = { rollOutPods = true }
-    envoy             = { rollOutPods = true }
+
+    # Requests track typical (1-day average) usage so the scheduler accounts for these pods.
+    resources = { requests = { cpu = "75m", memory = "192Mi" } }
+
+    operator = {
+      rollOutPods = true
+      resources   = { requests = { cpu = "10m", memory = "80Mi" } }
+    }
+    envoy = {
+      rollOutPods = true
+      resources   = { requests = { cpu = "10m", memory = "32Mi" } }
+    }
 
     # Replaces kube-proxy with eBPF-based routing (we disabled kube-proxy in Talos)
     kubeProxyReplacement = true
