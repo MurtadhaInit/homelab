@@ -145,11 +145,17 @@ nix-hashes:
     )
     flake="path:$PWD"
     stale=0
+    err=$(mktemp)
+    trap 'rm -f "${err}"' EXIT
     for attr in "${ATTRS[@]}"; do
         expr="(builtins.getFlake \"${flake}\").nixosConfigurations.nixos-ct.config.${attr}"
         pinned=$(nix eval --impure --raw --expr "${expr}.drvAttrs.outputHash")
         echo "==> ${attr}"
-        actual=$(nix run nixpkgs#nurl -- -e "${expr}" 2>/dev/null)
+        # nurl's stderr is noisy build output, so surface it only when nurl itself fails
+        if ! actual=$(nix run nixpkgs#nurl -- -e "${expr}" 2>"${err}"); then
+            cat "${err}" >&2
+            exit 1
+        fi
         if [[ "${pinned}" == "${actual}" ]]; then
             echo "    up to date: ${pinned}"
         else
