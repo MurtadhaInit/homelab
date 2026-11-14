@@ -58,11 +58,15 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
           resources:
+            # Chrome's profile and cache live on the node's disk; without a request it's the
+            # first eviction victim under node disk pressure. The limit is a cap.
             requests:
               cpu: 50m
               memory: 128Mi
+              ephemeral-storage: 256Mi
             limits:
               memory: 1Gi
+              ephemeral-storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
