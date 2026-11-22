@@ -10,7 +10,7 @@
     },
     "grafana-mcp": {
       "command": "mise",
-      "args": ["exec", "--", "uvx", "mcp-grafana"],
+      "args": ["exec", "--", "mcp-grafana"],
       "env": {
         "GRAFANA_URL": "https://grafana.k8s.murtadha.dev"
       }
