@@ -22,6 +22,17 @@
     "dozzle": {
       "type": "streamable-http",
       "url": "https://dozzle.home.murtadha.dev/api/mcp"
+    },
+    "unifi": {
+      "command": "mise",
+      "args": ["exec", "--", "unifi-mcp-server"],
+      "env": {
+        "UNIFI_API_TYPE": "local",
+        "UNIFI_LOCAL_HOST": "10.20.30.1",
+        "UNIFI_READ_ONLY": "true",
+        "UNIFI_AUDIT_LOG_ENABLED": "false",
+        "UNIFI_LOCAL_VERIFY_SSL": "false"
+      }
     }
   }
 }

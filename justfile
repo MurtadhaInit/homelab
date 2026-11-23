@@ -183,25 +183,26 @@ k8s-status:
 k8s-events:
     kubectl get events -A --sort-by=.lastTimestamp
 
-# Store the Grafana service-account token (for the Grafana MCP) in the OS keyring
-[group('k8s')]
-grafana-mcp-token:
+# E.g. `just mcp-secret grafana` for the Grafana service-account token or `just mcp-secret unifi` for the Unifi API key.
+# Store an MCP server's secrets (e.g. token or API key) in the OS keyring as `<server>-mcp-secret` (read by mise.toml)
+[group('mcp')]
+mcp-secret server:
     #!/usr/bin/env bash
     set -euo pipefail
     # Read silently so the token never lands in shell history
-    read -rsp "Paste the Grafana service-account token: " tok
+    read -rsp "Paste the {{ server }} MCP secret: " sec
     echo
-    [ -n "$tok" ] || { echo "No token provided." >&2; exit 1; }
+    [ -n "$sec" ] || { echo "No secret provided." >&2; exit 1; }
     if [[ "$(uname)" == "Darwin" ]]; then
-        security add-generic-password -a "$USER" -s grafana-mcp-token -U -w "$tok"
+        security add-generic-password -a "$USER" -s "{{ server }}-mcp-secret" -U -w "$sec"
     elif command -v secret-tool >/dev/null 2>&1; then
-        printf '%s' "$tok" | secret-tool store --label='Grafana MCP' service grafana-mcp-token
+        printf '%s' "$sec" | secret-tool store --label="{{ server }} MCP" service "{{ server }}-mcp-secret"
     else
         echo "No keyring found (need macOS 'security' or Linux 'secret-tool')." >&2
         echo "Install libsecret-tools, or store the token with 'pass'." >&2
         exit 1
     fi
-    echo "✅ Stored in the OS keyring. Reload the Grafana MCP server in your AI assistant."
+    echo "✅ Stored in the OS keyring. Reload the {{ server }} MCP server in your AI assistant."
 
 # Lint Kubernetes manifests with kube-linter
 [group('k8s')]
