@@ -183,7 +183,7 @@ k8s-status:
 k8s-events:
     kubectl get events -A --sort-by=.lastTimestamp
 
-# E.g. `just mcp-secret grafana` for the Grafana service-account token or `just mcp-secret unifi` for the Unifi API key.
+# E.g. `just mcp-secret grafana` or `just mcp-secret unifi` (see the relevant guide for each).
 # Store an MCP server's secrets (e.g. token or API key) in the OS keyring as `<server>-mcp-secret` (read by mise.toml)
 [group('mcp')]
 mcp-secret server:

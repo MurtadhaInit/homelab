@@ -12,7 +12,7 @@ cross-platform `exec()` lookup (macOS `security`, falling back to Linux `secret-
    Service accounts* → create one ('Viewer' if you want read-only MCP use) →
    *Add service account token* → copy it.
 2. **Store it in the workstation's OS keyring**:
-   1. `just grafana-mcp-token`.
+   1. `just mcp-secret grafana`.
    2. then paste the token when prompted (it is read silently, so it never lands
       in shell history).
    - On a fresh machine this works on macOS (login keychain) and
@@ -27,6 +27,6 @@ cross-platform `exec()` lookup (macOS `security`, falling back to Linux `secret-
 ## Rotating / removing the token
 
 - **Rotate / switch clusters:** generate a new token and re-run
-  `just grafana-mcp-token` (it updates the entry in place).
-- **Remove (macOS):** `security delete-generic-password -s grafana-mcp-token`
-- **Remove (Linux):** `secret-tool clear service grafana-mcp-token`
+  `just mcp-secret grafana` (it updates the entry in place).
+- **Remove (macOS):** `security delete-generic-password -s grafana-mcp-secret`
+- **Remove (Linux):** `secret-tool clear service grafana-mcp-secret`
