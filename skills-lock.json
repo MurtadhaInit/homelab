@@ -1,23 +1,75 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "gitops-cluster-debug": {
       "source": "fluxcd/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/gitops-cluster-debug/SKILL.md",
-      "computedHash": "160ab1ff92fb94a60f182696754e84b9fed8db358308b5833e862295447b0742"
+      "computedHash": "7c2bb0b5e1c90c09f940d966d4b34c188ae60d7061f70a51bfd8cfc14e81b847",
+      "commit": "25da0ed5bfdd1d8f779ef79c2c7e336781978d87"
     },
     "gitops-knowledge": {
       "source": "fluxcd/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/gitops-knowledge/SKILL.md",
-      "computedHash": "c9a3de3ec90fb251e2746c374f6144f508f2a0cd0de814a8827cef15354e3fcd"
+      "computedHash": "8af9ae00f498637fe1430c627fd393fd39975927488f308f389233190696ed40",
+      "commit": "25da0ed5bfdd1d8f779ef79c2c7e336781978d87"
     },
     "gitops-repo-audit": {
       "source": "fluxcd/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/gitops-repo-audit/SKILL.md",
-      "computedHash": "c613379517ce55e9cb9a5bb53510166bcf42c3f6223149c0ce20cdf692fe4b8c"
+      "computedHash": "40940c5013ac41b11abebb847a199ed9606d67c923b08b279d99e28a954b69a4",
+      "commit": "25da0ed5bfdd1d8f779ef79c2c7e336781978d87"
+    },
+    "unifi-channel-planning": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-channel-planning/SKILL.md",
+      "computedHash": "e54e060ff8754e7afe2fa9a25f79f090e46e880eadf84e900126d49c105bf0c3"
+    },
+    "unifi-devices": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-devices/SKILL.md",
+      "computedHash": "a5c8d889d6e13676dcf740e199672672f968233eed32a8e0a659f2bea4969126"
+    },
+    "unifi-discovery": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-discovery/SKILL.md",
+      "computedHash": "997ac9597c6249c675ee50ef6af8ddf7a889315caada7e491e51cb6b0910ff71"
+    },
+    "unifi-network": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-network/SKILL.md",
+      "computedHash": "856e16b6df77569e643e3b10105068b7d4ede763ea1dfa67183a8e9e7b64d507"
+    },
+    "unifi-safe-changes": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-safe-changes/SKILL.md",
+      "computedHash": "a169c3429ca51f8c5f61d169b817fc93c15f7d9ba9208206c46ad3557a703764"
+    },
+    "unifi-security": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-security/SKILL.md",
+      "computedHash": "07dacd475b50b6ec3af041ba4766e2b1c3d7a8e2302583a2fdcfa073a89a69f3"
+    },
+    "unifi-system": {
+      "source": "enuno/unifi-mcp-server",
+      "commit": "7be7c337fa1d21516487d241699e612ca52dec7e",
+      "sourceType": "github",
+      "skillPath": "skills/unifi-system/SKILL.md",
+      "computedHash": "97339d4e8d9c75ada2c261135f63dab231b28290c6ee5512f5f7267ba4865d1d"
     }
   }
 }
