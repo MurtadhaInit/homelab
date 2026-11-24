@@ -62,8 +62,8 @@
     # don't suit a long-lived node.
     # No --accept-routes: the VM is already on the subnet routers' advertised LAN,
     # so accepting the route would send LAN traffic through the tunnel.
-    # --accept-dns=false: a LAN server's DNS shouldn't hinge on the tailnet and tag:dev
-    # can't reach the tailnet nameservers (AdGuard on the subnet routers) anyways.
+    # --accept-dns=false: a LAN server's DNS shouldn't hinge on the tailnet, and tag:dev
+    # has no ACL grant to reach the tailnet nameservers (AdGuard on the subnet routers) anyway.
     # Peers still reach this VM by its MagicDNS name (resolved on their side).
     - name: Log in to the tailnet
       when: (tailscale_status.stdout | from_json).BackendState != 'Running'

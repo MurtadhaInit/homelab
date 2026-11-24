@@ -79,3 +79,7 @@ per-device ACLs, and keeps it reachable if both routers are down.
    the key `tailscale_oauth_secret`.
 4. Apply the [Ansible playbook](../ansible/playbooks/ubuntu-tailscale.yaml)
    (also part of `just pve-postconfig`).
+
+The VM doesn't use Tailscale DNS (`--accept-dns=false`): `tag:dev` has no ACL grant to reach
+the AdGuard tailnet nameservers, and a LAN server should keep its LAN resolver
+anyway. Peers still reach it as `ubuntu-vm`, since MagicDNS resolves on their side.
