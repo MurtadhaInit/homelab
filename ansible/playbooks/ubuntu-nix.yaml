@@ -1,5 +1,5 @@
 ---
-- name: Install the Nix package manager on an Ubuntu cloud image VM
+- name: Prepare an Ubuntu VM for Nix and home-manager
   hosts: ubuntu-vm
   remote_user: murtadha
 
@@ -24,3 +24,11 @@
           --extra-conf "trusted-users = root {{ ansible_facts['user_id'] }}"
         creates: /nix/receipt.json
         executable: /bin/bash
+
+    # Keeps the user's systemd instance running from boot and after logout, so
+    # home-manager's user services (e.g. the Rex server) don't die with the last SSH session.
+    - name: Enable lingering for the login user
+      become: true
+      ansible.builtin.command:
+        cmd: loginctl enable-linger {{ ansible_facts['user_id'] }}
+        creates: /var/lib/systemd/linger/{{ ansible_facts['user_id'] }}
