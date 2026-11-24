@@ -13,6 +13,10 @@ creation_rules:
   - path_regex: regular-user\.sops\.yaml$
     encrypted_regex: ^(regular_user_pass|salt|email)$
     age: age1judvvl6kdauw8kwu2ul7g0ffrmg0n9ugvznsh440mp8gzx5fwynsyhxxsc
+  # Tailscale OAuth client secret for the Ubuntu VM (Ansible host_vars).
+  - path_regex: tailscale-oauth\.sops\.yaml$
+    encrypted_regex: ^(tailscale_oauth_secret)$
+    age: age1judvvl6kdauw8kwu2ul7g0ffrmg0n9ugvznsh440mp8gzx5fwynsyhxxsc
   # K8s secrets: match by filename suffix so the encryption rule travels with the file —
   # secrets live next to the resources that consume them, not in a central dir.
   - path_regex: .*\.sops\.yaml$

@@ -7,7 +7,7 @@
    - Route: `10.20.30.0/24`.
    - Route is auto-approved for: `tag:subnet-router`.
    - Note: auto-approvers don't retroactively approve already-advertised routes.
-4. Settings -> Trust credentials -> (new) OAuth. Give the token the `auth_keys`
+4. Settings -> Trust credentials -> new Credential -> OAuth. Give the token the `auth_keys`
    (write) access scope with the `tag:subnet-router` tag.
    - Its secret doesn't expire, unlike auth keys (90 days max).
 5. Supply the client secret to the Nix module with `agenix` (see [agenix-rules.nix](../Nix/secrets/agenix-rules.nix)).
@@ -64,3 +64,18 @@ access and DNS survive `nixos-ct` or `prox` going down.
 - The TUN device comes from the same [Ansible playbook](../ansible/playbooks/proxmox-nixos-ct.yaml)
   as above, and the host's (public) SSH key must be a recipient of `tailscale-oauth-secret.age`
   before its first deploy.
+
+## `ubuntu-vm` (regular client)
+
+The VM is already reachable through the subnet routers, but joining it directly
+gives remote development a direct WireGuard path, a MagicDNS name (`ubuntu-vm`),
+per-device ACLs, and keeps it reachable if both routers are down.
+
+1. Access controls -> Definitions -> Tags -> Create tag -> `dev` for the name and set the owner (the account + `autogroup:admin`).
+2. Settings -> Trust credentials -> new Credential -> OAuth with the `auth_keys` (write) scope
+   and the `tag:dev` tag.
+3. Store the client secret SOPS-encrypted in the VM's host_vars:
+   `sops ansible/inventory/host_vars/ubuntu-vm/tailscale-oauth.sops.yaml`, with
+   the key `tailscale_oauth_secret`.
+4. Apply the [Ansible playbook](../ansible/playbooks/ubuntu-tailscale.yaml)
+   (also part of `just pve-postconfig`).

@@ -1,0 +1,79 @@
+---
+- name: Join the Ubuntu VM to the tailnet as a regular client
+  hosts: ubuntu-vm
+  remote_user: murtadha
+
+  tasks:
+    # The repo's signing key ("archive" is Debian's term for a package repo) ships as
+    # the tailscale-archive-keyring package, which owns this path so key rotations
+    # arrive through apt. This download only bootstraps the first install: get_url
+    # never overwrites an existing file, leaving it to the package from then on.
+    # A copy anywhere else (e.g. /etc/apt/keyrings) would never be rotated, and apt
+    # would then reject the repo, including the package carrying the new key.
+    - name: Bootstrap the Tailscale apt key
+      become: true
+      ansible.builtin.get_url:
+        url: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_facts['lsb']['codename'] }}.noarmor.gpg"
+        dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+        mode: '0644'
+
+    - name: Add Tailscale apt repository
+      become: true
+      ansible.builtin.deb822_repository:
+        name: tailscale
+        types: deb
+        uris: https://pkgs.tailscale.com/stable/ubuntu
+        suites: "{{ ansible_facts['lsb']['codename'] }}"
+        components: main
+        signed_by: /usr/share/keyrings/tailscale-archive-keyring.gpg
+        state: present
+        enabled: true
+
+    - name: Install Tailscale
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
+        name:
+          - tailscale
+          - tailscale-archive-keyring
+        state: present
+
+    - name: Enable tailscaled
+      become: true
+      ansible.builtin.service:
+        name: tailscaled
+        state: started
+        enabled: true
+
+    - name: Get Tailscale state
+      become: true
+      changed_when: false
+      # Read-only, so safe to run under --check (which otherwise skips commands)
+      # and gives the login condition below real state to evaluate.
+      check_mode: false
+      ansible.builtin.command:
+        cmd: tailscale status --json
+      register: tailscale_status
+
+    # Login only: once Running, re-running `up` would fail unless it restated every
+    # saved pref, so changing a pref on a logged-in node takes `tailscale set`.
+    # The OAuth secret (from SOPS host_vars) mints a key for the tag it was granted;
+    # the params override OAuth keys' ephemeral + approval-required defaults, which
+    # don't suit a long-lived node.
+    # No --accept-routes: the VM is already on the subnet routers' advertised LAN,
+    # so accepting the route would send LAN traffic through the tunnel.
+    # --accept-dns=false: a LAN server's DNS shouldn't hinge on the tailnet and tag:dev
+    # can't reach the tailnet nameservers (AdGuard on the subnet routers) anyways.
+    # Peers still reach this VM by its MagicDNS name (resolved on their side).
+    - name: Log in to the tailnet
+      when: (tailscale_status.stdout | from_json).BackendState != 'Running'
+      become: true
+      no_log: true
+      changed_when: true
+      ansible.builtin.command:
+        argv:
+          - tailscale
+          - up
+          - "--auth-key={{ tailscale_oauth_secret }}?ephemeral=false&preauthorized=true"
+          - --advertise-tags=tag:dev
+          - --accept-dns=false

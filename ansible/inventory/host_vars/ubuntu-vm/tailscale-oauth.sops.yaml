@@ -1,0 +1,16 @@
+tailscale_oauth_secret: ENC[AES256_GCM,data:tfdJRmSINAqox3NjUgt6W0wAGAeTCiwuNSHa6bW7mwbDEEH7+5RMa2Bp7LjRFa2K1HtLhVQAGBJp4oZWp+94,iv:hozTnlAEXsy11wKTmsSD3TlIKLTqJrqVJO77Y3WvO4k=,tag:Da5ZAIVlAeMzsmcWlCqhFA==,type:str]
+sops:
+  age:
+    - enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAyU2NLcW1xTFNjWXUvTEFP
+        UW1DTC83dXl2b204UjN1TDhrVFY2OFUwYVZRCm83SDczTFZIVmRoVHRVcVVPWjJK
+        eDROaVFTZ0xZWElZVWU1czFkczk1WEUKLS0tIFY1RjRPWktqOTlzcEJVajBnTEFQ
+        QVQzZkJZQTYweFlZdi8vZkpocVRzV0EK2Gj9cm0e/YLW+gdkjrlcxgLU47/BL64l
+        +GLvvn/w43Bh8l3yqbmjwixGLJLm+gD7rtLcmMTTXL5GA/rqEcAl3Q==
+        -----END AGE ENCRYPTED FILE-----
+      recipient: age1judvvl6kdauw8kwu2ul7g0ffrmg0n9ugvznsh440mp8gzx5fwynsyhxxsc
+  encrypted_regex: ^(tailscale_oauth_secret)$
+  lastmodified: "2026-11-23T22:20:48Z"
+  mac: ENC[AES256_GCM,data:X3sAV9hAmH0RdDp7cIyKVlT2MmOwRXfdtvxRh1whtog+56fO6RPqMXM2jU+zjWLXJh0erN3ItaV3CwBfYUzZea9qfjUvbgYqjFAurI3/hh8Ms7/jWDNGr5yQ3Dtg8ZHEubPV+Uf0HrJXc2VJqQFaYfJtt7EpqcDFrqDQJFrZIFg=,iv:nucKCAoiILXl5Z5F0maqPDDyZF+UUE7AjNS9UFKjdtg=,tag:kZ9OVM1fqiORCPJ7t4SS3w==,type:str]
+  version: 3.13.3
