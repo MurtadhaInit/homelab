@@ -1,0 +1,4 @@
+# Loaded only via `mise -E grafana-mcp` (see .mcp.json) so the secret reaches this MCP server alone, not every shell.
+# OS keyring entry stored via `just mcp-secret grafana`; tries macOS `security`, then Linux `secret-tool`; `|| true` yields empty if unset.
+[env]
+GRAFANA_SERVICE_ACCOUNT_TOKEN = "{{ exec(command='security find-generic-password -s grafana-mcp-secret -w 2>/dev/null || secret-tool lookup service grafana-mcp-secret 2>/dev/null || true') }}"

@@ -10,7 +10,7 @@
     },
     "grafana-mcp": {
       "command": "mise",
-      "args": ["exec", "--", "mcp-grafana"],
+      "args": ["-E", "grafana-mcp", "exec", "--", "mcp-grafana"],
       "env": {
         "GRAFANA_URL": "https://grafana.k8s.murtadha.dev"
       }
@@ -25,7 +25,7 @@
     },
     "unifi": {
       "command": "mise",
-      "args": ["exec", "--", "unifi-mcp-server"],
+      "args": ["-E", "unifi-mcp", "exec", "--", "unifi-mcp-server"],
       "env": {
         "UNIFI_API_TYPE": "local",
         "UNIFI_LOCAL_HOST": "10.20.30.1",

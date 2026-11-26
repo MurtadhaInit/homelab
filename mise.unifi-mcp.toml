@@ -1,0 +1,4 @@
+# Loaded only via `mise -E unifi-mcp` (see .mcp.json) so the secret reaches this MCP server alone, not every shell.
+# OS keyring entry stored via `just mcp-secret unifi`; tries macOS `security`, then Linux `secret-tool`; `|| true` yields empty if unset.
+[env]
+UNIFI_API_KEY = "{{ exec(command='security find-generic-password -s unifi-mcp-secret -w 2>/dev/null || secret-tool lookup service unifi-mcp-secret 2>/dev/null || true') }}"

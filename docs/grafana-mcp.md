@@ -2,9 +2,12 @@
 
 The [Grafana MCP server](https://grafana.com/docs/grafana/latest/developer-resources/mcp/)
 is configured in `.mcp.json` and authenticates to Grafana with a **service-account
-token** which lives in the OS keyring; `mise.toml` reads it into
+token** which lives in the OS keyring; `mise.grafana-mcp.toml` reads it into
 `GRAFANA_SERVICE_ACCOUNT_TOKEN` environment variable at runtime via a
 cross-platform `exec()` lookup (macOS `security`, falling back to Linux `secret-tool`).
+That file is a mise [config environment](https://mise.jdx.dev/configuration/environments.html)
+loaded only when the server starts (`mise -E grafana-mcp exec ...` in `.mcp.json`), so
+the token never lands in regular shells or other tools' environments.
 
 ## Per-cluster setup
 
