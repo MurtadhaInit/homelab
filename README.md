@@ -92,6 +92,7 @@ technologies include:
     <td align="center" width="110"><img height="40" alt="SOPS" src="https://cdn.jsdelivr.net/gh/cncf/artwork@main/projects/sops/icon/color/sops-icon-color.svg"/><br/><sub>SOPS</sub></td>
     <td align="center" width="110"><img height="40" alt="Reloader" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/reloader.svg"/><br/><sub>Reloader</sub></td>
     <td align="center" width="110"><img height="40" alt="OpenTelemetry" src="https://cdn.jsdelivr.net/gh/cncf/artwork@main/projects/opentelemetry/icon/color/opentelemetry-icon-color.svg"/><br/><sub>OpenTelemetry</sub></td>
+    <td align="center" width="110"><img height="40" alt="UniFi" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/unifi.svg"/><br/><sub>UniFi</sub></td>
   </tr>
 </table>
 
