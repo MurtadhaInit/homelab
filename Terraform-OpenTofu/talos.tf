@@ -27,6 +27,19 @@ resource "talos_machine_secrets" "this" {
 # The base config for each role. Think of this as the "template" —
 # further per-node customizations can be applied as patches in step 3.
 
+locals {
+  # Patches shared by both roles
+  talos_common_patches = [
+    # Periodic fstrim hands freed blocks back to the Proxmox storage (the VM disks have discard on).
+    # Weekly, as newer config contracts generate by default.
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "FilesystemTrimConfig"
+      interval   = "168h"
+    })
+  ]
+}
+
 data "talos_machine_configuration" "controlplane" {
   talos_version      = var.talos_config_contract
   kubernetes_version = var.k8s_version
@@ -35,7 +48,7 @@ data "talos_machine_configuration" "controlplane" {
   machine_type       = "controlplane"
   machine_secrets    = talos_machine_secrets.this.machine_secrets
 
-  config_patches = [
+  config_patches = concat(local.talos_common_patches, [
     yamlencode({
       cluster = {
         # Disable the default Flannel CNI and kube-proxy — Cilium replaces both.
@@ -71,7 +84,7 @@ data "talos_machine_configuration" "controlplane" {
         }
       }
     })
-  ]
+  ])
 }
 
 data "talos_machine_configuration" "worker" {
@@ -82,7 +95,7 @@ data "talos_machine_configuration" "worker" {
   machine_type       = "worker"
   machine_secrets    = talos_machine_secrets.this.machine_secrets
 
-  config_patches = [
+  config_patches = concat(local.talos_common_patches, [
     # Longhorn requires the kubelet to bind-mount its data directory.
     # UserVolumeConfig auto-mounts to /var/mnt/<name>, and this propagates
     # it into the kubelet's mount namespace.
@@ -114,7 +127,7 @@ data "talos_machine_configuration" "worker" {
         grow    = true
       }
     })
-  ]
+  ])
 }
 
 # === 3. Apply configs to each node ===
@@ -216,9 +229,14 @@ resource "helm_release" "cilium" {
   namespace  = "kube-system"
   repository = "https://helm.cilium.io/"
   chart      = "cilium"
-  version    = "1.19.2"
+  version    = "1.20.5"
 
   values = [yamlencode({
+    # Ensures that the configMap for Cilium will not change critical values that could cause
+    # disruption at the version the cluster was installed with (like the Talos config contract).
+    # Don't bump on upgrades.
+    upgradeCompatibility = "1.19"
+
     ipam = { mode = "kubernetes" }
 
     # Restart pods when their ConfigMap changes, so an apply takes effect
