@@ -114,7 +114,16 @@ variable "nixos_2_static_ip" {
 # === k8s ===
 variable "talos_version" {
   type        = string
-  description = "The version of Talos features to use in generated machine configuration"
+  description = "The Talos release the nodes run: selects the installer image for `talosctl upgrade` and the boot image for new nodes"
+  default     = "v1.14.7"
+}
+
+# Pinned to the version the cluster was created with. Bumping it regenerates the machine
+# config with that release's defaults, so it's a deliberate config migration of its own,
+# never part of an OS upgrade.
+variable "talos_config_contract" {
+  type        = string
+  description = "The Talos version contract for generated machine secrets and configuration"
   default     = "v1.12.6"
 }
 

@@ -20,7 +20,7 @@
 # All PKI material for the cluster: etcd CA, Kubernetes CA, machine certs,
 # bootstrap tokens, and encryption keys. Created once and stored in state.
 resource "talos_machine_secrets" "this" {
-  talos_version = var.talos_version
+  talos_version = var.talos_config_contract
 }
 
 # === 2. Machine configurations ===
@@ -28,7 +28,7 @@ resource "talos_machine_secrets" "this" {
 # further per-node customizations can be applied as patches in step 3.
 
 data "talos_machine_configuration" "controlplane" {
-  talos_version      = var.talos_version
+  talos_version      = var.talos_config_contract
   kubernetes_version = var.k8s_version
   cluster_name       = local.talos_cluster_name
   cluster_endpoint   = local.talos_cluster_endpoint
@@ -75,7 +75,7 @@ data "talos_machine_configuration" "controlplane" {
 }
 
 data "talos_machine_configuration" "worker" {
-  talos_version      = var.talos_version
+  talos_version      = var.talos_config_contract
   kubernetes_version = var.k8s_version
   cluster_name       = local.talos_cluster_name
   cluster_endpoint   = local.talos_cluster_endpoint
