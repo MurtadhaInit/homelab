@@ -3,13 +3,18 @@
 
 data "talos_image_factory_extensions_versions" "this" {
   talos_version = var.talos_version
-  filters = {
+  # Exact names, as `filters` matches substrings (e.g. iscsi-tools also pulls in trident-iscsi-tools).
+  # NOTE: a name the factory doesn't recognise for this Talos version is silently dropped,
+  # so check the schematic diff in the plan when bumping talos_version.
+  exact_filters = {
+    # Both microcode vendors ship to every node: the kernel only loads the one matching
+    # its CPU (splitting them per host would mean per-host schematics and installer images).
     names = [
-      "qemu-guest-agent",
-      "amd-ucode",       # prox  (AMD Ryzen 5 5600H)
-      "intel-ucode",     # prox2 (Intel N150)
-      "iscsi-tools",     # for Longhorn
-      "util-linux-tools" # for Longhorn
+      "siderolabs/qemu-guest-agent",
+      "siderolabs/amd-ucode",       # prox  (AMD Ryzen 5 5600H)
+      "siderolabs/intel-ucode",     # prox2 (Intel N150)
+      "siderolabs/iscsi-tools",     # for Longhorn
+      "siderolabs/util-linux-tools" # for Longhorn
     ]
   }
 }
@@ -25,10 +30,11 @@ resource "talos_image_factory_schematic" "this" {
 }
 
 data "talos_image_factory_urls" "this" {
-  talos_version = var.talos_version
-  schematic_id  = talos_image_factory_schematic.this.id
-  architecture  = "amd64"
-  platform      = "nocloud"
+  talos_version     = var.talos_version
+  schematic_id      = talos_image_factory_schematic.this.id
+  architecture      = "amd64"
+  platform          = "nocloud"
+  disk_image_format = "raw" # Proxmox can't decompress (e.g., .xz) on download
 }
 
 # Standalone (un-clustered) Proxmox nodes, so the same image has to be downloaded
@@ -41,9 +47,7 @@ resource "proxmox_download_file" "talos_image" {
   datastore_id = var.pve_hosts[each.key].storage.files
   node_name    = each.key
 
-  # Proxmox can't decompress xz on download, but Image Factory also serves the
-  # uncompressed .raw at the same URL minus .xz.
-  url       = trimsuffix(data.talos_image_factory_urls.this.urls.disk_image, ".xz")
+  url       = data.talos_image_factory_urls.this.urls.disk_image
   overwrite = false
   file_name = "talos-nocloud-amd64.img" # Saved as .img for Proxmox/provider compatibility
 }
